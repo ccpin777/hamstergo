@@ -31,17 +31,21 @@ echo "Tag this version? (e.g. 1.0) — Press Enter to skip"
 read tag
 
 git add .
-git commit -m "$msg" || { echo "Commit 失敗，已中止，沒有部署。"; read; exit 1; }
+if git diff --cached --quiet; then
+    echo "沒有新的變更可以 commit，直接 push 現有的內容..."
+else
+    git commit -m "$msg" || { echo "Commit 失敗，已中止，沒有部署。"; read; exit 1; }
+fi
 
 if [ -n "$tag" ]; then
     git tag "v$tag"
-    if git push origin main --tags; then
+    if git push -u origin main --tags; then
         echo "Deployed and tagged as v$tag!"
     else
         echo "Push 失敗，沒有真的部署成功，請檢查上面的錯誤訊息。"
     fi
 else
-    if git push; then
+    if git push -u origin main; then
         echo "Deployed!"
     else
         echo "Push 失敗，沒有真的部署成功，請檢查上面的錯誤訊息。"
