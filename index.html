@@ -76,7 +76,7 @@
   .days-input button:active{ background:var(--amber); color:var(--paper); }
   .days-input .val{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:18px; min-width:34px; text-align:center; }
   .progress-track{ height:8px; background:var(--line); border-radius:5px; overflow:hidden; }
-  .progress-fill{ height:100%; background:linear-gradient(90deg, #E8A33D 0%, #E2B24A 40%, #8FB996 75%, #4F8F63 100%); box-shadow:0 0 10px rgba(79,143,99,0.45); width:0%; transition:width 0.35s ease; }
+  .progress-fill{ height:100%; background:var(--navy); box-shadow:0 0 10px rgba(27,42,74,0.5); width:0%; transition:width 0.35s ease; }
   .progress-label{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--navy-soft); margin-top:6px; text-align:right; }
   .perforation{ position:relative; height:0; border-top:2px dashed var(--line); margin:4px 0 0; }
   .perforation::before, .perforation::after{ content:""; position:absolute; top:-11px; width:22px;height:22px; border-radius:50%; background:var(--navy); }
@@ -397,7 +397,7 @@ function render(){
         </div>
         <label class="follow-chip" data-cat="${cat.key}">
           <span class="chip-box"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
-          跟天數走（顯示「X 天」）
+          跟天數走
         </label>
       `;
       catEl.appendChild(addRow);
@@ -512,9 +512,10 @@ function essentialItemIds(){
 }
 
 function updateProgress(){
+  const docId = currentDocItem().id;
   const ids = essentialItemIds();
   const total = ids.length;
-  const done = ids.filter(id => state.checked[id]).length;
+  const done = ids.filter(id => id === docId ? (state.checked[id] || state.docPacked[id]) : state.checked[id]).length;
   document.getElementById('doneCount').textContent = done;
   document.getElementById('totalCount').textContent = total;
   const pct = total ? Math.round((done/total)*100) : 0;
