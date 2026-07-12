@@ -2,7 +2,7 @@
 
 English ｜ [中文](README.md)
 
-A pure front-end packing checklist styled like a boarding pass, designed for trips where you're bringing your hamster along. Installable to your phone's home screen and usable like a regular app.
+A pure front-end packing checklist styled like a boarding pass, as if a little hamster were helping you pack. Installable to your phone's home screen and usable like a regular app.
 
 ## Features
 
