@@ -70,7 +70,9 @@
   .days-row label{ font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--navy-soft); }
   .days-input{ display:flex; align-items:center; gap:8px; }
   .days-input button{
-    width:28px;height:28px; border-radius:8px; border:1px solid var(--line);
+    -webkit-appearance:none; appearance:none;
+    display:flex; align-items:center; justify-content:center;
+    width:28px;height:28px; padding:0; margin:0; line-height:1; border-radius:8px; border:1px solid var(--line);
     background:var(--paper); color:var(--navy); font-size:16px; font-family:'JetBrains Mono', monospace; cursor:pointer;
   }
   .days-input button:active{ background:var(--amber); color:var(--paper); }
