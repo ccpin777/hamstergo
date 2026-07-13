@@ -135,11 +135,22 @@
   .cat-select-btn .arrow{ width:12px;height:12px; flex:0 0 12px; color:var(--navy-soft); transition:transform 0.15s ease; }
   .cat-select-btn .arrow svg{ width:100%; height:100%; }
   .cat-select-btn.open .arrow{ transform:rotate(180deg); }
+  .cat-select-overlay{ position:fixed; inset:0; background:rgba(20,26,42,0.45); z-index:900; display:none; }
+  .cat-select-overlay.show{ display:block; }
   .cat-select-list{
     position:fixed; min-width:150px; max-width:220px; max-height:260px; overflow-y:auto;
     background:var(--paper); border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 24px rgba(0,0,0,0.25);
     padding:6px; z-index:1000; display:none;
   }
+  .cat-select-list.mobile-sheet{
+    left:0 !important; right:0; bottom:0 !important; top:auto !important; width:100%; max-width:100%;
+    border-radius:16px 16px 0 0; box-shadow:0 -8px 30px rgba(0,0,0,0.3);
+    padding:10px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .cat-select-list.mobile-sheet::before{
+    content:''; display:block; width:36px; height:4px; border-radius:2px; background:var(--line); margin:2px auto 10px;
+  }
+  .cat-select-list.mobile-sheet .cat-select-option{ padding:14px 14px; font-size:15px; }
   .cat-select-list.show{ display:block; }
   .cat-select-option{
     padding:8px 10px; font-size:13.5px; color:var(--navy); border-radius:6px; cursor:pointer; white-space:nowrap;
@@ -438,6 +449,7 @@ function buildDocRow(docItem){
 }
 
 function render(){
+  closeAllCatLists();
   document.querySelectorAll('.cat-select-list').forEach(el => el.remove());
   renderDocuments();
   getData().forEach(section => {
@@ -469,6 +481,22 @@ function render(){
   updateProgress();
   document.getElementById('editToggle').classList.toggle('active', state.editMode);
   document.getElementById('editToggle').textContent = state.editMode ? '完成編輯' : '編輯';
+}
+
+function getCatSelectOverlay(){
+  let overlay = document.querySelector('.cat-select-overlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.className = 'cat-select-overlay';
+    document.body.appendChild(overlay);
+  }
+  return overlay;
+}
+
+function closeAllCatLists(){
+  document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
+  document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
+  getCatSelectOverlay().classList.remove('show');
 }
 
 function buildSectionAddRow(section){
@@ -521,6 +549,8 @@ function buildSectionAddRow(section){
     document.body.appendChild(list);
 
     function positionCatList(){
+      list.classList.remove('mobile-sheet');
+      list.style.left = ''; list.style.top = ''; list.style.bottom = ''; list.style.maxHeight = ''; list.style.minWidth = '';
       const rect = catBtn.getBoundingClientRect();
       const listWidth = Math.max(rect.width, 150);
       let left = rect.left;
@@ -540,23 +570,33 @@ function buildSectionAddRow(section){
       }
     }
 
+    function openCatList(){
+      const isMobile = window.matchMedia('(max-width: 600px)').matches;
+      if(isMobile){
+        list.style.left = ''; list.style.top = ''; list.style.bottom = ''; list.style.maxHeight = ''; list.style.minWidth = '';
+        list.classList.add('mobile-sheet');
+        const overlay = getCatSelectOverlay();
+        overlay.classList.add('show');
+        overlay.onclick = closeAllCatLists;
+      } else {
+        positionCatList();
+        getCatSelectOverlay().classList.remove('show');
+      }
+      list.classList.add('show');
+      catBtn.classList.add('open');
+    }
+
     function closeCatList(){
       list.classList.remove('show');
       catBtn.classList.remove('open');
+      getCatSelectOverlay().classList.remove('show');
     }
 
     catBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const willShow = !list.classList.contains('show');
-      document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
-      document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
-      if(willShow){
-        positionCatList();
-        list.classList.add('show');
-        catBtn.classList.add('open');
-      } else {
-        closeCatList();
-      }
+      closeAllCatLists();
+      if(willShow) openCatList();
     });
 
     catWrap.appendChild(catBtn);
@@ -811,18 +851,9 @@ function endItemDrag(e){
 document.addEventListener('pointerup', endItemDrag);
 document.addEventListener('pointercancel', endItemDrag);
 
-document.addEventListener('click', () => {
-  document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
-  document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
-});
-window.addEventListener('scroll', () => {
-  document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
-  document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
-}, true);
-window.addEventListener('resize', () => {
-  document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
-  document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
-});
+document.addEventListener('click', closeAllCatLists);
+window.addEventListener('scroll', closeAllCatLists, true);
+window.addEventListener('resize', closeAllCatLists);
 
 loadState();
 
