@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#1B2A4A">
+<title>HamsterGo · 倉鼠出行日</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF7F0;
+    --paper-dim:#F1ECE0;
+    --navy:#1B2A4A;
+    --navy-soft:#4A5A78;
+    --amber:#E8A33D;
+    --red:#C15B4A;
+    --line:#D9D2BF;
+    --green:#5E8C6A;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--navy);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(232,163,61,0.10), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(232,163,61,0.08), transparent 40%);
+    font-family:'Inter', sans-serif;
+    color:var(--navy);
+    padding:28px 14px 60px;
+    display:flex;
+    justify-content:center;
+  }
+  .pass{ width:100%; max-width:460px; }
+  .header-strip{
+    display:flex; justify-content:space-between; align-items:baseline;
+    color:var(--paper); padding:0 6px 14px;
+  }
+  .header-strip .brand{
+    font-family:'Oswald', sans-serif; font-weight:600; letter-spacing:0.14em;
+    font-size:13px; color:var(--amber); text-transform:uppercase;
+  }
+  .edit-toggle{
+    font-family:'Oswald', sans-serif; font-size:11px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--paper-dim); background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.25); border-radius:14px; padding:5px 12px;
+    cursor:pointer;
+  }
+  .edit-toggle.active{ background:var(--amber); color:var(--navy); border-color:var(--amber); font-weight:600; }
+  .ticket{
+    background:var(--paper); border-radius:18px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35); overflow:hidden; position:relative;
+  }
+  .ticket-top{ padding:22px 24px 18px; }
+  .route{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .route h1{ font-family:'Oswald', sans-serif; font-weight:700; font-size:26px; margin:0; color:var(--navy); }
+  .route .dot{ width:6px;height:6px;border-radius:50%; background:var(--amber); }
+  .subtitle{ font-size:13px; color:var(--navy-soft); margin:0 0 18px; }
+  .days-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--paper-dim); border:1px solid var(--line); border-radius:10px;
+    padding:10px 14px; margin-bottom:16px;
+  }
+  .days-row label{ font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--navy-soft); }
+  .days-input{ display:flex; align-items:center; gap:8px; }
+  .days-input button{
+    width:28px;height:28px; border-radius:8px; border:1px solid var(--line);
+    background:var(--paper); color:var(--navy); font-size:16px; font-family:'JetBrains Mono', monospace; cursor:pointer;
+  }
+  .days-input button:active{ background:var(--amber); color:var(--paper); }
+  .days-input .val{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:18px; min-width:34px; text-align:center; }
+  .progress-track{ height:8px; background:var(--line); border-radius:5px; overflow:hidden; }
+  .progress-fill{ height:100%; background:var(--navy); box-shadow:0 0 10px rgba(27,42,74,0.5); width:0%; transition:width 0.35s ease; }
+  .progress-label{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--navy-soft); margin-top:6px; text-align:right; }
+  .perforation{ position:relative; height:0; border-top:2px dashed var(--line); margin:4px 0 0; }
+  .perforation::before, .perforation::after{ content:""; position:absolute; top:-11px; width:22px;height:22px; border-radius:50%; background:var(--navy); }
+  .perforation::before{ left:-25px; } .perforation::after{ right:-25px; }
+  .section{ padding:18px 24px; }
+  .section + .section{ border-top:1px solid var(--line); }
+  .section-title{ display:flex; align-items:center; gap:8px; font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--navy); margin-bottom:10px; }
+  .section-title .idx{ font-family:'JetBrains Mono', monospace; color:var(--amber); font-weight:700; }
+  .cat{ margin-bottom:14px; } .cat:last-child{ margin-bottom:0; }
+  .cat-name{ font-size:12.5px; font-weight:600; color:var(--navy-soft); margin:0 0 6px 2px; }
+  .drag-handle{ width:20px;height:20px; flex:0 0 20px; color:var(--navy-soft); cursor:grab; touch-action:none; display:flex; align-items:center; justify-content:center; }
+  .drag-handle:active{ cursor:grabbing; }
+  .item{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px dotted var(--line); -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; }
+  .item:last-child{ border-bottom:none; }
+  .item.dragging{ opacity:0.9; box-shadow:0 10px 24px rgba(0,0,0,0.18); border-radius:10px; background:var(--paper); position:relative; z-index:20; border-bottom:none; }
+  .checkbox{ width:20px;height:20px; flex:0 0 20px; border-radius:6px; border:2px solid var(--navy-soft); display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; cursor:pointer; }
+  .item.checked .checkbox{ background:var(--green); border-color:var(--green); }
+  .item.skipped .checkbox{ background:rgba(193,91,74,0.08); border-color:var(--red); color:var(--red); }
+  .checkbox svg{ width:12px;height:12px; opacity:0; transition:opacity 0.15s ease; }
+  .item.checked .checkbox svg{ opacity:1; }
+  .item.skipped .checkbox svg{ opacity:1; }
+  .item-label{ flex:1; font-size:14.5px; color:var(--navy); cursor:pointer; font-weight:400; }
+  .item.checked .item-label{ color:var(--navy-soft); }
+  .item.skipped .item-label{ color:var(--red); }
+  .item-label-input{
+    flex:1; font-size:14.5px; color:var(--navy); border:1px solid var(--amber); border-radius:6px;
+    padding:4px 6px; font-family:'Inter', sans-serif;
+  }
+  .item-qty{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--red); background:rgba(193,91,74,0.08); padding:2px 8px; border-radius:6px; white-space:nowrap; }
+  .item.checked .item-qty{ color:var(--navy-soft); background:transparent; }
+  .icon-btn{
+    width:22px;height:22px; flex:0 0 22px; border:none; background:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; color:var(--navy-soft); border-radius:6px;
+  }
+  .icon-btn:active{ background:var(--paper-dim); }
+  .icon-btn.delete{ color:var(--red); }
+  .icon-btn svg{ width:16px; height:16px; }
+  .note{ background:rgba(232,163,61,0.12); border:1px solid rgba(232,163,61,0.4); border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.5; color:var(--navy); margin-bottom:14px; }
+  .note b{ color:var(--red); }
+  .add-row{ display:none; margin-top:8px; gap:8px; flex-direction:column; }
+  .add-row.show{ display:flex; }
+  .add-row .add-inputs{ display:flex; gap:6px; }
+  .add-row input[type="text"]{
+    box-sizing:border-box; flex:1 1 60px; min-width:50px; font-family:'Inter', sans-serif; font-size:13.5px; border:1px solid var(--line);
+    border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3;
+  }
+  .add-row select{ display:none; }
+  .cat-select-wrap{ position:relative; flex:0 0 118px; }
+  .cat-select-btn{
+    box-sizing:border-box; width:100%; display:flex; align-items:center; justify-content:space-between; gap:4px;
+    font-family:'Inter', sans-serif; font-size:13.5px; border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; background:var(--paper-dim); color:var(--navy); cursor:pointer; line-height:1.3;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-touch-callout:none;
+  }
+  .cat-select-btn span:first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cat-select-btn .arrow{ width:12px;height:12px; flex:0 0 12px; color:var(--navy-soft); transition:transform 0.15s ease; }
+  .cat-select-btn .arrow svg{ width:100%; height:100%; }
+  .cat-select-btn.open .arrow{ transform:rotate(180deg); }
+  .cat-select-list{
+    position:fixed; min-width:150px; max-width:220px; max-height:260px; overflow-y:auto;
+    background:var(--paper); border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 24px rgba(0,0,0,0.25);
+    padding:6px; z-index:1000; display:none;
+  }
+  .cat-select-list.show{ display:block; }
+  .cat-select-option{
+    padding:8px 10px; font-size:13.5px; color:var(--navy); border-radius:6px; cursor:pointer; white-space:nowrap;
+    display:flex; align-items:center; gap:6px;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-touch-callout:none;
+  }
+  .cat-select-option:active{ background:var(--paper-dim); }
+  .cat-select-option .check{ width:13px;height:13px; flex:0 0 13px; opacity:0; color:var(--amber); }
+  .cat-select-option.selected .check{ opacity:1; }
+  .cat-select-option .check svg{ width:100%; height:100%; }
+
+  .add-row .add-btn{
+    box-sizing:border-box; font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.05em; text-transform:uppercase;
+    background:var(--navy); color:var(--paper); border:none; border-radius:8px; padding:0 14px; cursor:pointer;
+    flex:0 0 auto; white-space:nowrap;
+  }
+  .follow-chip{
+    display:flex; align-items:center; gap:6px; font-size:12px; color:var(--navy-soft); cursor:pointer; user-select:none;
+  }
+  .follow-chip .chip-box{
+    width:16px;height:16px; border-radius:4px; border:2px solid var(--navy-soft); display:flex; align-items:center; justify-content:center;
+  }
+  .follow-chip.on .chip-box{ background:var(--amber); border-color:var(--amber); }
+  .flight-toggle{
+    display:flex; gap:8px; margin-bottom:14px;
+  }
+  .flight-toggle button{
+    flex:1; font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.05em;
+    text-transform:uppercase; padding:9px 10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--paper-dim); color:var(--navy-soft); cursor:pointer;
+  }
+  .flight-toggle button.active{
+    background:var(--navy); color:var(--paper); border-color:var(--navy); font-weight:600;
+  }
+  .doc-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--paper-dim); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+  }
+  .doc-row-label{ font-size:14.5px; font-weight:600; color:var(--navy); }
+  .doc-stage{ display:flex; gap:8px; }
+  .stage-btn{
+    font-family:'Oswald', sans-serif; font-size:11px; letter-spacing:0.03em;
+    border:1px solid var(--line); background:var(--paper); color:var(--navy-soft);
+    border-radius:8px; padding:7px 10px; cursor:pointer; white-space:nowrap;
+  }
+  .stage-btn.done{ background:var(--green); border-color:var(--green); color:var(--paper); font-weight:600; }
+  .stage-btn.disabled{ opacity:0.4; cursor:not-allowed; }
+  .doc-done{
+    display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; color:var(--green);
+    background:rgba(94,140,106,0.1); border:1px solid rgba(94,140,106,0.35); border-radius:10px; padding:12px 14px;
+  }
+  .footer{ padding:16px 24px 24px; display:flex; justify-content:center; }
+  .reset-btn{
+    font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--navy-soft); background:none; border:1px solid var(--line); border-radius:20px; padding:8px 18px; cursor:pointer;
+  }
+  .reset-btn:active{ background:var(--paper-dim); }
+  .barcode{ height:34px; margin:2px 24px 0; background:repeating-linear-gradient(90deg, var(--navy) 0px, var(--navy) 2px, transparent 2px, transparent 5px); opacity:0.85; }
+</style>
+</head>
+<body>
+<div class="pass">
+  <div class="header-strip">
+    <div class="brand">🐹 HamsterGo · 倉鼠出行日</div>
+    <button class="edit-toggle" id="editToggle">編輯</button>
+  </div>
+
+  <div class="ticket">
+    <div class="ticket-top">
+      <div class="route"><span class="dot"></span><h1 id="pctHeadline">0% 完成</h1></div>
+      <p class="subtitle">出發前，把每一項確認裝進行李。</p>
+
+      <div class="days-row">
+        <label>行程天數</label>
+        <div class="days-input">
+          <button id="dayMinus">−</button>
+          <span class="val" id="dayVal">3</span>
+          <button id="dayPlus">+</button>
+        </div>
+      </div>
+
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已確認</div>
+    </div>
+
+    <div class="perforation"></div>
+    <div class="section" id="documentsSection">
+      <div class="section-title"><span class="idx">01</span> 證件</div>
+      <div id="docActive">
+        <div class="flight-toggle" id="flightToggle">
+          <button data-type="domestic">國內線</button>
+          <button data-type="international">國際線</button>
+        </div>
+        <div class="note"><b>出發前</b>放 Personal Item；<b>安檢後</b>移到 Carry-on。</div>
+        <div id="docItemRow"></div>
+      </div>
+      <div class="doc-done" id="docDone" style="display:none;"></div>
+    </div>
+
+    <div class="perforation"></div>
+    <div class="section" id="personalSection">
+      <div class="section-title"><span class="idx">02</span> Personal Item 隨身包</div>
+    </div>
+
+    <div class="perforation"></div>
+    <div class="section" id="carryOnSection">
+      <div class="section-title"><span class="idx">03</span> Carry-on 手提行李</div>
+    </div>
+
+    <div class="footer">
+      <button class="reset-btn" id="resetBtn">開始新的旅程</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+const X_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>';
+const TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+const DRAG_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="9" cy="12" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>';
+
+function getData(){
+  const importantItems = [ { id:'keys', label:'鑰匙' } ];
+  if(state.flightType === 'international'){
+    importantItems.push({ id:'license', label:'駕照錢包' });
+  }
+
+  return [
+    { key:'personal', target:'personalSection', cats: [
+      { key:'personalItems', name:'', items: [
+        { id:'pet', label:'小動物' },
+        { id:'phone', label:'手機' },
+        { id:'ipad', label:'iPad mini' },
+        { id:'headphones', label:'耳機' },
+        { id:'kindle', label:'Kindle' },
+        { id:'cable', label:'充電線' },
+      ]},
+    ]},
+    { key:'carry', target:'carryOnSection', cats: [
+      { key:'clothes', name:'衣物', items: [
+        { id:'tops', label:'上衣', qty:'days' },
+        { id:'socks', label:'襪子', qty:'days' },
+        { id:'underwear', label:'內褲', qty:'days' },
+        { id:'pants', label:'褲子' },
+        { id:'jacket', label:'外套' },
+        { id:'shoes', label:'鞋子 or 拖鞋' },
+      ]},
+      { key:'toiletries', name:'洗漱品和藥品', items: [
+        { id:'razor', label:'刮鬍刀' },
+        { id:'toothbrush', label:'牙刷' },
+        { id:'toothpaste', label:'牙膏' },
+        { id:'contacts', label:'隱形眼鏡（日拋）', qty:'lens' },
+        { id:'eyedrops', label:'眼藥水' },
+        { id:'cleanser', label:'洗面用品' },
+        { id:'skincare', label:'臉部保養品' },
+        { id:'meds', label:'藥品' },
+      ]},
+      { key:'electronics', name:'電子用品', items: [
+        { id:'laptop', label:'筆電' },
+        { id:'charger', label:'充電器' },
+        { id:'watchcable', label:'手錶充電線' },
+      ]},
+      { key:'misc', name:'旅行雜物', items: [
+        { id:'bottle', label:'水瓶' },
+        { id:'sunglasses', label:'太陽眼鏡' },
+      ]},
+      { key:'important', name:'重要物品', items: importantItems },
+    ]},
+  ];
+}
+
+function currentDocItem(){
+  return state.flightType === 'international'
+    ? { id:'passport', label:'護照' }
+    : { id:'license', label:'駕照錢包' };
+}
+
+const STORAGE_KEY = 'packing-checklist-v2';
+let state = { days: 3, checked: {}, customItems: {}, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {} };
+let editingId = null; // custom item currently being renamed
+let dragState = null; // category currently being drag-reordered
+
+function daysQtyText(days){ return days + ' 天'; }
+function lensQtyText(days){ return days + ' 天 + 備用 1–2 副'; }
+
+function qtyTextFor(item, days){
+  if(item.qty === 'days') return daysQtyText(days);
+  if(item.qty === 'lens') return lensQtyText(days);
+  if(item.qty === 'fixed') return item.qtyText;
+  if(item.followsDays) return daysQtyText(days);
+  return null;
+}
+
+function getCustomItems(catKey){
+  return state.customItems[catKey] || [];
+}
+
+function orderedItemsFor(cat){
+  cat.items.forEach(i => { i.isCustom = false; });
+  const customItems = getCustomItems(cat.key);
+  customItems.forEach(i => { i.isCustom = true; });
+  const all = cat.items.concat(customItems);
+  const saved = state.itemOrder[cat.key];
+  if(!saved) return all;
+  const byId = {};
+  all.forEach(i => { byId[i.id] = i; });
+  const ordered = saved.filter(id => byId[id]).map(id => byId[id]);
+  all.forEach(i => { if(!saved.includes(i.id)) ordered.push(i); });
+  return ordered;
+}
+
+function getItemState(id){
+  return Object.prototype.hasOwnProperty.call(state.checked, id) ? state.checked[id] : null;
+}
+
+function isItemChecked(id){
+  return getItemState(id) === true;
+}
+
+function cycleItemState(id){
+  const current = getItemState(id);
+  if(current === null){
+    state.checked[id] = true;
+  }else if(current === true){
+    state.checked[id] = false;
+  }else{
+    delete state.checked[id];
+  }
+}
+
+function renderDocuments(){
+  const docItem = currentDocItem();
+  const done = isItemChecked(docItem.id);
+  const packed = !!state.docPacked[docItem.id];
+
+  document.getElementById('docActive').style.display = done ? 'none' : '';
+  const doneEl = document.getElementById('docDone');
+  doneEl.style.display = done ? 'flex' : 'none';
+  if(done){
+    const typeLabel = state.flightType === 'international' ? '國際線' : '國內線';
+    doneEl.innerHTML = `✓ ${docItem.label}已收妥（${typeLabel}）`;
+  }
+
+  document.getElementById('flightToggle').style.display = packed ? 'none' : '';
+  document.querySelectorAll('#flightToggle button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === state.flightType);
+  });
+
+  const rowContainer = document.getElementById('docItemRow');
+  rowContainer.innerHTML = '';
+  if(!done){
+    rowContainer.appendChild(buildDocRow(docItem));
+  }
+}
+
+function buildDocRow(docItem){
+  const packed = !!state.docPacked[docItem.id];
+  const row = document.createElement('div');
+  row.className = 'doc-row';
+
+  const label = document.createElement('div');
+  label.className = 'doc-row-label';
+  label.textContent = docItem.label;
+  row.appendChild(label);
+
+  const stageWrap = document.createElement('div');
+  stageWrap.className = 'doc-stage';
+
+  const stage1 = document.createElement('button');
+  stage1.className = 'stage-btn' + (packed ? ' done' : '');
+  stage1.textContent = '① 帶了';
+  stage1.addEventListener('click', () => {
+    state.docPacked[docItem.id] = !state.docPacked[docItem.id];
+    saveState();
+    renderDocuments();
+    updateProgress();
+  });
+  stageWrap.appendChild(stage1);
+
+  const stage2 = document.createElement('button');
+  stage2.className = 'stage-btn' + (packed ? '' : ' disabled');
+  stage2.textContent = '② 已收好';
+  if(packed){
+    stage2.addEventListener('click', () => {
+      state.checked[docItem.id] = true;
+      saveState();
+      renderDocuments();
+      updateProgress();
+    });
+  }
+  stageWrap.appendChild(stage2);
+
+  row.appendChild(stageWrap);
+  return row;
+}
+
+function render(){
+  document.querySelectorAll('.cat-select-list').forEach(el => el.remove());
+  renderDocuments();
+  getData().forEach(section => {
+    const container = document.getElementById(section.target);
+    container.querySelectorAll('.cat').forEach(el => el.remove());
+    container.querySelectorAll('.section-add-row').forEach(el => el.remove());
+    section.cats.forEach(cat => {
+      const catEl = document.createElement('div');
+      catEl.className = 'cat';
+      catEl.dataset.catKey = cat.key;
+      if(cat.name){
+        const nameEl = document.createElement('p');
+        nameEl.className = 'cat-name';
+        nameEl.textContent = cat.name;
+        catEl.appendChild(nameEl);
+      }
+
+      orderedItemsFor(cat).forEach(item => {
+        catEl.appendChild(buildItemRow(item, item.isCustom, cat.key));
+      });
+
+      container.appendChild(catEl);
+    });
+
+    if(state.editMode){
+      container.appendChild(buildSectionAddRow(section));
+    }
+  });
+  updateProgress();
+  document.getElementById('editToggle').classList.toggle('active', state.editMode);
+  document.getElementById('editToggle').textContent = state.editMode ? '完成編輯' : '編輯';
+}
+
+function buildSectionAddRow(section){
+  const wrap = document.createElement('div');
+  wrap.className = 'add-row section-add-row show';
+
+  const inputsRow = document.createElement('div');
+  inputsRow.className = 'add-inputs';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = '新增項目名稱';
+  input.className = 'new-item-input';
+  inputsRow.appendChild(input);
+
+  let selectedCatKey = section.cats[0] ? section.cats[0].key : null;
+
+  if(section.cats.length > 1){
+    const catWrap = document.createElement('div');
+    catWrap.className = 'cat-select-wrap';
+
+    const catBtn = document.createElement('button');
+    catBtn.type = 'button';
+    catBtn.className = 'cat-select-btn';
+    const btnLabel = document.createElement('span');
+    btnLabel.textContent = section.cats[0].name || section.cats[0].key;
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    catBtn.appendChild(btnLabel);
+    catBtn.appendChild(arrow);
+    catBtn.addEventListener('mousedown', e => e.preventDefault());
+
+    const list = document.createElement('div');
+    list.className = 'cat-select-list';
+    section.cats.forEach(cat => {
+      const opt = document.createElement('div');
+      opt.className = 'cat-select-option' + (cat.key === selectedCatKey ? ' selected' : '');
+      opt.innerHTML = `<span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span><span>${cat.name || cat.key}</span>`;
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectedCatKey = cat.key;
+        btnLabel.textContent = cat.name || cat.key;
+        list.querySelectorAll('.cat-select-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        closeCatList();
+      });
+      list.appendChild(opt);
+    });
+    document.body.appendChild(list);
+
+    function positionCatList(){
+      const rect = catBtn.getBoundingClientRect();
+      const listWidth = Math.max(rect.width, 150);
+      let left = rect.left;
+      if(left + listWidth > window.innerWidth - 8) left = window.innerWidth - listWidth - 8;
+      list.style.left = left + 'px';
+      list.style.minWidth = rect.width + 'px';
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      if(spaceBelow < 160 && spaceAbove > spaceBelow){
+        list.style.top = 'auto';
+        list.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+        list.style.maxHeight = Math.min(260, spaceAbove - 12) + 'px';
+      } else {
+        list.style.bottom = 'auto';
+        list.style.top = (rect.bottom + 4) + 'px';
+        list.style.maxHeight = Math.min(260, spaceBelow - 12) + 'px';
+      }
+    }
+
+    function closeCatList(){
+      list.classList.remove('show');
+      catBtn.classList.remove('open');
+    }
+
+    catBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const willShow = !list.classList.contains('show');
+      document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
+      document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
+      if(willShow){
+        positionCatList();
+        list.classList.add('show');
+        catBtn.classList.add('open');
+      } else {
+        closeCatList();
+      }
+    });
+
+    catWrap.appendChild(catBtn);
+    inputsRow.appendChild(catWrap);
+  }
+
+  const btn = document.createElement('button');
+  btn.className = 'add-btn';
+  btn.textContent = '新增';
+  inputsRow.appendChild(btn);
+  wrap.appendChild(inputsRow);
+
+  const chip = document.createElement('label');
+  chip.className = 'follow-chip';
+  chip.innerHTML = `<span class="chip-box"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"><polyline points="20 6 9 17 4 12"></polyline></svg></span>跟天數走`;
+  wrap.appendChild(chip);
+
+  const targetCatKey = () => selectedCatKey || section.cats[0].key;
+
+  const doAdd = () => {
+    const label = input.value.trim();
+    if(!label) return;
+    const catKey = targetCatKey();
+    const followsDays = chip.classList.contains('on');
+    const id = 'custom_' + catKey + '_' + Date.now();
+    if(!state.customItems[catKey]) state.customItems[catKey] = [];
+    state.customItems[catKey].push({ id, label, followsDays });
+    saveState();
+    render();
+  };
+
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') doAdd(); });
+  btn.addEventListener('click', doAdd);
+  chip.addEventListener('click', () => chip.classList.toggle('on'));
+
+  return wrap;
+}
+
+function buildItemRow(item, isCustom, catKey){
+  const row = document.createElement('div');
+  const itemState = getItemState(item.id);
+  row.className = 'item' + (itemState === true ? ' checked' : '') + (itemState === false ? ' skipped' : '');
+  row.dataset.id = item.id;
+
+  const box = document.createElement('div');
+  box.className = 'checkbox';
+  box.innerHTML = itemState === false ? X_SVG : CHECK_SVG;
+  box.style.cursor = state.editMode ? 'default' : 'pointer';
+  box.addEventListener('mousedown', e => e.preventDefault());
+  box.addEventListener('click', () => { if(!state.editMode) toggleItem(item.id); });
+  row.appendChild(box);
+
+  if(isCustom && state.editMode && editingId === item.id){
+    const input = document.createElement('input');
+    input.className = 'item-label-input';
+    input.value = item.label;
+    input.addEventListener('keydown', e => { if(e.key === 'Enter') input.blur(); });
+    input.addEventListener('blur', () => {
+      const val = input.value.trim();
+      if(val) item.label = val;
+      editingId = null;
+      saveState();
+      render();
+    });
+    row.appendChild(input);
+    setTimeout(() => { input.focus(); input.select(); }, 0);
+  } else {
+    const label = document.createElement('div');
+    label.className = 'item-label';
+    label.textContent = item.label;
+    label.style.cursor = state.editMode ? 'default' : 'pointer';
+    label.addEventListener('mousedown', e => e.preventDefault());
+    label.addEventListener('click', () => { if(!state.editMode) toggleItem(item.id); });
+    row.appendChild(label);
+  }
+
+  const qtyText = qtyTextFor(item, state.days);
+  if(qtyText && editingId !== item.id){
+    const qtyEl = document.createElement('div');
+    qtyEl.className = 'item-qty';
+    qtyEl.textContent = qtyText;
+    row.appendChild(qtyEl);
+  }
+
+  if(isCustom && state.editMode){
+    const editBtn = document.createElement('button');
+    editBtn.className = 'icon-btn';
+    editBtn.innerHTML = PENCIL_SVG;
+    editBtn.addEventListener('click', () => { editingId = item.id; render(); });
+    row.appendChild(editBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'icon-btn delete';
+    delBtn.innerHTML = TRASH_SVG;
+    delBtn.addEventListener('click', () => deleteCustomItem(catKey, item.id));
+    row.appendChild(delBtn);
+  }
+
+  if(state.editMode){
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.innerHTML = DRAG_SVG;
+    row.appendChild(handle);
+  }
+
+  return row;
+}
+
+function deleteCustomItem(catKey, id){
+  state.customItems[catKey] = (state.customItems[catKey] || []).filter(i => i.id !== id);
+  delete state.checked[id];
+  saveState();
+  render();
+}
+
+function allItemIds(){
+  const ids = [ currentDocItem().id ];
+  getData().forEach(s => s.cats.forEach(c => {
+    c.items.forEach(i => { ids.push(i.id); });
+  }));
+  Object.values(state.customItems).forEach(items => {
+    items.forEach(i => { ids.push(i.id); });
+  });
+  return ids;
+}
+
+function updateProgress(){
+  const docId = currentDocItem().id;
+  const ids = allItemIds();
+  const total = ids.length;
+  const done = ids.filter(id => id === docId ? (isItemChecked(id) || state.docPacked[id]) : getItemState(id) !== null).length;
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('totalCount').textContent = total;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('pctHeadline').textContent = pct + '% 完成';
+  document.getElementById('dayVal').textContent = state.days;
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){ console.error('save failed', e); }
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{} }, parsed);
+    }
+  }catch(e){ /* first run, no saved state */ }
+  render();
+}
+
+function toggleItem(id){
+  cycleItemState(id);
+  render();
+  saveState();
+}
+
+document.getElementById('dayMinus').addEventListener('click', () => {
+  state.days = Math.max(1, state.days - 1);
+  render(); saveState();
+});
+document.getElementById('dayPlus').addEventListener('click', () => {
+  state.days = Math.min(30, state.days + 1);
+  render(); saveState();
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+  state.checked = {};
+  state.docPacked = {};
+  state.flightType = 'domestic';
+  render(); saveState();
+});
+document.getElementById('editToggle').addEventListener('click', () => {
+  state.editMode = !state.editMode;
+  editingId = null;
+  render(); saveState();
+});
+document.querySelectorAll('#flightToggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.flightType = btn.dataset.type;
+    render(); saveState();
+  });
+});
+
+function swapItemNodes(dragEl, sib, direction){
+  const rect = sib.getBoundingClientRect();
+  const style = getComputedStyle(sib);
+  const height = rect.height + parseFloat(style.marginTop || 0) + parseFloat(style.marginBottom || 0);
+  if(direction === 'down'){
+    sib.parentNode.insertBefore(sib, dragEl);
+    dragState.startY += height;
+  } else {
+    sib.parentNode.insertBefore(dragEl, sib);
+    dragState.startY -= height;
+  }
+}
+
+document.addEventListener('pointerdown', e => {
+  const handle = e.target.closest('.drag-handle');
+  if(!handle) return;
+  const itemEl = handle.closest('.item');
+  if(!itemEl) return;
+  const container = itemEl.closest('.cat');
+  if(!container) return;
+  e.preventDefault();
+  dragState = { itemEl, container, pointerId: e.pointerId, startY: e.clientY };
+  itemEl.classList.add('dragging');
+  try{ itemEl.setPointerCapture(e.pointerId); }catch(err){ /* not supported */ }
+});
+
+document.addEventListener('pointermove', e => {
+  if(!dragState || e.pointerId !== dragState.pointerId) return;
+  const dy = e.clientY - dragState.startY;
+  dragState.itemEl.style.transform = `translateY(${dy}px)`;
+
+  const siblings = Array.from(dragState.container.querySelectorAll('.item')).filter(el => el !== dragState.itemEl);
+  const dragRect = dragState.itemEl.getBoundingClientRect();
+  const dragCenter = dragRect.top + dragRect.height / 2;
+
+  for(const sib of siblings){
+    const rect = sib.getBoundingClientRect();
+    const sibCenter = rect.top + rect.height / 2;
+    const dragIsBefore = !!(dragState.itemEl.compareDocumentPosition(sib) & Node.DOCUMENT_POSITION_FOLLOWING);
+    if(dragIsBefore && dragCenter > sibCenter){
+      swapItemNodes(dragState.itemEl, sib, 'down');
+      dragState.itemEl.style.transform = `translateY(${e.clientY - dragState.startY}px)`;
+      break;
+    } else if(!dragIsBefore && dragCenter < sibCenter){
+      swapItemNodes(dragState.itemEl, sib, 'up');
+      dragState.itemEl.style.transform = `translateY(${e.clientY - dragState.startY}px)`;
+      break;
+    }
+  }
+});
+
+function endItemDrag(e){
+  if(!dragState || e.pointerId !== dragState.pointerId) return;
+  const { itemEl, container } = dragState;
+  itemEl.classList.remove('dragging');
+  itemEl.style.transform = '';
+  try{ itemEl.releasePointerCapture(e.pointerId); }catch(err){ /* already released */ }
+  const order = Array.from(container.querySelectorAll('.item')).map(el => el.dataset.id);
+  state.itemOrder[container.dataset.catKey] = order;
+  dragState = null;
+  saveState();
+}
+
+document.addEventListener('pointerup', endItemDrag);
+document.addEventListener('pointercancel', endItemDrag);
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
+  document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
+});
+window.addEventListener('scroll', () => {
+  document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
+  document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
+}, true);
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
+  document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
+});
+
+loadState();
+
+try{
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('service-worker.js');
+  }
+}catch(e){ /* service worker not supported */ }
+</script>
+</body>
+</html>
