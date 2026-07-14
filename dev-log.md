@@ -2,6 +2,15 @@
 
 開發過程中的重要決定與變更紀錄，新的在最上面。
 
+## 2026-07-14 — 修正新增項目類別選單在手機上貼太緊底部
+
+**問題**：編輯模式下新增項目時，Carry-on 分類會跳出類別選單，在手機上會變成從底部滑出的 bottom sheet（`.cat-select-list.mobile-sheet`）。因為 Carry-on 有 5 個分類，選單較長，最後一個選項「重要物品」會頂到螢幕最下面，跟 Home 指示條/手勢列太貼近。
+
+**原因**：sheet 的下方 padding 只有 `10px + env(safe-area-inset-bottom, 0px)`。`safe-area-inset-bottom` 只有在「加到主畫面、以 standalone PWA 執行」且裝置有底部安全區（例如有 Home 指示條的 iPhone）時才會是非 0 值；用一般手機瀏覽器分頁打開時這個值是 0，所以實際下方留白只有 10px，太窄。
+
+**修改**：把底部 padding 的基礎值從 `10px` 提高到 `24px`（`env(safe-area-inset-bottom, 0px)` 仍疊加在上面），讓最後一個選項在任何情況下都有足夠留白，不再只依賴安全區變數。
+- `index.html` → `.cat-select-list.mobile-sheet` 的 `padding` 屬性。
+
 ## 2026-07-14 — Carry-on / Checked Baggage 開關與衣物自動歸類
 
 **背景**：原本 Carry-on（手提行李）一律顯示、沒有開關；只有 Checked Baggage（托運行李）有一個手動開關，預設關閉，且衣物永遠放在 Carry-on 底下，不會因為有沒有托運而變動。
