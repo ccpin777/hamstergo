@@ -9,6 +9,7 @@ A pure front-end packing checklist styled like a boarding pass, as if a little h
 - **Auto quantity by trip length**: socks, tops, underwear, and daily contact lenses (plus spares) automatically show how many you need based on the number of days you set
 - **Check / cross progress tracking**: tap an item once to check it (bringing it), tap again to cross it out (skipping it this time), tap a third time to clear it; both checked and crossed items count toward progress — there's no more "essential vs. optional" distinction
 - **Document flow**: defaults to domestic flight (driver's license wallet), can switch to international (passport); after tapping "① Packed", the domestic/international toggle auto-hides, and it's only marked done after "② Stowed"
+- **Carry-on / Checked baggage toggles**: Carry-on and Checked Baggage each have their own on/off toggle. Domestic defaults to "carry-on on, checked off"; international defaults to "both on" — switching between domestic/international applies the matching defaults automatically, and you can still adjust either toggle by hand afterward. Whenever the checked-baggage toggle is on, the clothing category (tops, socks, underwear, pants, jacket, shoes/sandals) automatically moves into Checked Baggage; turning it off moves clothing back into Carry-on
 - **Edit mode**: add your own items under any category, optionally marking them to "scale with trip length"; added items can be renamed or deleted. Built-in items stay fixed and can't be edited or removed. Added items are saved permanently — even tapping "Start a new trip" (which resets checkmarks) won't remove them
 - **Drag to reorder items**: in edit mode, a drag handle appears next to every item under Personal Item and Carry-on; press and drag up/down to reorder items within their own category (mouse and touch both supported), and the order is remembered. Categories themselves stay in a fixed order and can't be dragged
 - **Document reminders**: two reminder points — before departure and after security
@@ -24,7 +25,8 @@ A pure front-end packing checklist styled like a boarding pass, as if a little h
 ├── service-worker.js    # offline caching logic
 ├── icon-192.png         # app icon (192×192)
 ├── icon-512.png         # app icon (512×512)
-└── deploy.command       # double-click script to commit + push to GitHub
+├── deploy.command       # double-click script to commit + push to GitHub
+└── dev-log.md           # development log
 ```
 
 ## Local testing

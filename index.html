@@ -211,6 +211,18 @@
   }
   .reset-btn:active{ background:var(--paper-dim); }
   .barcode{ height:34px; margin:2px 24px 0; background:repeating-linear-gradient(90deg, var(--navy) 0px, var(--navy) 2px, transparent 2px, transparent 5px); opacity:0.85; }
+  .checked-toggle{
+    display:flex; align-items:center; gap:6px; font-size:11px; color:var(--navy-soft); cursor:pointer;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
+    font-family:'Oswald', sans-serif; letter-spacing:0.05em; text-transform:uppercase;
+  }
+  .checked-toggle .toggle-box{
+    width:16px;height:16px; border-radius:4px; border:2px solid var(--navy-soft);
+    display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; flex:0 0 16px;
+  }
+  .checked-toggle.on .toggle-box{ background:var(--amber); border-color:var(--amber); }
+  .checked-toggle .toggle-box svg{ width:10px;height:10px; opacity:0; transition:opacity 0.15s ease; }
+  .checked-toggle.on .toggle-box svg{ opacity:1; }
 </style>
 </head>
 <body>
@@ -259,7 +271,26 @@
 
     <div class="perforation"></div>
     <div class="section" id="carryOnSection">
-      <div class="section-title"><span class="idx">03</span> Carry-on 手提行李</div>
+      <div class="section-title" style="justify-content:space-between;">
+        <span><span class="idx">03</span> Carry-on 手提行李</span>
+        <label class="checked-toggle" id="carryOnToggle">
+          <span class="toggle-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>這趟有手提行李
+        </label>
+      </div>
+    </div>
+
+    <div class="perforation"></div>
+    <div class="section" id="checkedSection">
+      <div class="section-title" style="justify-content:space-between;">
+        <span><span class="idx">04</span> Checked Baggage 托運行李</span>
+        <label class="checked-toggle" id="checkedToggle">
+          <span class="toggle-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>這趟有托運
+        </label>
+      </div>
     </div>
 
     <div class="footer">
@@ -281,6 +312,49 @@ function getData(){
     importantItems.push({ id:'license', label:'駕照錢包' });
   }
 
+  const clothesCat = { key:'clothes', name:'衣物', items: [
+    { id:'tops', label:'上衣', qty:'days' },
+    { id:'socks', label:'襪子', qty:'days' },
+    { id:'underwear', label:'內褲', qty:'days' },
+    { id:'pants', label:'褲子' },
+    { id:'jacket', label:'外套' },
+    { id:'shoes', label:'鞋子 or 拖鞋' },
+  ]};
+
+  const carryCats = [
+    { key:'toiletries', name:'洗漱品和藥品', items: [
+      { id:'razor', label:'刮鬍刀' },
+      { id:'toothbrush', label:'牙刷' },
+      { id:'toothpaste', label:'牙膏' },
+      { id:'contacts', label:'隱形眼鏡（日拋）', qty:'lens' },
+      { id:'eyedrops', label:'眼藥水' },
+      { id:'cleanser', label:'洗面用品' },
+      { id:'skincare', label:'臉部保養品' },
+      { id:'meds', label:'藥品' },
+    ]},
+    { key:'electronics', name:'電子用品', items: [
+      { id:'laptop', label:'筆電' },
+      { id:'charger', label:'充電器' },
+      { id:'watchcable', label:'手錶充電線' },
+    ]},
+    { key:'misc', name:'旅行雜物', items: [
+      { id:'bottle', label:'水瓶' },
+      { id:'sunglasses', label:'太陽眼鏡' },
+    ]},
+    { key:'important', name:'重要物品', items: importantItems },
+  ];
+
+  const checkedCats = [
+    { key:'checkedItems', name:'', items: [] },
+  ];
+
+  // 托運開啟時（國際線預設開啟，或國內線手動開啟），衣物類移到托運行李。
+  if(state.checkedEnabled){
+    checkedCats.unshift(clothesCat);
+  } else {
+    carryCats.unshift(clothesCat);
+  }
+
   return [
     { key:'personal', target:'personalSection', cats: [
       { key:'personalItems', name:'', items: [
@@ -292,36 +366,8 @@ function getData(){
         { id:'cable', label:'充電線' },
       ]},
     ]},
-    { key:'carry', target:'carryOnSection', cats: [
-      { key:'clothes', name:'衣物', items: [
-        { id:'tops', label:'上衣', qty:'days' },
-        { id:'socks', label:'襪子', qty:'days' },
-        { id:'underwear', label:'內褲', qty:'days' },
-        { id:'pants', label:'褲子' },
-        { id:'jacket', label:'外套' },
-        { id:'shoes', label:'鞋子 or 拖鞋' },
-      ]},
-      { key:'toiletries', name:'洗漱品和藥品', items: [
-        { id:'razor', label:'刮鬍刀' },
-        { id:'toothbrush', label:'牙刷' },
-        { id:'toothpaste', label:'牙膏' },
-        { id:'contacts', label:'隱形眼鏡（日拋）', qty:'lens' },
-        { id:'eyedrops', label:'眼藥水' },
-        { id:'cleanser', label:'洗面用品' },
-        { id:'skincare', label:'臉部保養品' },
-        { id:'meds', label:'藥品' },
-      ]},
-      { key:'electronics', name:'電子用品', items: [
-        { id:'laptop', label:'筆電' },
-        { id:'charger', label:'充電器' },
-        { id:'watchcable', label:'手錶充電線' },
-      ]},
-      { key:'misc', name:'旅行雜物', items: [
-        { id:'bottle', label:'水瓶' },
-        { id:'sunglasses', label:'太陽眼鏡' },
-      ]},
-      { key:'important', name:'重要物品', items: importantItems },
-    ]},
+    { key:'carry', target:'carryOnSection', cats: carryCats },
+    { key:'checked', target:'checkedSection', cats: checkedCats },
   ];
 }
 
@@ -332,7 +378,7 @@ function currentDocItem(){
 }
 
 const STORAGE_KEY = 'packing-checklist-v2';
-let state = { days: 3, checked: {}, customItems: {}, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {} };
+let state = { days: 3, checked: {}, customItems: {}, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true };
 let editingId = null; // custom item currently being renamed
 let dragState = null; // category currently being drag-reordered
 
@@ -458,6 +504,12 @@ function render(){
     const container = document.getElementById(section.target);
     container.querySelectorAll('.cat').forEach(el => el.remove());
     container.querySelectorAll('.section-add-row').forEach(el => el.remove());
+    if(section.key === 'checked' && !state.checkedEnabled){
+      return;
+    }
+    if(section.key === 'carry' && !state.carryOnEnabled){
+      return;
+    }
     section.cats.forEach(cat => {
       const catEl = document.createElement('div');
       catEl.className = 'cat';
@@ -480,6 +532,8 @@ function render(){
       container.appendChild(buildSectionAddRow(section));
     }
   });
+  document.getElementById('checkedToggle').classList.toggle('on', !!state.checkedEnabled);
+  document.getElementById('carryOnToggle').classList.toggle('on', !!state.carryOnEnabled);
   updateProgress();
   document.getElementById('editToggle').classList.toggle('active', state.editMode);
   document.getElementById('editToggle').textContent = state.editMode ? '完成編輯' : '編輯';
@@ -716,10 +770,18 @@ function deleteCustomItem(catKey, id){
 
 function allItemIds(){
   const ids = [ currentDocItem().id ];
-  getData().forEach(s => s.cats.forEach(c => {
-    c.items.forEach(i => { ids.push(i.id); });
-  }));
-  Object.values(state.customItems).forEach(items => {
+  const data = getData();
+  const visibleCatKeys = new Set();
+  data.forEach(s => {
+    if(s.key === 'checked' && !state.checkedEnabled) return;
+    if(s.key === 'carry' && !state.carryOnEnabled) return;
+    s.cats.forEach(c => {
+      visibleCatKeys.add(c.key);
+      c.items.forEach(i => { ids.push(i.id); });
+    });
+  });
+  Object.entries(state.customItems).forEach(([catKey, items]) => {
+    if(!visibleCatKeys.has(catKey)) return;
     items.forEach(i => { ids.push(i.id); });
   });
   return ids;
@@ -749,7 +811,7 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{} }, parsed);
+      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true }, parsed);
     }
   }catch(e){ /* first run, no saved state */ }
   render();
@@ -783,8 +845,19 @@ document.getElementById('editToggle').addEventListener('click', () => {
 document.querySelectorAll('#flightToggle button').forEach(btn => {
   btn.addEventListener('click', () => {
     state.flightType = btn.dataset.type;
+    const isIntl = state.flightType === 'international';
+    state.carryOnEnabled = true;
+    state.checkedEnabled = isIntl;
     render(); saveState();
   });
+});
+document.getElementById('checkedToggle').addEventListener('click', () => {
+  state.checkedEnabled = !state.checkedEnabled;
+  render(); saveState();
+});
+document.getElementById('carryOnToggle').addEventListener('click', () => {
+  state.carryOnEnabled = !state.carryOnEnabled;
+  render(); saveState();
 });
 
 function swapItemNodes(dragEl, sib, direction){
