@@ -381,9 +381,6 @@
   <div class="header-strip">
     <div class="brand">HamsterGo · 倉鼠打包小幫手</div>
     <div class="header-actions">
-      <button class="toolbar-btn" id="quickResetBtn" aria-label="開始新的旅程" title="開始新的旅程">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="1.5"></rect><path d="M7 7V4h10v3"></path><path d="M4 12h16"></path></svg>
-      </button>
       <button class="toolbar-btn" id="addItemBtn" aria-label="新增項目" title="新增項目">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
       </button>
@@ -1235,9 +1232,6 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   state.prepWasComplete = false;
   state.tripStatus = 'packing';
   render(); saveState();
-});
-document.getElementById('quickResetBtn').addEventListener('click', () => {
-  document.getElementById('resetBtn').click();
 });
 document.getElementById('editToggle').addEventListener('click', () => {
   closeAddModal();
