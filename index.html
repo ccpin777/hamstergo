@@ -77,6 +77,25 @@
   }
   .settings-btn:active, .settings-btn.open{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
   .settings-btn svg{ width:15px; height:15px; }
+
+  @media (max-width:420px){
+    .header-strip{
+      display:block;
+      padding-bottom:14px;
+    }
+    .header-strip .brand{
+      display:block;
+      width:100%;
+      margin-bottom:10px;
+      white-space:normal;
+      overflow:visible;
+      text-overflow:clip;
+      line-height:1.35;
+    }
+    .header-actions{
+      justify-content:flex-end;
+    }
+  }
   .settings-panel{
     display:none; margin:0 0 12px; padding:14px 16px; color:var(--paper);
     background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:12px;
