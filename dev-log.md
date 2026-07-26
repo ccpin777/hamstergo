@@ -1,3 +1,25 @@
+## 2026-07-26 — Status prompts, simplified quantities, and reminder-only prep section
+
+**What changed**:
+
+1. The top headline now acts as a simple trip-status prompt instead of a raw percentage label:
+   - `🐹 今天要出發了！還有 n 項沒帶。` while packing
+   - `🐹 行李整理完成！ ✈️` once the main checklist is done
+   - Section 05 is excluded from the main completion math, and crossed-out items (`X`) are not counted as missing
+2. Removed the `Boarding Complete` final state/button. The UI now ends at `行李整理完成！ ✈️` and uses `再次檢查` to clear checked items while preserving crossed-out items.
+3. Quantity handling was simplified:
+   - clothing quantities now render as plain numbers
+   - daily contact lenses show numbers again
+   - new custom items can choose `不顯示 / 固定數量 / 跟天數走`
+   - the quantity editor is now focused on clothing, while custom-item quantities are set at creation time
+4. Section 05 was renamed into a reminder-only `TRIP PREP 出發前準備` block with Chinese-only items like clearing the fridge, taking out trash, charging electronics, turning off lights/appliances, and checking documents/flight details.
+5. The yellow dot before the hamster in the top status line was removed, and the headline was tightened to avoid clipping on longer two-digit status messages.
+
+**Files touched**:
+- `index.html`
+- `README.md`
+- `README.en.md`
+
 # Dev Log
 
 開發過程中的重要決定與變更紀錄，新的在最上面。

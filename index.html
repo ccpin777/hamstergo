@@ -57,10 +57,10 @@
     background:var(--paper); border-radius:18px;
     box-shadow:0 20px 50px rgba(0,0,0,0.35); overflow:hidden; position:relative;
   }
-  .ticket-top{ padding:22px 24px 18px; }
-  .route{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
-  .route h1{ font-family:'Oswald', sans-serif; font-weight:700; font-size:26px; margin:0; color:var(--navy); }
-  .route .dot{ width:6px;height:6px;border-radius:50%; background:var(--amber); }
+  .ticket-top{ padding:22px 24px 20px; }
+  .route{ display:flex; align-items:center; gap:0; margin-bottom:6px; }
+  .route h1{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(16px, 4vw, 22px); line-height:1.2; margin:0; color:var(--navy); white-space:nowrap; text-overflow:ellipsis; }
+  .route .dot{ display:none; }
   .subtitle{ font-size:13px; color:var(--navy-soft); margin:0 0 18px; }
   .days-row{
     display:flex; align-items:center; justify-content:space-between;
@@ -91,7 +91,7 @@
   .cat-name{ font-size:12.5px; font-weight:600; color:var(--navy-soft); margin:0 0 6px 2px; }
   .drag-handle{ width:20px;height:20px; flex:0 0 20px; color:var(--navy-soft); cursor:grab; touch-action:none; display:flex; align-items:center; justify-content:center; }
   .drag-handle:active{ cursor:grabbing; }
-  .item{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px dotted var(--line); -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; }
+  .item{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px dotted var(--line); -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; flex-wrap:wrap; }
   .item:last-child{ border-bottom:none; }
   .item.dragging{ opacity:0.9; box-shadow:0 10px 24px rgba(0,0,0,0.18); border-radius:10px; background:var(--paper); position:relative; z-index:20; border-bottom:none; }
   .checkbox{ width:20px;height:20px; flex:0 0 20px; border-radius:6px; border:2px solid var(--navy-soft); display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; cursor:pointer; }
@@ -109,6 +109,53 @@
   }
   .item-qty{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--red); background:rgba(193,91,74,0.08); padding:2px 8px; border-radius:6px; white-space:nowrap; }
   .item.checked .item-qty{ color:var(--navy-soft); background:transparent; }
+  .item-settings{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:0 0 4px 32px;
+    margin-top:-4px;
+    font-size:12px;
+    color:var(--navy-soft);
+  }
+  .item-setting-label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .item-setting-label input{ accent-color:var(--navy); }
+  .item-setting-input{
+    width:76px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:5px 8px;
+    background:var(--paper);
+    color:var(--navy);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+  }
+  .item-setting-input:disabled{ opacity:0.45; }
+  .item-setting-btn{
+    border:1px solid var(--line);
+    background:var(--paper-dim);
+    color:var(--navy-soft);
+    border-radius:8px;
+    padding:5px 8px;
+    font-family:'Oswald', sans-serif;
+    font-size:11px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .item-setting-btn.active{
+    background:var(--navy);
+    color:var(--paper);
+    border-color:var(--navy);
+  }
   .icon-btn{
     width:22px;height:22px; flex:0 0 22px; border:none; background:none; cursor:pointer;
     display:flex; align-items:center; justify-content:center; color:var(--navy-soft); border-radius:6px;
@@ -125,6 +172,14 @@
     box-sizing:border-box; flex:1 1 60px; min-width:50px; font-family:'Inter', sans-serif; font-size:13.5px; border:1px solid var(--line);
     border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3;
   }
+  .add-qty-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .add-qty-label{ font-family:'Oswald', sans-serif; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--navy-soft); }
+  .add-qty-select, .add-qty-input{
+    border:1px solid var(--line); border-radius:8px; background:var(--paper-dim); color:var(--navy);
+    font-family:'Inter', sans-serif; font-size:13px; padding:7px 10px;
+  }
+  .add-qty-select{ min-width:120px; }
+  .add-qty-input{ width:88px; }
   .add-row select{ display:none; }
   .cat-select-wrap{ position:relative; flex:0 0 118px; }
   .cat-select-btn{
@@ -205,11 +260,29 @@
     background:rgba(94,140,106,0.1); border:1px solid rgba(94,140,106,0.35); border-radius:10px; padding:12px 14px;
   }
   .footer{ padding:16px 24px 24px; display:flex; justify-content:center; }
+  .footer-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
   .reset-btn{
     font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
     color:var(--navy-soft); background:none; border:1px solid var(--line); border-radius:20px; padding:8px 18px; cursor:pointer;
   }
+  .secondary-btn{
+    font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--navy); background:var(--paper-dim); border:1px solid var(--line); border-radius:20px; padding:8px 18px; cursor:pointer;
+  }
   .reset-btn:active{ background:var(--paper-dim); }
+  .secondary-btn:active{ background:var(--paper); }
+  .boarding-btn{
+    font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--paper); background:var(--green); border:1px solid var(--green); border-radius:20px; padding:8px 18px; cursor:pointer;
+    box-shadow:0 6px 16px rgba(94,140,106,0.22);
+  }
+  .boarding-btn:active{ background:#4d785a; }
+  .boarding-btn.disabled{ opacity:0.45; cursor:not-allowed; box-shadow:none; }
   .barcode{ height:34px; margin:2px 24px 0; background:repeating-linear-gradient(90deg, var(--navy) 0px, var(--navy) 2px, transparent 2px, transparent 5px); opacity:0.85; }
   .checked-toggle{
     display:flex; align-items:center; gap:6px; font-size:11px; color:var(--navy-soft); cursor:pointer;
@@ -234,7 +307,7 @@
 
   <div class="ticket">
     <div class="ticket-top">
-      <div class="route"><span class="dot"></span><h1 id="pctHeadline">0% 完成</h1></div>
+      <div class="route"><h1 id="pctHeadline">0% 完成</h1></div>
       <p class="subtitle">出發前，把每一項確認裝進行李。</p>
 
       <div class="days-row">
@@ -293,8 +366,16 @@
       </div>
     </div>
 
+    <div class="perforation"></div>
+    <div class="section" id="prepSection">
+      <div class="section-title"><span class="idx">05</span> TRIP PREP 出發前準備</div>
+    </div>
+
     <div class="footer">
-      <button class="reset-btn" id="resetBtn">開始新的旅程</button>
+      <div class="footer-actions">
+        <button class="secondary-btn" id="recheckBtn">再次檢查</button>
+        <button class="reset-btn" id="resetBtn">開始新的旅程</button>
+      </div>
     </div>
   </div>
 </div>
@@ -337,7 +418,7 @@ function getData(){
       { id:'charger', label:'充電器' },
       { id:'watchcable', label:'手錶充電線' },
     ]},
-    { key:'misc', name:'旅行雜物', items: [
+    { key:'misc', name:'個人用品', items: [
       { id:'bottle', label:'水瓶' },
       { id:'sunglasses', label:'太陽眼鏡' },
     ]},
@@ -346,6 +427,16 @@ function getData(){
 
   const checkedCats = [
     { key:'checkedItems', name:'', items: [] },
+  ];
+
+  const prepCats = [
+    { key:'prepTasks', name:'', items: [
+      { id:'fridge', label:'清冰箱' },
+      { id:'trash', label:'倒垃圾' },
+      { id:'charge', label:'電子產品充電' },
+      { id:'poweroff', label:'關燈與電器' },
+      { id:'docs', label:'檢查證件與航班' },
+    ]},
   ];
 
   // 托運開啟時（國際線預設開啟，或國內線手動開啟），衣物類移到托運行李。
@@ -368,6 +459,7 @@ function getData(){
     ]},
     { key:'carry', target:'carryOnSection', cats: carryCats },
     { key:'checked', target:'checkedSection', cats: checkedCats },
+    { key:'prep', target:'prepSection', cats: prepCats },
   ];
 }
 
@@ -378,19 +470,90 @@ function currentDocItem(){
 }
 
 const STORAGE_KEY = 'packing-checklist-v2';
-let state = { days: 3, checked: {}, customItems: {}, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true };
+let state = { days: 3, checked: {}, customItems: {}, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true, qtySettings: {}, tripStatus: 'packing' };
 let editingId = null; // custom item currently being renamed
 let dragState = null; // category currently being drag-reordered
 
-function daysQtyText(days){ return days + ' 天'; }
-function lensQtyText(days){ return days + ' 天 + 備用 1–2 副'; }
+function daysQtyText(days){ return String(days); }
+function lensQtyText(days){ return String(days + 1); }
 
-function qtyTextFor(item, days){
+function getMainItemIds(){
+  const ids = [ currentDocItem().id ];
+  const data = getData();
+  const visibleCatKeys = new Set();
+  data.forEach(s => {
+    if(s.key === 'checked' && !state.checkedEnabled) return;
+    if(s.key === 'carry' && !state.carryOnEnabled) return;
+    if(s.key === 'prep') return;
+    s.cats.forEach(c => {
+      visibleCatKeys.add(c.key);
+      c.items.forEach(i => { ids.push(i.id); });
+    });
+  });
+  Object.entries(state.customItems).forEach(([catKey, items]) => {
+    if(!visibleCatKeys.has(catKey)) return;
+    items.forEach(i => { ids.push(i.id); });
+  });
+  return ids;
+}
+
+function hasDefaultQty(item){
+  return item.qty === 'days' || item.qty === 'lens' || item.qty === 'fixed' || item.followsDays;
+}
+
+function defaultQtyTextFor(item, days){
   if(item.qty === 'days') return daysQtyText(days);
   if(item.qty === 'lens') return lensQtyText(days);
   if(item.qty === 'fixed') return item.qtyText;
   if(item.followsDays) return daysQtyText(days);
   return null;
+}
+
+function getQtySetting(item){
+  const saved = state.qtySettings[item.id];
+  if(saved){
+    return {
+      show: saved.show !== false,
+      mode: saved.mode === 'auto' ? 'auto' : 'fixed',
+      value: Math.max(1, parseInt(saved.value, 10) || 1),
+    };
+  }
+  return {
+    show: hasDefaultQty(item),
+    mode: hasDefaultQty(item) ? 'auto' : 'fixed',
+    value: 1,
+  };
+}
+
+function getCustomQtyConfig(item, days){
+  const mode = item.qtyMode || (item.followsDays ? 'auto' : 'hide');
+  if(mode === 'hide') return null;
+  if(mode === 'auto') return { show:true, value: days };
+  if(mode === 'fixed') return { show:true, value: Math.max(1, parseInt(item.qtyValue, 10) || 1) };
+  return null;
+}
+
+function qtyTextFor(item, days, catKey){
+  if(item.isCustom){
+    const cfg = getCustomQtyConfig(item, days);
+    if(!cfg) return null;
+    return String(cfg.value);
+  }
+  if(item.qty === 'days') return daysQtyText(days);
+  if(item.qty === 'lens') return lensQtyText(days);
+  if(item.qty === 'fixed') return String(Math.max(1, parseInt(item.qtyValue || item.qtyText, 10) || 1));
+  if(item.followsDays) return daysQtyText(days);
+  return null;
+}
+
+function setQtySetting(itemId, next){
+  const current = state.qtySettings[itemId] || {};
+  state.qtySettings[itemId] = Object.assign({ show: true, mode: 'fixed', value: 1 }, current, next);
+  if(state.qtySettings[itemId].value < 1 || Number.isNaN(state.qtySettings[itemId].value)){
+    state.qtySettings[itemId].value = 1;
+  }
+  saveState();
+  render();
 }
 
 function getCustomItems(catKey){
@@ -659,16 +822,44 @@ function buildSectionAddRow(section){
     inputsRow.appendChild(catWrap);
   }
 
+  const qtyWrap = document.createElement('div');
+  qtyWrap.className = 'add-qty-row';
+
+  const qtyLabel = document.createElement('span');
+  qtyLabel.className = 'add-qty-label';
+  qtyLabel.textContent = '數量';
+  qtyWrap.appendChild(qtyLabel);
+
+  const qtyMode = document.createElement('select');
+  qtyMode.className = 'add-qty-select';
+  qtyMode.innerHTML = `
+    <option value="hide">不顯示</option>
+    <option value="fixed">固定數量</option>
+    <option value="auto">跟天數走</option>
+  `;
+  qtyWrap.appendChild(qtyMode);
+
+  const qtyValue = document.createElement('input');
+  qtyValue.type = 'number';
+  qtyValue.min = '1';
+  qtyValue.step = '1';
+  qtyValue.value = '1';
+  qtyValue.className = 'add-qty-input';
+  qtyWrap.appendChild(qtyValue);
+
+  function syncQtyUI(){
+    qtyValue.style.display = qtyMode.value === 'fixed' ? 'inline-block' : 'none';
+  }
+  syncQtyUI();
+  qtyMode.addEventListener('change', syncQtyUI);
+
+  wrap.appendChild(inputsRow);
+  wrap.appendChild(qtyWrap);
+
   const btn = document.createElement('button');
   btn.className = 'add-btn';
   btn.textContent = '新增';
   inputsRow.appendChild(btn);
-  wrap.appendChild(inputsRow);
-
-  const chip = document.createElement('label');
-  chip.className = 'follow-chip';
-  chip.innerHTML = `<span class="chip-box"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"><polyline points="20 6 9 17 4 12"></polyline></svg></span>跟天數走`;
-  wrap.appendChild(chip);
 
   const targetCatKey = () => selectedCatKey || section.cats[0].key;
 
@@ -676,17 +867,19 @@ function buildSectionAddRow(section){
     const label = input.value.trim();
     if(!label) return;
     const catKey = targetCatKey();
-    const followsDays = chip.classList.contains('on');
     const id = 'custom_' + catKey + '_' + Date.now();
+    const qtyModeValue = qtyMode.value;
+    const qtyValueNum = Math.max(1, parseInt(qtyValue.value, 10) || 1);
     if(!state.customItems[catKey]) state.customItems[catKey] = [];
-    state.customItems[catKey].push({ id, label, followsDays });
+    const item = { id, label, qtyMode: qtyModeValue };
+    if(qtyModeValue === 'fixed') item.qtyValue = qtyValueNum;
+    state.customItems[catKey].push(item);
     saveState();
     render();
   };
 
   input.addEventListener('keydown', e => { if(e.key === 'Enter') doAdd(); });
   btn.addEventListener('click', doAdd);
-  chip.addEventListener('click', () => chip.classList.toggle('on'));
 
   return wrap;
 }
@@ -729,7 +922,7 @@ function buildItemRow(item, isCustom, catKey){
     row.appendChild(label);
   }
 
-  const qtyText = qtyTextFor(item, state.days);
+  const qtyText = qtyTextFor(item, state.days, catKey);
   if(qtyText && editingId !== item.id){
     const qtyEl = document.createElement('div');
     qtyEl.className = 'item-qty';
@@ -756,6 +949,50 @@ function buildItemRow(item, isCustom, catKey){
     handle.className = 'drag-handle';
     handle.innerHTML = DRAG_SVG;
     row.appendChild(handle);
+
+    if(catKey === 'clothes' && !isCustom){
+      const qtySetting = getQtySetting(item);
+      const settings = document.createElement('div');
+      settings.className = 'item-settings';
+
+      const showLabel = document.createElement('label');
+      showLabel.className = 'item-setting-label';
+      const showInput = document.createElement('input');
+      showInput.type = 'checkbox';
+      showInput.checked = qtySetting.show;
+      showInput.addEventListener('change', () => {
+        setQtySetting(item.id, { show: showInput.checked });
+      });
+      showLabel.appendChild(showInput);
+      showLabel.appendChild(document.createTextNode('有數量'));
+      settings.appendChild(showLabel);
+
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'number';
+      qtyInput.min = '1';
+      qtyInput.step = '1';
+      qtyInput.className = 'item-setting-input';
+      qtyInput.value = qtySetting.value;
+      qtyInput.disabled = !qtySetting.show;
+      qtyInput.addEventListener('change', () => {
+        const value = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+        setQtySetting(item.id, { show: true, mode: 'fixed', value });
+      });
+      settings.appendChild(qtyInput);
+
+      if(hasDefaultQty(item)){
+        const autoBtn = document.createElement('button');
+        autoBtn.type = 'button';
+        autoBtn.className = 'item-setting-btn' + (qtySetting.mode === 'auto' ? ' active' : '');
+        autoBtn.textContent = '跟天數';
+        autoBtn.addEventListener('click', () => {
+          setQtySetting(item.id, { show: true, mode: 'auto', value: qtySetting.value });
+        });
+        settings.appendChild(autoBtn);
+      }
+
+      row.appendChild(settings);
+    }
   }
 
   return row;
@@ -764,39 +1001,32 @@ function buildItemRow(item, isCustom, catKey){
 function deleteCustomItem(catKey, id){
   state.customItems[catKey] = (state.customItems[catKey] || []).filter(i => i.id !== id);
   delete state.checked[id];
+  if(state.qtySettings) delete state.qtySettings[id];
   saveState();
   render();
 }
 
 function allItemIds(){
-  const ids = [ currentDocItem().id ];
-  const data = getData();
-  const visibleCatKeys = new Set();
-  data.forEach(s => {
-    if(s.key === 'checked' && !state.checkedEnabled) return;
-    if(s.key === 'carry' && !state.carryOnEnabled) return;
-    s.cats.forEach(c => {
-      visibleCatKeys.add(c.key);
-      c.items.forEach(i => { ids.push(i.id); });
-    });
-  });
-  Object.entries(state.customItems).forEach(([catKey, items]) => {
-    if(!visibleCatKeys.has(catKey)) return;
-    items.forEach(i => { ids.push(i.id); });
-  });
-  return ids;
+  return getMainItemIds();
 }
 
 function updateProgress(){
   const docId = currentDocItem().id;
   const ids = allItemIds();
   const total = ids.length;
-  const done = ids.filter(id => id === docId ? (isItemChecked(id) || state.docPacked[id]) : getItemState(id) !== null).length;
+  const pending = ids.filter(id => id === docId ? (!state.docPacked[id] && getItemState(id) !== false) : getItemState(id) === null).length;
+  const done = total - pending;
+
+  const statusText = pending > 0
+    ? `🐹 今天要出發了！還有 ${pending} 項沒帶。`
+    : '🐹 行李整理完成！ ✈️';
+  state.tripStatus = pending > 0 ? 'packing' : 'packed';
+
   document.getElementById('doneCount').textContent = done;
   document.getElementById('totalCount').textContent = total;
   const pct = total ? Math.round((done/total)*100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('pctHeadline').textContent = pct + '% 完成';
+  document.getElementById('pctHeadline').textContent = statusText;
   document.getElementById('dayVal').textContent = state.days;
 }
 
@@ -811,7 +1041,9 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true }, parsed);
+      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing' }, parsed);
+      state.qtySettings = state.qtySettings || {};
+      state.tripStatus = state.tripStatus === 'packed' ? 'packed' : 'packing';
     }
   }catch(e){ /* first run, no saved state */ }
   render();
@@ -831,10 +1063,19 @@ document.getElementById('dayPlus').addEventListener('click', () => {
   state.days = Math.min(30, state.days + 1);
   render(); saveState();
 });
+document.getElementById('recheckBtn').addEventListener('click', () => {
+  Object.keys(state.checked).forEach(id => {
+    if(state.checked[id] === true) delete state.checked[id];
+  });
+  state.docPacked = {};
+  state.tripStatus = 'packing';
+  render(); saveState();
+});
 document.getElementById('resetBtn').addEventListener('click', () => {
   state.checked = {};
   state.docPacked = {};
   state.flightType = 'domestic';
+  state.tripStatus = 'packing';
   render(); saveState();
 });
 document.getElementById('editToggle').addEventListener('click', () => {
@@ -859,7 +1100,6 @@ document.getElementById('carryOnToggle').addEventListener('click', () => {
   state.carryOnEnabled = !state.carryOnEnabled;
   render(); saveState();
 });
-
 function swapItemNodes(dragEl, sib, direction){
   const rect = sib.getBoundingClientRect();
   const style = getComputedStyle(sib);
