@@ -15,10 +15,23 @@
 4. Section 05 was renamed into a reminder-only `TRIP PREP 出發前準備` block with Chinese-only items like clearing the fridge, taking out trash, charging electronics, turning off lights/appliances, and checking documents/flight details.
 5. The yellow dot before the hamster in the top status line was removed, and the headline was tightened to avoid clipping on longer two-digit status messages.
 
+6. The edit controls were reorganized:
+   - 「編輯」 now sits to the left of 「再次檢查」 in the footer and has a clearer touch target.
+   - Editing mode shows one shared add panel at the bottom instead of one add row per section.
+   - Users choose a major section first; selecting section 03 reveals its subcategory picker.
+7. Added subtle visual separation for custom items, the add panel, and section 05. The 🐹 was removed from the top brand line, while status prompts keep their hamster emoji.
+8. Moved HamsterGo images into `resource/`, including the current 192/512 PWA icons and the retained candidate logo `hamstergo-logo-candidate.png`.
+9. Updated the Service Worker to use a stable cache name with network-first fetching and cached offline fallback, so future deployments do not require manually incrementing a cache version.
+
 **Files touched**:
 - `index.html`
+- `manifest.json`
+- `service-worker.js`
 - `README.md`
 - `README.en.md`
+- `resource/icon-192.png`
+- `resource/icon-512.png`
+- `resource/hamstergo-logo-candidate.png`
 
 # Dev Log
 
