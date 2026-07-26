@@ -6,8 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="resource/icon-192.png">
+<link rel="icon" href="resource/icon-192.png">
 <meta name="theme-color" content="#1B2A4A">
 <title>HamsterGo · 倉鼠出行日</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -94,6 +94,7 @@
   .drag-handle:active{ cursor:grabbing; }
   .item{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px dotted var(--line); -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; flex-wrap:wrap; }
   .item:last-child{ border-bottom:none; }
+  .item.custom-item{ background:rgba(232,163,61,0.07); border-radius:8px; padding-left:8px; padding-right:8px; }
   .item.dragging{ opacity:0.9; box-shadow:0 10px 24px rgba(0,0,0,0.18); border-radius:10px; background:var(--paper); position:relative; z-index:20; border-bottom:none; pointer-events:none; }
   .checkbox{ width:20px;height:20px; flex:0 0 20px; border-radius:6px; border:2px solid var(--navy-soft); display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; cursor:pointer; }
   .item.checked .checkbox{ background:var(--green); border-color:var(--green); }
@@ -166,7 +167,7 @@
   .icon-btn svg{ width:16px; height:16px; }
   .note{ background:rgba(232,163,61,0.12); border:1px solid rgba(232,163,61,0.4); border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.5; color:var(--navy); margin-bottom:14px; }
   .note b{ color:var(--red); }
-  .add-row{ display:none; margin-top:8px; gap:8px; flex-direction:column; }
+  .add-row{ display:none; gap:8px; flex-direction:column; margin:0; padding:12px; background:rgba(232,163,61,0.08); border:1px solid rgba(232,163,61,0.28); border-radius:12px; width:100%; }
   .add-row.show{ display:flex; }
   .add-row .add-inputs{ display:flex; gap:6px; }
   .add-row input[type="text"]{
@@ -211,6 +212,9 @@
   .cat-select-option.selected .check{ opacity:1; }
   .cat-select-option .check svg{ width:100%; height:100%; }
 
+  .add-category-row{ display:flex; gap:6px; }
+  .add-category-row select{ flex:1 1 0; min-width:0; font-family:"Inter", sans-serif; font-size:13.5px; border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3; }
+  #prepSection{ background:rgba(94,140,106,0.055); }
   .add-row .add-btn{
     box-sizing:border-box; font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.05em; text-transform:uppercase;
     background:var(--navy); color:var(--paper); border:none; border-radius:8px; padding:0 14px; cursor:pointer;
@@ -252,6 +256,25 @@
     background:rgba(94,140,106,0.1); border:1px solid rgba(94,140,106,0.35); border-radius:10px; padding:12px 14px;
   }
   .footer{ padding:16px 24px 24px; display:flex; justify-content:center; }
+  .footer-content{ width:100%; display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .footer-actions .edit-toggle{
+    font-family:'Oswald', sans-serif;
+    font-size:12px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--navy);
+    background:var(--paper-dim);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:8px 18px;
+    min-height:35px;
+  }
+  .footer-actions .edit-toggle.active{
+    background:var(--amber);
+    color:var(--navy);
+    border-color:var(--amber);
+    font-weight:600;
+  }
   .footer-actions{
     display:flex;
     gap:10px;
@@ -293,8 +316,8 @@
 <body>
 <div class="pass">
   <div class="header-strip">
-    <div class="brand">🐹 HamsterGo · 倉鼠出行日</div>
-    <button class="edit-toggle" id="editToggle">編輯</button>
+    <div class="brand">HamsterGo · 倉鼠出行日</div>
+    <div></div>
   </div>
 
   <div class="ticket">
@@ -364,9 +387,13 @@
     </div>
 
     <div class="footer">
-      <div class="footer-actions">
-        <button class="secondary-btn" id="recheckBtn">再次檢查</button>
-        <button class="reset-btn" id="resetBtn">開始新的旅程</button>
+      <div class="footer-content">
+        <div id="globalAddRow"></div>
+        <div class="footer-actions">
+          <button class="edit-toggle" id="editToggle">編輯</button>
+          <button class="secondary-btn" id="recheckBtn">再次檢查</button>
+          <button class="reset-btn" id="resetBtn">開始新的旅程</button>
+        </div>
       </div>
     </div>
   </div>
@@ -659,7 +686,6 @@ function render(){
   getData().forEach(section => {
     const container = document.getElementById(section.target);
     container.querySelectorAll('.cat').forEach(el => el.remove());
-    container.querySelectorAll('.section-add-row').forEach(el => el.remove());
     if(section.key === 'checked' && !state.checkedEnabled){
       return;
     }
@@ -684,10 +710,8 @@ function render(){
       container.appendChild(catEl);
     });
 
-    if(state.editMode){
-      container.appendChild(buildSectionAddRow(section));
-    }
   });
+  renderGlobalAddRow();
   document.getElementById('checkedToggle').classList.toggle('on', !!state.checkedEnabled);
   document.getElementById('carryOnToggle').classList.toggle('on', !!state.carryOnEnabled);
   updateProgress();
@@ -711,135 +735,80 @@ function closeAllCatLists(){
   getCatSelectOverlay().classList.remove('show');
 }
 
-function buildSectionAddRow(section){
-  const wrap = document.createElement('div');
-  wrap.className = 'add-row section-add-row show';
+function renderGlobalAddRow(){
+  const host = document.getElementById('globalAddRow');
+  host.innerHTML = '';
+  if(!state.editMode) return;
 
+  const wrap = document.createElement('div');
+  wrap.className = 'add-row show';
   const inputsRow = document.createElement('div');
   inputsRow.className = 'add-inputs';
-
   const input = document.createElement('input');
   input.type = 'text';
   input.placeholder = '新增項目名稱';
   input.className = 'new-item-input';
-  inputsRow.appendChild(input);
-
-  let selectedCatKey = section.cats[0] ? section.cats[0].key : null;
-
-  if(section.cats.length > 1){
-    const catWrap = document.createElement('div');
-    catWrap.className = 'cat-select-wrap';
-
-    const catBtn = document.createElement('button');
-    catBtn.type = 'button';
-    catBtn.className = 'cat-select-btn';
-    const btnLabel = document.createElement('span');
-    btnLabel.textContent = section.cats[0].name || section.cats[0].key;
-    const arrow = document.createElement('span');
-    arrow.className = 'arrow';
-    arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-    catBtn.appendChild(btnLabel);
-    catBtn.appendChild(arrow);
-    catBtn.addEventListener('mousedown', e => e.preventDefault());
-
-    const list = document.createElement('div');
-    list.className = 'cat-select-list';
-    section.cats.forEach(cat => {
-      const opt = document.createElement('div');
-      opt.className = 'cat-select-option' + (cat.key === selectedCatKey ? ' selected' : '');
-      opt.innerHTML = `<span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span><span>${cat.name || cat.key}</span>`;
-      opt.addEventListener('click', (e) => {
-        e.stopPropagation();
-        selectedCatKey = cat.key;
-        btnLabel.textContent = cat.name || cat.key;
-        list.querySelectorAll('.cat-select-option').forEach(o => o.classList.remove('selected'));
-        opt.classList.add('selected');
-        closeCatList();
-      });
-      list.appendChild(opt);
-    });
-    document.body.appendChild(list);
-
-    function positionCatList(){
-      list.classList.remove('mobile-sheet');
-      list.style.left = ''; list.style.top = ''; list.style.bottom = ''; list.style.maxHeight = ''; list.style.minWidth = '';
-      const rect = catBtn.getBoundingClientRect();
-      const listWidth = Math.max(rect.width, 150);
-      let left = rect.left;
-      if(left + listWidth > window.innerWidth - 8) left = window.innerWidth - listWidth - 8;
-      list.style.left = left + 'px';
-      list.style.minWidth = rect.width + 'px';
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      if(spaceBelow < 160 && spaceAbove > spaceBelow){
-        list.style.top = 'auto';
-        list.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
-        list.style.maxHeight = Math.min(260, spaceAbove - 12) + 'px';
-      } else {
-        list.style.bottom = 'auto';
-        list.style.top = (rect.bottom + 4) + 'px';
-        list.style.maxHeight = Math.min(260, spaceBelow - 12) + 'px';
-      }
-    }
-
-    function openCatList(){
-      const isMobile = window.matchMedia('(max-width: 600px)').matches;
-      if(isMobile){
-        list.style.left = ''; list.style.top = ''; list.style.bottom = ''; list.style.maxHeight = ''; list.style.minWidth = '';
-        list.classList.add('mobile-sheet');
-        const overlay = getCatSelectOverlay();
-        overlay.classList.add('show');
-        overlay.onclick = closeAllCatLists;
-      } else {
-        positionCatList();
-        getCatSelectOverlay().classList.remove('show');
-      }
-      list.classList.add('show');
-      catBtn.classList.add('open');
-    }
-
-    function closeCatList(){
-      list.classList.remove('show');
-      catBtn.classList.remove('open');
-      getCatSelectOverlay().classList.remove('show');
-    }
-
-    catBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const willShow = !list.classList.contains('show');
-      closeAllCatLists();
-      if(willShow) openCatList();
-    });
-
-    catWrap.appendChild(catBtn);
-    inputsRow.appendChild(catWrap);
-  }
-
-  wrap.appendChild(inputsRow);
-
   const btn = document.createElement('button');
   btn.className = 'add-btn';
   btn.textContent = '新增';
-  inputsRow.appendChild(btn);
+  inputsRow.append(input, btn);
+  wrap.appendChild(inputsRow);
 
-  const targetCatKey = () => selectedCatKey || section.cats[0].key;
+  const data = getData();
+  const sections = [
+    { key:'personal', label:'02 隨身包', cats:data[0].cats },
+    { key:'carry', label:'03 手提行李', cats:data[1].cats },
+    { key:'checked', label:'04 托運行李', cats:data[2].cats },
+    { key:'prep', label:'05 出發前提醒', cats:data[3].cats },
+  ].filter(section => (section.key !== 'carry' || state.carryOnEnabled) && (section.key !== 'checked' || state.checkedEnabled));
+
+  const categoryRow = document.createElement('div');
+  categoryRow.className = 'add-category-row';
+  const majorSelect = document.createElement('select');
+  sections.forEach(section => {
+    const option = document.createElement('option');
+    option.value = section.key;
+    option.textContent = section.label;
+    majorSelect.appendChild(option);
+  });
+  categoryRow.appendChild(majorSelect);
+  const subSelect = document.createElement('select');
+  subSelect.className = 'subcategory';
+  categoryRow.appendChild(subSelect);
+  wrap.appendChild(categoryRow);
+
+  const selectedSection = () => sections.find(section => section.key === majorSelect.value) || sections[0];
+  const refreshSubcategory = () => {
+    const section = selectedSection();
+    subSelect.innerHTML = '';
+    const showSubcategory = section && section.key === 'carry' && section.cats.length > 1;
+    subSelect.style.display = showSubcategory ? 'block' : 'none';
+    if(showSubcategory){
+      section.cats.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.key;
+        option.textContent = cat.name || cat.key;
+        subSelect.appendChild(option);
+      });
+    }
+  };
+  majorSelect.addEventListener('change', refreshSubcategory);
+  refreshSubcategory();
 
   const doAdd = () => {
     const label = input.value.trim();
-    if(!label) return;
-    const catKey = targetCatKey();
+    const section = selectedSection();
+    if(!label || !section) return;
+    const catKey = section.key === 'carry' && subSelect.style.display !== 'none' ? subSelect.value : section.cats[0].key;
     const id = 'custom_' + catKey + '_' + Date.now();
     if(!state.customItems[catKey]) state.customItems[catKey] = [];
-    const item = { id, label };
-    state.customItems[catKey].push(item);
+    state.customItems[catKey].push({ id, label });
     saveState();
     render();
   };
-
   input.addEventListener('keydown', e => { if(e.key === 'Enter') doAdd(); });
   btn.addEventListener('click', doAdd);
-
-  return wrap;
+  host.appendChild(wrap);
 }
 
 function buildItemRow(item, isCustom, catKey){
@@ -847,7 +816,7 @@ function buildItemRow(item, isCustom, catKey){
   const itemState = getItemState(item.id);
   const isPrepItem = catKey === 'prepTasks';
   const prepChecked = isPrepItem && itemState === true;
-  row.className = 'item' + (!isPrepItem && itemState === true ? ' checked' : '') + (!isPrepItem && itemState === false ? ' skipped' : '') + (prepChecked ? ' checked' : '');
+  row.className = 'item' + (isCustom ? ' custom-item' : '') + (!isPrepItem && itemState === true ? ' checked' : '') + (!isPrepItem && itemState === false ? ' skipped' : '') + (prepChecked ? ' checked' : '');
   row.dataset.id = item.id;
   row.dataset.custom = isCustom ? '1' : '0';
 
@@ -991,7 +960,7 @@ function updateProgress(){
   const done = total - pending;
 
   const statusText = pending > 0
-    ? `🐹 今天要出發了！還有 ${pending} 項沒帶。`
+    ? `🐹 要出發了！還有 ${pending} 項沒帶。`
     : '🐹 行李整理完成！ ✈️';
   state.tripStatus = pending > 0 ? 'packing' : 'packed';
 

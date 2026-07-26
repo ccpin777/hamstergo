@@ -26,8 +26,9 @@ A pure front-end packing checklist styled like a boarding pass, as if a little h
 ├── index.html          # main page and logic
 ├── manifest.json        # PWA config (name, icons, colors, launch mode)
 ├── service-worker.js    # offline caching logic
-├── icon-192.png         # app icon (192×192)
-├── icon-512.png         # app icon (512×512)
+├── resource/
+│   ├── icon-192.png         # app icon (192×192)
+│   ├── icon-512.png         # app icon (512×512)
 ├── deploy.command       # double-click script to commit + push to GitHub
 └── dev-log.md           # development log
 ```
@@ -63,4 +64,4 @@ All data lives in **this phone, this browser** (`localStorage`) — it doesn't s
 
 - To change checklist items or categories, edit the `getData()` function in `index.html`
 - To change the color scheme, edit the CSS variables at the top of `index.html` under `:root` (`--navy`, `--amber`, etc.)
-- To change the icons, regenerate `icon-192.png` / `icon-512.png` keeping the same filenames
+- To change the icons, regenerate `resource/icon-192.png` / `resource/icon-512.png` keeping the same filenames

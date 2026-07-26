@@ -1,10 +1,10 @@
-const CACHE_NAME = 'packing-checklist-v2';
+const CACHE_NAME = 'packing-checklist-cache';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
+  './resource/icon-192.png',
+  './resource/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -24,17 +24,21 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if(event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        // Only cache successful same-origin GET requests
-        if (event.request.method === 'GET' && response && response.status === 200 && response.type === 'basic') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
-        }
-        return response;
-      }).catch(() => cached);
-    })
+    fetch(event.request).then((response) => {
+      if(response && response.status === 200 && response.type === 'basic'){
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+      }
+      return response;
+    }).catch(() =>
+      caches.match(event.request).then((cached) => {
+        if(cached) return cached;
+        if(event.request.mode === 'navigate') return caches.match('./index.html');
+        return Response.error();
+      })
+    )
   );
 });
