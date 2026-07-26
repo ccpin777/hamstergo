@@ -173,15 +173,6 @@
     box-sizing:border-box; flex:1 1 60px; min-width:50px; font-family:'Inter', sans-serif; font-size:13.5px; border:1px solid var(--line);
     border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3;
   }
-  .add-qty-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; }
-  .add-qty-label{ font-family:'Oswald', sans-serif; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--navy-soft); }
-  .add-qty-select, .add-qty-input{
-    border:1px solid var(--line); border-radius:8px; background:var(--paper-dim); color:var(--navy);
-    font-family:'Inter', sans-serif; font-size:13px; padding:7px 10px;
-  }
-  .add-qty-select{ min-width:120px; }
-  .add-qty-input{ width:88px; }
-  .add-row select{ display:none; }
   .cat-select-wrap{ position:relative; flex:0 0 118px; }
   .cat-select-btn{
     box-sizing:border-box; width:100%; display:flex; align-items:center; justify-content:space-between; gap:4px;
@@ -369,7 +360,7 @@
 
     <div class="perforation"></div>
     <div class="section" id="prepSection">
-      <div class="section-title"><span class="idx">05</span> TRIP PREP 出發前準備</div>
+      <div class="section-title"><span class="idx">05</span> Pre-departure reminders 出發前提醒</div>
     </div>
 
     <div class="footer">
@@ -400,7 +391,8 @@ function getData(){
     { id:'underwear', label:'內褲', qty:'days' },
     { id:'pants', label:'褲子' },
     { id:'jacket', label:'外套' },
-    { id:'shoes', label:'鞋子 or 拖鞋' },
+    { id:'shoes', label:'鞋子' },
+    { id:'slippers', label:'拖鞋' },
   ]};
 
   const carryCats = [
@@ -823,39 +815,7 @@ function buildSectionAddRow(section){
     inputsRow.appendChild(catWrap);
   }
 
-  const qtyWrap = document.createElement('div');
-  qtyWrap.className = 'add-qty-row';
-
-  const qtyLabel = document.createElement('span');
-  qtyLabel.className = 'add-qty-label';
-  qtyLabel.textContent = '數量';
-  qtyWrap.appendChild(qtyLabel);
-
-  const qtyMode = document.createElement('select');
-  qtyMode.className = 'add-qty-select';
-  qtyMode.innerHTML = `
-    <option value="hide">不顯示</option>
-    <option value="fixed">固定數量</option>
-    <option value="auto">跟天數走</option>
-  `;
-  qtyWrap.appendChild(qtyMode);
-
-  const qtyValue = document.createElement('input');
-  qtyValue.type = 'number';
-  qtyValue.min = '1';
-  qtyValue.step = '1';
-  qtyValue.value = '1';
-  qtyValue.className = 'add-qty-input';
-  qtyWrap.appendChild(qtyValue);
-
-  function syncQtyUI(){
-    qtyValue.style.display = qtyMode.value === 'fixed' ? 'inline-block' : 'none';
-  }
-  syncQtyUI();
-  qtyMode.addEventListener('change', syncQtyUI);
-
   wrap.appendChild(inputsRow);
-  wrap.appendChild(qtyWrap);
 
   const btn = document.createElement('button');
   btn.className = 'add-btn';
@@ -869,11 +829,8 @@ function buildSectionAddRow(section){
     if(!label) return;
     const catKey = targetCatKey();
     const id = 'custom_' + catKey + '_' + Date.now();
-    const qtyModeValue = qtyMode.value;
-    const qtyValueNum = Math.max(1, parseInt(qtyValue.value, 10) || 1);
     if(!state.customItems[catKey]) state.customItems[catKey] = [];
-    const item = { id, label, qtyMode: qtyModeValue };
-    if(qtyModeValue === 'fixed') item.qtyValue = qtyValueNum;
+    const item = { id, label };
     state.customItems[catKey].push(item);
     saveState();
     render();
@@ -888,16 +845,28 @@ function buildSectionAddRow(section){
 function buildItemRow(item, isCustom, catKey){
   const row = document.createElement('div');
   const itemState = getItemState(item.id);
-  row.className = 'item' + (itemState === true ? ' checked' : '') + (itemState === false ? ' skipped' : '');
+  const isPrepItem = catKey === 'prepTasks';
+  const prepChecked = isPrepItem && itemState === true;
+  row.className = 'item' + (!isPrepItem && itemState === true ? ' checked' : '') + (!isPrepItem && itemState === false ? ' skipped' : '') + (prepChecked ? ' checked' : '');
   row.dataset.id = item.id;
   row.dataset.custom = isCustom ? '1' : '0';
 
   const box = document.createElement('div');
   box.className = 'checkbox';
-  box.innerHTML = itemState === false ? X_SVG : CHECK_SVG;
+  box.innerHTML = isPrepItem ? (prepChecked ? CHECK_SVG : '') : (itemState === false ? X_SVG : CHECK_SVG);
   box.style.cursor = state.editMode ? 'default' : 'pointer';
   box.addEventListener('mousedown', e => e.preventDefault());
-  box.addEventListener('click', () => { if(!state.editMode) toggleItem(item.id); });
+  box.addEventListener('click', () => {
+    if(state.editMode) return;
+    if(isPrepItem){
+      if(itemState === true) delete state.checked[item.id];
+      else state.checked[item.id] = true;
+      saveState();
+      render();
+      return;
+    }
+    toggleItem(item.id);
+  });
   row.appendChild(box);
 
   if(isCustom && state.editMode && editingId === item.id){
@@ -918,9 +887,11 @@ function buildItemRow(item, isCustom, catKey){
     const label = document.createElement('div');
     label.className = 'item-label';
     label.textContent = item.label;
-    label.style.cursor = state.editMode ? 'default' : 'pointer';
-    label.addEventListener('mousedown', e => e.preventDefault());
-    label.addEventListener('click', () => { if(!state.editMode) toggleItem(item.id); });
+    label.style.cursor = (state.editMode || isPrepItem) ? 'default' : 'pointer';
+    if(!isPrepItem){
+      label.addEventListener('mousedown', e => e.preventDefault());
+      label.addEventListener('click', () => { if(!state.editMode) toggleItem(item.id); });
+    }
     row.appendChild(label);
   }
 
