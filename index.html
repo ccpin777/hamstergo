@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="resource/icon-192.png">
 <link rel="icon" href="resource/icon-192.png">
 <meta name="theme-color" content="#1B2A4A">
-<title>HamsterGo · 倉鼠出行日</title>
+<title>HamsterGo · 倉鼠打包小幫手 🐹</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -22,6 +22,7 @@
     --red:#C15B4A;
     --line:#D9D2BF;
     --green:#5E8C6A;
+    --font-scale:1;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   body{
@@ -44,52 +45,87 @@
   }
   .header-strip .brand{
     font-family:'Oswald', sans-serif; font-weight:600; letter-spacing:0.14em;
-    font-size:13px; color:var(--amber); text-transform:uppercase;
+    font-size:calc(15px * var(--font-scale, 1)); color:var(--amber); text-transform:uppercase;
   }
   .edit-toggle{
-    font-family:'Oswald', sans-serif; font-size:11px; letter-spacing:0.08em;
+    font-family:'Oswald', sans-serif; font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.08em;
     text-transform:uppercase; color:var(--paper-dim); background:rgba(255,255,255,0.08);
     border:1px solid rgba(255,255,255,0.25); border-radius:14px; padding:5px 12px;
     cursor:pointer;
   }
   .edit-toggle.active{ background:var(--amber); color:var(--navy); border-color:var(--amber); font-weight:600; }
+  .header-actions{ display:flex; align-items:center; gap:8px; }
+  .export-btn{
+    height:28px; width:28px; padding:0; justify-content:center; display:flex; align-items:center; gap:5px;
+    color:var(--paper-dim); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25);
+    border-radius:16px; cursor:pointer; font-family:'Oswald', sans-serif; font-size:11px; letter-spacing:0.06em;
+  }
+  .export-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .export-btn svg{ width:14px; height:14px; }
+  .settings-btn{
+    width:28px; height:28px; padding:0; display:flex; align-items:center; justify-content:center;
+    color:var(--paper-dim); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25);
+    border-radius:50%; cursor:pointer;
+  }
+  .settings-btn:active, .settings-btn.open{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .settings-btn svg{ width:15px; height:15px; }
+  .settings-panel{
+    display:none; margin:0 0 12px; padding:14px 16px; color:var(--paper);
+    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:12px;
+  }
+  .settings-panel.show{ display:block; }
+  .settings-title{ font-size:13px; font-weight:600; margin-bottom:10px; }
+  .font-options{ display:flex; gap:7px; }
+  .font-option{ flex:1; padding:7px 4px; font-size:12px; color:var(--paper-dim); background:transparent;
+    border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; }
+  .font-option.active{ color:var(--navy); background:var(--amber); border-color:var(--amber); font-weight:600; }
+  .data-title{ margin-top:8px; margin-bottom:10px; }
+  .data-actions{ display:flex; gap:8px; margin-top:0; }
+  .data-btn{ flex:1; padding:8px 10px; color:var(--paper-dim); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; font-size:12px; }
+  .data-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .trip-title{
+    flex:1 1 180px; min-width:0; width:auto; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:0 0 8px;
+    margin:0; background:transparent; color:var(--navy);
+    font-family:'Oswald', sans-serif; font-size:calc(18px * var(--font-scale, 1)); font-weight:600;
+    letter-spacing:0.04em; outline:none;
+  }
+  .trip-title::placeholder{ color:var(--navy-soft); opacity:0.65; }
+  .trip-title:focus{ border-bottom-color:var(--amber); }
   .ticket{
     background:var(--paper); border-radius:18px;
     box-shadow:0 20px 50px rgba(0,0,0,0.35); overflow:hidden; position:relative;
   }
   .ticket-top{ padding:22px 24px 20px; }
   .route{ display:flex; align-items:center; gap:0; margin-bottom:6px; }
-  .route h1{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(16px, 4vw, 22px); line-height:1.2; margin:0; color:var(--navy); white-space:nowrap; text-overflow:ellipsis; }
+  .route h1{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(calc(16px * var(--font-scale, 1)), 4vw, calc(22px * var(--font-scale, 1))); line-height:1.2; margin:0; color:var(--navy); white-space:nowrap; text-overflow:ellipsis; }
   .route .dot{ display:none; }
-  .subtitle{ font-size:13px; color:var(--navy-soft); margin:0 0 18px; }
-  .days-row{
-    display:flex; align-items:center; justify-content:space-between;
-    background:var(--paper-dim); border:1px solid var(--line); border-radius:10px;
-    padding:10px 14px; margin-bottom:16px;
+  .subtitle{ font-size:calc(13px * var(--font-scale, 1)); color:var(--navy-soft); margin:0 0 18px; }
+  .trip-meta{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 14px; margin-bottom:18px; }
+  .days-row{ display:flex; align-items:center; gap:5px; flex:0 0 auto; margin:0; }
+  .days-row label{ font-family:'Oswald', sans-serif; font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.08em; text-transform:uppercase; color:var(--navy-soft); }
+  .days-input{ display:flex; align-items:center; gap:5px; }
+  .days-input .val{
+    -webkit-appearance:none; -moz-appearance:textfield; appearance:none; width:38px; height:30px; padding:2px 0;
+    border:0; border-bottom:1px solid var(--line); border-radius:0; outline:0;
+    background:transparent; color:var(--navy); font-family:'JetBrains Mono', monospace; font-weight:700;
+    font-size:calc(17px * var(--font-scale, 1)); text-align:center;
   }
-  .days-row label{ font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--navy-soft); }
-  .days-input{ display:flex; align-items:center; gap:8px; }
-  .days-input button{
-    -webkit-appearance:none; appearance:none;
-    display:flex; align-items:center; justify-content:center;
-    width:28px;height:28px; padding:0; margin:0; line-height:1; border-radius:8px; border:1px solid var(--line);
-    background:var(--paper); color:var(--navy); font-size:16px; font-family:'JetBrains Mono', monospace; cursor:pointer;
-  }
-  .days-input button:active{ background:var(--amber); color:var(--paper); }
-  .days-input .val{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:18px; min-width:34px; text-align:center; }
+  .days-input .val::-webkit-inner-spin-button, .days-input .val::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .days-input .val:focus{ border-bottom-color:var(--amber); }
+  .days-input .unit{ font-family:'Oswald', sans-serif; font-size:calc(13px * var(--font-scale, 1)); color:var(--navy-soft); letter-spacing:0.04em; }
   .progress-track{ height:8px; background:var(--line); border-radius:5px; overflow:hidden; }
   .progress-fill{ height:100%; background:var(--navy); box-shadow:0 0 10px rgba(27,42,74,0.5); width:0%; transition:width 0.35s ease; }
-  .progress-label{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--navy-soft); margin-top:6px; text-align:right; }
+  .progress-label{ font-family:'JetBrains Mono', monospace; font-size:calc(11px * var(--font-scale, 1)); color:var(--navy-soft); margin-top:6px; text-align:right; }
   .perforation{ position:relative; height:0; border-top:2px dashed var(--line); margin:4px 0 0; }
   .perforation::before, .perforation::after{ content:""; position:absolute; top:-11px; width:22px;height:22px; border-radius:50%; background:var(--navy); }
   .perforation::before{ left:-25px; } .perforation::after{ right:-25px; }
   .section{ padding:18px 24px; }
   .section + .section{ border-top:1px solid var(--line); }
-  .section-title{ display:flex; align-items:center; gap:8px; font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--navy); margin-bottom:10px; }
+  .section-title{ display:flex; align-items:center; gap:8px; font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.14em; text-transform:uppercase; color:var(--navy); margin-bottom:10px; }
   .section-title .idx{ font-family:'JetBrains Mono', monospace; color:var(--amber); font-weight:700; }
   .cat{ margin-bottom:14px; }
   .cat:last-child{ margin-bottom:0; }
-  .cat-name{ font-size:12.5px; font-weight:600; color:var(--navy-soft); margin:0 0 6px 2px; }
+  .cat-name{ font-size:calc(12.5px * var(--font-scale, 1)); font-weight:600; color:var(--navy-soft); margin:0 0 6px 2px; }
   .drag-handle{ width:20px;height:20px; flex:0 0 20px; color:var(--navy-soft); cursor:grab; touch-action:none; display:flex; align-items:center; justify-content:center; }
   .drag-handle:active{ cursor:grabbing; }
   .item{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px dotted var(--line); -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; flex-wrap:wrap; }
@@ -102,14 +138,14 @@
   .checkbox svg{ width:12px;height:12px; opacity:0; transition:opacity 0.15s ease; }
   .item.checked .checkbox svg{ opacity:1; }
   .item.skipped .checkbox svg{ opacity:1; }
-  .item-label{ flex:1; font-size:14.5px; color:var(--navy); cursor:pointer; font-weight:400; }
+  .item-label{ flex:1; font-size:calc(14.5px * var(--font-scale, 1)); color:var(--navy); cursor:pointer; font-weight:400; }
   .item.checked .item-label{ color:var(--navy-soft); }
   .item.skipped .item-label{ color:var(--red); }
   .item-label-input{
-    flex:1; font-size:14.5px; color:var(--navy); border:1px solid var(--amber); border-radius:6px;
+    flex:1; font-size:calc(14.5px * var(--font-scale, 1)); color:var(--navy); border:1px solid var(--amber); border-radius:6px;
     padding:4px 6px; font-family:'Inter', sans-serif;
   }
-  .item-qty{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--red); background:rgba(193,91,74,0.08); padding:2px 8px; border-radius:6px; white-space:nowrap; }
+  .item-qty{ font-family:'JetBrains Mono', monospace; font-size:calc(12px * var(--font-scale, 1)); color:var(--red); background:rgba(193,91,74,0.08); padding:2px 8px; border-radius:6px; white-space:nowrap; }
   .item.checked .item-qty{ color:var(--navy-soft); background:transparent; }
   .item-settings{
     width:100%;
@@ -119,7 +155,7 @@
     flex-wrap:wrap;
     padding:0 0 4px 32px;
     margin-top:-4px;
-    font-size:12px;
+    font-size:calc(12px * var(--font-scale, 1));
     color:var(--navy-soft);
   }
   .item-setting-label{
@@ -138,7 +174,7 @@
     background:var(--paper);
     color:var(--navy);
     font-family:'JetBrains Mono', monospace;
-    font-size:12px;
+    font-size:calc(12px * var(--font-scale, 1));
   }
   .item-setting-input:disabled{ opacity:0.45; }
   .item-setting-btn{
@@ -148,7 +184,7 @@
     border-radius:8px;
     padding:5px 8px;
     font-family:'Oswald', sans-serif;
-    font-size:11px;
+    font-size:calc(11px * var(--font-scale, 1));
     letter-spacing:0.05em;
     text-transform:uppercase;
     cursor:pointer;
@@ -165,19 +201,19 @@
   .icon-btn:active{ background:var(--paper-dim); }
   .icon-btn.delete{ color:var(--red); }
   .icon-btn svg{ width:16px; height:16px; }
-  .note{ background:rgba(232,163,61,0.12); border:1px solid rgba(232,163,61,0.4); border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.5; color:var(--navy); margin-bottom:14px; }
+  .note{ background:rgba(232,163,61,0.12); border:1px solid rgba(232,163,61,0.4); border-radius:10px; padding:12px 14px; font-size:calc(13px * var(--font-scale, 1)); line-height:1.5; color:var(--navy); margin-bottom:14px; }
   .note b{ color:var(--red); }
   .add-row{ display:none; gap:8px; flex-direction:column; margin:0; padding:12px; background:rgba(232,163,61,0.08); border:1px solid rgba(232,163,61,0.28); border-radius:12px; width:100%; }
   .add-row.show{ display:flex; }
   .add-row .add-inputs{ display:flex; gap:6px; }
   .add-row input[type="text"]{
-    box-sizing:border-box; flex:1 1 60px; min-width:50px; font-family:'Inter', sans-serif; font-size:13.5px; border:1px solid var(--line);
+    box-sizing:border-box; flex:1 1 60px; min-width:50px; font-family:'Inter', sans-serif; font-size:calc(13.5px * var(--font-scale, 1)); border:1px solid var(--line);
     border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3;
   }
   .cat-select-wrap{ position:relative; flex:0 0 118px; }
   .cat-select-btn{
     box-sizing:border-box; width:100%; display:flex; align-items:center; justify-content:space-between; gap:4px;
-    font-family:'Inter', sans-serif; font-size:13.5px; border:1px solid var(--line); border-radius:8px;
+    font-family:'Inter', sans-serif; font-size:calc(13.5px * var(--font-scale, 1)); border:1px solid var(--line); border-radius:8px;
     padding:8px 10px; background:var(--paper-dim); color:var(--navy); cursor:pointer; line-height:1.3;
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-touch-callout:none;
   }
@@ -200,10 +236,10 @@
   .cat-select-list.mobile-sheet::before{
     content:''; display:block; width:36px; height:4px; border-radius:2px; background:var(--line); margin:2px auto 10px;
   }
-  .cat-select-list.mobile-sheet .cat-select-option{ padding:14px 14px; font-size:15px; }
+  .cat-select-list.mobile-sheet .cat-select-option{ padding:14px 14px; font-size:calc(15px * var(--font-scale, 1)); }
   .cat-select-list.show{ display:block; }
   .cat-select-option{
-    padding:8px 10px; font-size:13.5px; color:var(--navy); border-radius:6px; cursor:pointer; white-space:nowrap;
+    padding:8px 10px; font-size:calc(13.5px * var(--font-scale, 1)); color:var(--navy); border-radius:6px; cursor:pointer; white-space:nowrap;
     display:flex; align-items:center; gap:6px;
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-touch-callout:none;
   }
@@ -213,15 +249,15 @@
   .cat-select-option .check svg{ width:100%; height:100%; }
 
   .add-category-row{ display:flex; gap:6px; }
-  .add-category-row select{ flex:1 1 0; min-width:0; font-family:"Inter", sans-serif; font-size:13.5px; border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3; }
+  .add-category-row select{ flex:1 1 0; min-width:0; font-family:"Inter", sans-serif; font-size:calc(13.5px * var(--font-scale, 1)); border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3; }
   #prepSection{ background:rgba(94,140,106,0.055); }
   .add-row .add-btn{
-    box-sizing:border-box; font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.05em; text-transform:uppercase;
+    box-sizing:border-box; font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.05em; text-transform:uppercase;
     background:var(--navy); color:var(--paper); border:none; border-radius:8px; padding:0 14px; cursor:pointer;
     flex:0 0 auto; white-space:nowrap;
   }
   .follow-chip{
-    display:flex; align-items:center; gap:6px; font-size:12px; color:var(--navy-soft); cursor:pointer; user-select:none;
+    display:flex; align-items:center; gap:6px; font-size:calc(12px * var(--font-scale, 1)); color:var(--navy-soft); cursor:pointer; user-select:none;
   }
   .follow-chip .chip-box{
     width:16px;height:16px; border-radius:4px; border:2px solid var(--navy-soft); display:flex; align-items:center; justify-content:center;
@@ -231,7 +267,7 @@
     display:flex; gap:8px; margin-bottom:14px;
   }
   .flight-toggle button{
-    flex:1; font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.05em;
+    flex:1; font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.05em;
     text-transform:uppercase; padding:9px 10px; border-radius:8px; border:1px solid var(--line);
     background:var(--paper-dim); color:var(--navy-soft); cursor:pointer;
   }
@@ -242,24 +278,24 @@
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     background:var(--paper-dim); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
   }
-  .doc-row-label{ font-size:14.5px; font-weight:600; color:var(--navy); }
+  .doc-row-label{ font-size:calc(14.5px * var(--font-scale, 1)); font-weight:600; color:var(--navy); }
   .doc-stage{ display:flex; gap:8px; }
   .stage-btn{
-    font-family:'Oswald', sans-serif; font-size:11px; letter-spacing:0.03em;
+    font-family:'Oswald', sans-serif; font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.03em;
     border:1px solid var(--line); background:var(--paper); color:var(--navy-soft);
     border-radius:8px; padding:7px 10px; cursor:pointer; white-space:nowrap;
   }
   .stage-btn.done{ background:var(--green); border-color:var(--green); color:var(--paper); font-weight:600; }
   .stage-btn.disabled{ opacity:0.4; cursor:not-allowed; }
   .doc-done{
-    display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; color:var(--green);
+    display:flex; align-items:center; gap:8px; font-size:calc(13.5px * var(--font-scale, 1)); font-weight:600; color:var(--green);
     background:rgba(94,140,106,0.1); border:1px solid rgba(94,140,106,0.35); border-radius:10px; padding:12px 14px;
   }
   .footer{ padding:16px 24px 24px; display:flex; justify-content:center; }
   .footer-content{ width:100%; display:flex; flex-direction:column; gap:14px; align-items:center; }
   .footer-actions .edit-toggle{
     font-family:'Oswald', sans-serif;
-    font-size:12px;
+    font-size:calc(12px * var(--font-scale, 1));
     letter-spacing:0.1em;
     text-transform:uppercase;
     color:var(--navy);
@@ -282,17 +318,17 @@
     justify-content:center;
   }
   .reset-btn{
-    font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.1em; text-transform:uppercase;
     color:var(--navy-soft); background:none; border:1px solid var(--line); border-radius:20px; padding:8px 18px; cursor:pointer;
   }
   .secondary-btn{
-    font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.1em; text-transform:uppercase;
     color:var(--navy); background:var(--paper-dim); border:1px solid var(--line); border-radius:20px; padding:8px 18px; cursor:pointer;
   }
   .reset-btn:active{ background:var(--paper-dim); }
   .secondary-btn:active{ background:var(--paper); }
   .boarding-btn{
-    font-family:'Oswald', sans-serif; font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.1em; text-transform:uppercase;
     color:var(--paper); background:var(--green); border:1px solid var(--green); border-radius:20px; padding:8px 18px; cursor:pointer;
     box-shadow:0 6px 16px rgba(94,140,106,0.22);
   }
@@ -300,7 +336,7 @@
   .boarding-btn.disabled{ opacity:0.45; cursor:not-allowed; box-shadow:none; }
   .barcode{ height:34px; margin:2px 24px 0; background:repeating-linear-gradient(90deg, var(--navy) 0px, var(--navy) 2px, transparent 2px, transparent 5px); opacity:0.85; }
   .checked-toggle{
-    display:flex; align-items:center; gap:6px; font-size:11px; color:var(--navy-soft); cursor:pointer;
+    display:flex; align-items:center; gap:6px; font-size:calc(11px * var(--font-scale, 1)); color:var(--navy-soft); cursor:pointer;
     -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
     font-family:'Oswald', sans-serif; letter-spacing:0.05em; text-transform:uppercase;
   }
@@ -316,23 +352,46 @@
 <body>
 <div class="pass">
   <div class="header-strip">
-    <div class="brand">HamsterGo · 倉鼠出行日</div>
-    <div></div>
+    <div class="brand">HamsterGo · 倉鼠打包小幫手 🐹</div>
+    <div class="header-actions">
+      <button class="export-btn" id="quickExportBtn" aria-label="匯出旅行 JSON">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+      </button>
+      <button class="settings-btn" id="settingsBtn" aria-label="開啟設定" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0L6.2 6.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+    </div>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel" aria-hidden="true">
+    <div class="settings-title">文字大小</div>
+    <div class="font-options" role="group" aria-label="文字大小">
+      <button class="font-option" data-font-scale="0.9">小</button>
+      <button class="font-option" data-font-scale="1">標準</button>
+      <button class="font-option" data-font-scale="1.15">大</button>
+      <button class="font-option" data-font-scale="1.3">特大</button>
+      </div>
+    <div class="settings-title data-title">旅行資料</div>
+    <div class="data-actions">
+      <button class="data-btn" id="panelExportBtn">匯出 JSON</button>
+      <button class="data-btn" id="importBtn">匯入 JSON</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
   </div>
 
   <div class="ticket">
     <div class="ticket-top">
-      <div class="route"><h1 id="pctHeadline">0% 完成</h1></div>
-      <p class="subtitle">出發前，把每一項確認裝進行李。</p>
-
-      <div class="days-row">
-        <label>行程天數</label>
-        <div class="days-input">
-          <button id="dayMinus">−</button>
-          <span class="val" id="dayVal">3</span>
-          <button id="dayPlus">+</button>
+      <div class="trip-meta">
+        <input class="trip-title" id="tripTitle" name="trip" type="text" maxlength="80" placeholder="此次旅行名稱" aria-label="此次旅行名稱" autocomplete="off" autocapitalize="off">
+        <div class="days-row" aria-label="行程天數">
+          <div class="days-input">
+            <input class="val" id="dayVal" type="number" min="1" max="30" step="1" inputmode="numeric" aria-label="行程天數">
+            <span class="unit">day</span>
+          </div>
         </div>
       </div>
+      <div class="route"><h1 id="pctHeadline">0% 完成</h1></div>
+      <p class="subtitle">出發前，把每一項確認裝進行李。</p>
 
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
       <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已確認</div>
@@ -490,7 +549,7 @@ function currentDocItem(){
 }
 
 const STORAGE_KEY = 'packing-checklist-v2';
-let state = { days: 3, checked: {}, customItems: {}, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true, qtySettings: {}, tripStatus: 'packing' };
+let state = { days: 3, checked: {}, customItems: {}, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true, qtySettings: {}, tripStatus: 'packing', tripTitle: '' };
 let editingId = null; // custom item currently being renamed
 let dragState = null; // active drag session
 
@@ -969,7 +1028,7 @@ function updateProgress(){
   const pct = total ? Math.round((done/total)*100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('pctHeadline').textContent = statusText;
-  document.getElementById('dayVal').textContent = state.days;
+  document.getElementById('dayVal').value = state.days;
 }
 
 function saveState(){
@@ -983,13 +1042,65 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing' }, parsed);
+      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'' }, parsed);
       delete state.itemPlacement;
       state.qtySettings = state.qtySettings || {};
       state.tripStatus = state.tripStatus === 'packed' ? 'packed' : 'packing';
+      state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : '';
     }
   }catch(e){ /* first run, no saved state */ }
   render();
+}
+
+function safeFileName(name){
+  const cleaned = String(name || 'HamsterGo-旅行紀錄').trim().replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, ' ');
+  return (cleaned || 'HamsterGo-旅行紀錄').slice(0, 80);
+}
+
+function exportTrip(){
+  const payload = {
+    format: 'HamsterGo Travel',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    tripTitle: state.tripTitle || '',
+    state
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = safeFileName(state.tripTitle) + '.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function importTripFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const payload = JSON.parse(reader.result);
+      const imported = payload && payload.state && typeof payload.state === 'object' ? payload.state : payload;
+      if(!imported || typeof imported !== 'object' || Array.isArray(imported) || !imported.checked || !imported.customItems){
+        throw new Error('invalid travel file');
+      }
+      const defaults = { days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'' };
+      state = Object.assign(defaults, imported);
+      state.editMode = false;
+      state.qtySettings = state.qtySettings || {};
+      state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : (typeof payload.tripTitle === 'string' ? payload.tripTitle : '');
+      editingId = null;
+      dragState = null;
+      render();
+      document.getElementById('tripTitle').value = state.tripTitle;
+      saveState();
+    }catch(e){
+      alert('這不是有效的 HamsterGo 旅行 JSON 檔案。');
+    }
+  };
+  reader.readAsText(file);
 }
 
 function toggleItem(id){
@@ -998,12 +1109,20 @@ function toggleItem(id){
   saveState();
 }
 
-document.getElementById('dayMinus').addEventListener('click', () => {
-  state.days = Math.max(1, state.days - 1);
-  render(); saveState();
+document.getElementById('tripTitle').value = state.tripTitle || '';
+document.getElementById('tripTitle').addEventListener('input', e => {
+  state.tripTitle = e.target.value;
+  saveState();
 });
-document.getElementById('dayPlus').addEventListener('click', () => {
-  state.days = Math.min(30, state.days + 1);
+document.getElementById('quickExportBtn').addEventListener('click', exportTrip);
+document.getElementById('panelExportBtn').addEventListener('click', exportTrip);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e => {
+  importTripFile(e.target.files[0]);
+  e.target.value = '';
+});
+document.getElementById('dayVal').addEventListener('change', e => {
+  state.days = Math.min(30, Math.max(1, parseInt(e.target.value, 10) || 1));
   render(); saveState();
 });
 document.getElementById('recheckBtn').addEventListener('click', () => {
@@ -1113,7 +1232,35 @@ document.addEventListener('click', closeAllCatLists);
 window.addEventListener('scroll', closeAllCatLists, true);
 window.addEventListener('resize', closeAllCatLists);
 
+const FONT_SCALE_KEY = 'hamstergo-font-scale';
+function setFontScale(scale, persist = true){
+  const value = String(scale);
+  document.documentElement.style.setProperty('--font-scale', value);
+  document.querySelectorAll('.font-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.fontScale === value);
+  });
+  if(persist){
+    try{ localStorage.setItem(FONT_SCALE_KEY, value); }catch(e){ /* storage unavailable */ }
+  }
+}
+
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+settingsBtn.addEventListener('click', () => {
+  const open = settingsPanel.classList.toggle('show');
+  settingsBtn.classList.toggle('open', open);
+  settingsBtn.setAttribute('aria-expanded', String(open));
+  settingsPanel.setAttribute('aria-hidden', String(!open));
+});
+document.querySelectorAll('.font-option').forEach(btn => {
+  btn.addEventListener('click', () => setFontScale(btn.dataset.fontScale));
+});
+let savedFontScale = '1';
+try{ savedFontScale = localStorage.getItem(FONT_SCALE_KEY) || '1'; }catch(e){ /* first run */ }
+setFontScale(savedFontScale, false);
+
 loadState();
+document.getElementById('tripTitle').value = state.tripTitle || '';
 
 try{
   if('serviceWorker' in navigator){

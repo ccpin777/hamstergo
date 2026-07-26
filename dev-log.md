@@ -1,3 +1,21 @@
+## 2026-07-26 — Trip naming, JSON backup, and compact controls
+
+**What changed**:
+
+1. Added a visible trip-title field beside the trip-day input. The title is saved locally and is used as the exported JSON filename.
+2. Added JSON travel-data export and import:
+   - the header now has an icon-only quick export button
+   - the Settings panel contains labelled 「匯出 JSON」 and 「匯入 JSON」 actions under a new 「旅行資料」 heading
+   - imported files restore the checklist, custom items, baggage settings, trip title, and other travel state
+3. Added four local font-size options in the Settings panel and persisted the selection in the browser.
+4. Reworked the top controls: the brand is now `HamsterGo · 倉鼠打包小幫手 🐹`, the gear icon is smaller, and the trip days are a direct 1–30 number input with no spinner arrows or capsule wrapper.
+5. Disabled browser autofill for the trip title field and kept the existing localStorage-first behavior.
+
+**Files touched**:
+- `index.html`
+- `manifest.json`
+- `README.md`
+
 ## 2026-07-26 — Status prompts, simplified quantities, and reminder-only prep section
 
 **What changed**:

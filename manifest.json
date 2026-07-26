@@ -1,7 +1,7 @@
 {
-  "name": "HamsterGo 倉鼠出行打包清單",
+  "name": "HamsterGo 倉鼠打包小幫手 🐹",
   "short_name": "HamsterGo",
-  "description": "帶倉鼠出門前，確認每一項裝進行李",
+  "description": "你的倉鼠打包小幫手，陪你確認每一項行李",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
