@@ -3,8 +3,19 @@ const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './resource/icon-192.png',
-  './resource/icon-512.png',
+  './resources/icon-192.png',
+  './resources/icon-512.png',
+  './resources/briefcase.svg',
+  './resources/plus.svg',
+  './resources/pencil.svg',
+  './resources/export.svg',
+  './resources/settings.svg',
+  './resources/recheck.svg',
+  './resources/check.svg',
+  './resources/x.svg',
+  './resources/trash.svg',
+  './resources/drag.svg',
+  './resources/chevron-down.svg',
 ];
 
 self.addEventListener('install', (event) => {

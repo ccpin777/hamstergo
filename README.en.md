@@ -6,15 +6,16 @@ A pure front-end packing checklist styled like a boarding pass, as if a little h
 
 ## Features
 
-- **Auto quantity by trip length**: socks, tops, underwear, and daily contact lenses (plus spares) automatically show how many you need based on the number of days you set; clothing quantities are shown as plain numbers instead of phrased day counts
+- **Quantity fields**: every item has a quantity field; normal mode shows only the number, while edit mode shows the input and stepper controls. Empty quantities stay blank and 0 is treated as empty; tops, socks, underwear, and daily contacts still get default values based on trip length
 - **Check / cross progress tracking**: tap an item once to check it (bringing it), tap again to cross it out (skipping it this time), tap a third time to clear it; both checked and crossed items count toward progress — there's no more "essential vs. optional" distinction
-- **Document flow**: defaults to domestic flight (driver's license wallet), can switch to international (passport); after tapping "① Packed", the domestic/international toggle auto-hides, and it's only marked done after "② Stowed"
+- **Document flow**: defaults to domestic flight (driver's license wallet), can switch to international (passport); "① Packed" immediately counts toward progress, while "② Stowed" completes the airport hand-off. Edit mode can undo only the stowed state while keeping the document packed
 - **Carry-on / Checked baggage toggles**: Carry-on and Checked Baggage each have their own on/off toggle. Domestic defaults to "carry-on on, checked off"; international defaults to "both on" — switching between domestic/international applies the matching defaults automatically, and you can still adjust either toggle by hand afterward. Whenever the checked-baggage toggle is on, the clothing category (tops, socks, underwear, pants, jacket, shoes, slippers) automatically moves into Checked Baggage; turning it off moves clothing back into Carry-on
-- **Edit mode**: add your own items under any category, and rename or delete them later. Built-in items stay fixed and can't be edited or removed. Clothing items can still toggle quantity display/editing. New items no longer have quantity controls at creation time. Added items are saved permanently — even tapping "Start a new trip" (which resets checkmarks) won't remove them
+- **Editing and adding items**: top icon controls open editing and a centered add dialog; the dialog supports Cancel, backdrop click, and Esc. Choose a major section, then a Carry-on subcategory. Custom items can be renamed, deleted, reordered, and quantified; built-in items stay fixed. "Start a new trip" remains available both at the top and in the footer
 - **Drag to reorder items**: in edit mode, a drag handle appears next to every item; press and drag up/down to reorder items within their own category (mouse and touch both supported), and the order is remembered. Categories themselves stay in a fixed order and can't be dragged, and items can't be moved across categories
-- **Pre-departure reminders**: a new Section 05 (`Pre-departure reminders 出發前提醒`) used as a reminder checklist; items can be checked on and off, but they do not count toward the main packing completion rate
+- **Pre-departure reminders**: Section 05 (`Pre-departure reminders 出發前提醒`) is excluded from the main completion rate; it auto-collapses when all reminders are checked and has a manual expand/collapse control
 - **Status prompts**: the top headline switches between "🐹 Today is the day! N items are still missing." and "🐹 Packing complete! ✈️"; the main completion rate counts only Sections 01 to 04, excluding Section 05
-- **Recheck flow**: one tap clears all checked items while keeping crossed-out items, so you can review the same list again without losing "not bringing" choices
+- **Recheck flow**: the icon appears only after the main list is processed and the document is stowed. Recheck mode preserves crossed-out items, lets blank items be checked or unchecked, locks crossed-out items, and locks baggage toggles and flight instructions
+- **Checklist items**: added Travel Toiletry Bag, Medicine Bag, and Charging Bag as normal checklist items
 - **Document reminders**: two reminder points — before departure and after security
 - **Local storage only**: checkmarks, day count, and custom items are all stored in the browser's `localStorage`, staying on your own device — nothing is uploaded to any server
 - **Installable as a PWA**: add to your phone's home screen for a full-screen experience, with offline caching via a Service Worker
@@ -26,9 +27,10 @@ A pure front-end packing checklist styled like a boarding pass, as if a little h
 ├── index.html          # main page and logic
 ├── manifest.json        # PWA config (name, icons, colors, launch mode)
 ├── service-worker.js    # offline caching logic
-├── resource/
+├── resources/
 │   ├── icon-192.png         # app icon (192×192)
 │   ├── icon-512.png         # app icon (512×512)
+│   └── *.svg                # individual UI icon copies
 ├── deploy.command       # double-click script to commit + push to GitHub
 └── dev-log.md           # development log
 ```
@@ -64,4 +66,4 @@ All data lives in **this phone, this browser** (`localStorage`) — it doesn't s
 
 - To change checklist items or categories, edit the `getData()` function in `index.html`
 - To change the color scheme, edit the CSS variables at the top of `index.html` under `:root` (`--navy`, `--amber`, etc.)
-- To change the icons, regenerate `resource/icon-192.png` / `resource/icon-512.png` keeping the same filenames
+- To change the app icons, regenerate `resources/icon-192.png` / `resources/icon-512.png` with the same filenames; individual UI SVG copies also live in `resources/`, while the page keeps inline SVG for direct `index.html` opening

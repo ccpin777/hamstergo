@@ -6,10 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="resource/icon-192.png">
-<link rel="icon" href="resource/icon-192.png">
+<link rel="apple-touch-icon" href="resources/icon-192.png">
+<link rel="icon" href="resources/icon-192.png">
 <meta name="theme-color" content="#1B2A4A">
-<title>HamsterGo · 倉鼠打包小幫手 🐹</title>
+<title>HamsterGo · 倉鼠打包小幫手</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -40,12 +40,13 @@
   }
   .pass{ width:100%; max-width:460px; }
   .header-strip{
-    display:flex; justify-content:space-between; align-items:baseline;
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
     color:var(--paper); padding:0 6px 14px;
   }
   .header-strip .brand{
     font-family:'Oswald', sans-serif; font-weight:600; letter-spacing:0.14em;
     font-size:calc(15px * var(--font-scale, 1)); color:var(--amber); text-transform:uppercase;
+    flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .edit-toggle{
     font-family:'Oswald', sans-serif; font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.08em;
@@ -54,7 +55,14 @@
     cursor:pointer;
   }
   .edit-toggle.active{ background:var(--amber); color:var(--navy); border-color:var(--amber); font-weight:600; }
-  .header-actions{ display:flex; align-items:center; gap:8px; }
+  .header-actions{ display:flex; align-items:center; gap:5px; flex:0 0 auto; }
+  .toolbar-btn{
+    width:28px; height:28px; padding:0; display:flex; align-items:center; justify-content:center;
+    color:var(--paper-dim); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25);
+    border-radius:50%; cursor:pointer;
+  }
+  .toolbar-btn:active, .toolbar-btn.active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .toolbar-btn svg{ width:15px; height:15px; }
   .export-btn{
     height:28px; width:28px; padding:0; justify-content:center; display:flex; align-items:center; gap:5px;
     color:var(--paper-dim); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25);
@@ -96,7 +104,12 @@
     box-shadow:0 20px 50px rgba(0,0,0,0.35); overflow:hidden; position:relative;
   }
   .ticket-top{ padding:22px 24px 20px; }
-  .route{ display:flex; align-items:center; gap:0; margin-bottom:6px; }
+  .route{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
+  .packed-recheck{
+    display:none; flex:0 0 30px; width:30px; height:30px; padding:0 !important;
+    align-items:center; justify-content:center; line-height:1; overflow:hidden;
+  }
+  .recheck-icon{ width:18px; height:18px; display:block; flex:0 0 18px; }
   .route h1{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(calc(16px * var(--font-scale, 1)), 4vw, calc(22px * var(--font-scale, 1))); line-height:1.2; margin:0; color:var(--navy); white-space:nowrap; text-overflow:ellipsis; }
   .route .dot{ display:none; }
   .subtitle{ font-size:calc(13px * var(--font-scale, 1)); color:var(--navy-soft); margin:0 0 18px; }
@@ -123,6 +136,13 @@
   .section + .section{ border-top:1px solid var(--line); }
   .section-title{ display:flex; align-items:center; gap:8px; font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.14em; text-transform:uppercase; color:var(--navy); margin-bottom:10px; }
   .section-title .idx{ font-family:'JetBrains Mono', monospace; color:var(--amber); font-weight:700; }
+  .section-collapse-btn{
+    margin-left:auto; width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:50%; padding:0;
+    background:var(--paper-dim); color:var(--navy-soft); cursor:pointer;
+  }
+  .section-collapse-btn svg{ width:14px; height:14px; transition:transform 0.15s ease; }
+  #prepSection.prep-collapsed .section-collapse-btn svg{ transform:rotate(-90deg); }
   .cat{ margin-bottom:14px; }
   .cat:last-child{ margin-bottom:0; }
   .cat-name{ font-size:calc(12.5px * var(--font-scale, 1)); font-weight:600; color:var(--navy-soft); margin:0 0 6px 2px; }
@@ -145,64 +165,44 @@
     flex:1; font-size:calc(14.5px * var(--font-scale, 1)); color:var(--navy); border:1px solid var(--amber); border-radius:6px;
     padding:4px 6px; font-family:'Inter', sans-serif;
   }
-  .item-qty{ font-family:'JetBrains Mono', monospace; font-size:calc(12px * var(--font-scale, 1)); color:var(--red); background:rgba(193,91,74,0.08); padding:2px 8px; border-radius:6px; white-space:nowrap; }
-  .item.checked .item-qty{ color:var(--navy-soft); background:transparent; }
-  .item-settings{
-    width:100%;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-    padding:0 0 4px 32px;
-    margin-top:-4px;
-    font-size:calc(12px * var(--font-scale, 1));
-    color:var(--navy-soft);
+  .item-qty-input{
+    width:42px; height:28px; flex:0 0 42px; padding:2px 4px; border:1px solid var(--line); border-radius:6px;
+    background:var(--paper-dim); color:var(--navy); font-family:'JetBrains Mono', monospace; font-size:calc(12px * var(--font-scale, 1));
+    text-align:center; outline:none;
   }
-  .item-setting-label{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    cursor:pointer;
-    user-select:none;
+  .item-qty-input:focus{ border-color:var(--amber); background:var(--paper); }
+  .item-qty-input[readonly]{
+    width:28px; flex-basis:28px; padding:2px 0; border-color:transparent; background:transparent;
+    color:var(--red); cursor:default; pointer-events:none;
   }
-  .item-setting-label input{ accent-color:var(--navy); }
-  .item-setting-input{
-    width:76px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:5px 8px;
-    background:var(--paper);
-    color:var(--navy);
-    font-family:'JetBrains Mono', monospace;
-    font-size:calc(12px * var(--font-scale, 1));
-  }
-  .item-setting-input:disabled{ opacity:0.45; }
-  .item-setting-btn{
-    border:1px solid var(--line);
-    background:var(--paper-dim);
-    color:var(--navy-soft);
-    border-radius:8px;
-    padding:5px 8px;
-    font-family:'Oswald', sans-serif;
-    font-size:calc(11px * var(--font-scale, 1));
-    letter-spacing:0.05em;
-    text-transform:uppercase;
-    cursor:pointer;
-  }
-  .item-setting-btn.active{
-    background:var(--navy);
-    color:var(--paper);
-    border-color:var(--navy);
-  }
-  .icon-btn{
-    width:22px;height:22px; flex:0 0 22px; border:none; background:none; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; color:var(--navy-soft); border-radius:6px;
-  }
-  .icon-btn:active{ background:var(--paper-dim); }
-  .icon-btn.delete{ color:var(--red); }
-  .icon-btn svg{ width:16px; height:16px; }
+  .item-qty-input[readonly]::-webkit-inner-spin-button,
+  .item-qty-input[readonly]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .item.checked .item-qty-input[readonly]{ color:var(--navy-soft); }
   .note{ background:rgba(232,163,61,0.12); border:1px solid rgba(232,163,61,0.4); border-radius:10px; padding:12px 14px; font-size:calc(13px * var(--font-scale, 1)); line-height:1.5; color:var(--navy); margin-bottom:14px; }
   .note b{ color:var(--red); }
+  .add-modal-layer{
+    position:fixed; inset:0; z-index:1100; display:flex; align-items:center; justify-content:center;
+    padding:18px; background:rgba(20,26,42,0.62);
+  }
+  .add-row.add-modal{
+    display:flex; width:min(100%, 420px); max-height:calc(100vh - 36px); overflow:auto;
+    margin:0; padding:18px; background:var(--paper); border:1px solid var(--line);
+    border-radius:14px; box-shadow:0 18px 45px rgba(0,0,0,0.3);
+  }
+  .add-modal-title{ margin:0 0 12px; font-family:'Oswald', sans-serif; font-size:calc(17px * var(--font-scale, 1)); color:var(--navy); }
+  .add-modal .add-inputs{ display:block; }
+  .add-modal .new-item-input{ width:100%; min-height:40px; }
+  .add-modal .add-category-row{ display:block; }
+  .add-modal .add-category-row select{ width:100%; margin-top:8px; }
+  .add-modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+  .add-modal-actions button{
+    min-width:72px; border-radius:8px; padding:9px 14px; font-family:'Inter', sans-serif;
+    font-size:calc(13px * var(--font-scale, 1)); font-weight:600; cursor:pointer;
+  }
+  .add-modal-cancel{ color:var(--navy-soft); background:transparent; border:1px solid var(--line); }
+  .add-modal-confirm{ color:var(--paper); background:var(--navy); border:1px solid var(--navy); }
+  .add-modal-cancel:active{ background:var(--paper-dim); }
+  .add-modal-confirm:active{ background:var(--navy-soft); }
   .add-row{ display:none; gap:8px; flex-direction:column; margin:0; padding:12px; background:rgba(232,163,61,0.08); border:1px solid rgba(232,163,61,0.28); border-radius:12px; width:100%; }
   .add-row.show{ display:flex; }
   .add-row .add-inputs{ display:flex; gap:6px; }
@@ -251,6 +251,7 @@
   .add-category-row{ display:flex; gap:6px; }
   .add-category-row select{ flex:1 1 0; min-width:0; font-family:"Inter", sans-serif; font-size:calc(13.5px * var(--font-scale, 1)); border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3; }
   #prepSection{ background:rgba(94,140,106,0.055); }
+  #prepSection.prep-collapsed .cat{ display:none; }
   .add-row .add-btn{
     box-sizing:border-box; font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.05em; text-transform:uppercase;
     background:var(--navy); color:var(--paper); border:none; border-radius:8px; padding:0 14px; cursor:pointer;
@@ -291,6 +292,12 @@
     display:flex; align-items:center; gap:8px; font-size:calc(13.5px * var(--font-scale, 1)); font-weight:600; color:var(--green);
     background:rgba(94,140,106,0.1); border:1px solid rgba(94,140,106,0.35); border-radius:10px; padding:12px 14px;
   }
+  .doc-undo-btn{
+    margin-left:auto; border:1px solid var(--line); border-radius:7px; padding:5px 8px;
+    background:var(--paper); color:var(--navy-soft); font-family:'Oswald', sans-serif;
+    font-size:calc(10px * var(--font-scale, 1)); cursor:pointer; white-space:nowrap;
+  }
+  .doc-undo-btn:active{ background:var(--paper-dim); }
   .footer{ padding:16px 24px 24px; display:flex; justify-content:center; }
   .footer-content{ width:100%; display:flex; flex-direction:column; gap:14px; align-items:center; }
   .footer-actions .edit-toggle{
@@ -312,10 +319,10 @@
     font-weight:600;
   }
   .footer-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    justify-content:center;
+    display:flex; flex-direction:column; gap:10px; width:100%; align-items:center;
+  }
+  .footer-action-row{
+    display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
   }
   .reset-btn{
     font-family:'Oswald', sans-serif; font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.1em; text-transform:uppercase;
@@ -347,16 +354,24 @@
   .checked-toggle.on .toggle-box{ background:var(--amber); border-color:var(--amber); }
   .checked-toggle .toggle-box svg{ width:10px;height:10px; opacity:0; transition:opacity 0.15s ease; }
   .checked-toggle.on .toggle-box svg{ opacity:1; }
+  .checked-toggle.recheck-locked{ opacity:0.5; pointer-events:none; }
 </style>
 </head>
 <body>
 <div class="pass">
   <div class="header-strip">
-    <div class="brand">HamsterGo · 倉鼠打包小幫手 🐹</div>
+    <div class="brand">HamsterGo · 倉鼠打包小幫手</div>
     <div class="header-actions">
-      <button class="export-btn" id="quickExportBtn" aria-label="匯出旅行 JSON">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+      <button class="toolbar-btn" id="quickResetBtn" aria-label="開始新的旅程" title="開始新的旅程">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="1.5"></rect><path d="M7 7V4h10v3"></path><path d="M4 12h16"></path></svg>
       </button>
+      <button class="toolbar-btn" id="addItemBtn" aria-label="新增項目" title="新增項目">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+      </button>
+      <button class="toolbar-btn" id="editToggle" aria-label="編輯項目" title="編輯項目">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+      </button>
+
       <button class="settings-btn" id="settingsBtn" aria-label="開啟設定" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0L6.2 6.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
@@ -390,8 +405,13 @@
           </div>
         </div>
       </div>
-      <div class="route"><h1 id="pctHeadline">0% 完成</h1></div>
-      <p class="subtitle">出發前，把每一項確認裝進行李。</p>
+      <div class="route">
+        <h1 id="pctHeadline">0% 完成</h1>
+        <button class="secondary-btn packed-recheck" id="recheckBtn" aria-label="再次檢查" title="再次檢查">
+          <svg class="recheck-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" stroke-width="1.35"></path><path d="M14.4 4.3 17.66 6.34 17.05 3.55" fill="none" stroke="currentColor" stroke-width="1.35"></path><path d="M8 12.6 10.4 15 15.4 9"></path></svg>
+        </button>
+      </div>
+      <p class="subtitle" id="statusSubtitle">出發前，把每一項確認裝進行李。</p>
 
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
       <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已確認</div>
@@ -405,7 +425,7 @@
           <button data-type="domestic">國內線</button>
           <button data-type="international">國際線</button>
         </div>
-        <div class="note"><b>出發前</b>放 Personal Item；<b>安檢後</b>移到 Carry-on。</div>
+        <div class="note" id="docNote"><b>出發前</b>放 Personal Item；<b>安檢後</b>移到 Carry-on。</div>
         <div id="docItemRow"></div>
       </div>
       <div class="doc-done" id="docDone" style="display:none;"></div>
@@ -442,16 +462,16 @@
 
     <div class="perforation"></div>
     <div class="section" id="prepSection">
-      <div class="section-title"><span class="idx">05</span> Pre-departure reminders 出發前提醒</div>
+      <div class="section-title"><span class="idx">05</span> Pre-departure reminders 出發前提醒 <button class="section-collapse-btn" id="prepToggle" type="button">展開</button></div>
     </div>
 
     <div class="footer">
       <div class="footer-content">
         <div id="globalAddRow"></div>
         <div class="footer-actions">
-          <button class="edit-toggle" id="editToggle">編輯</button>
-          <button class="secondary-btn" id="recheckBtn">再次檢查</button>
-          <button class="reset-btn" id="resetBtn">開始新的旅程</button>
+          <div class="footer-action-row">
+            <button class="reset-btn" id="resetBtn">開始新的旅程</button>
+          </div>
         </div>
       </div>
     </div>
@@ -483,6 +503,8 @@ function getData(){
 
   const carryCats = [
     { key:'toiletries', name:'洗漱品和藥品', items: [
+      { id:'toiletryBag', label:'洗漱袋' },
+      { id:'medicineBag', label:'藥品袋' },
       { id:'razor', label:'刮鬍刀' },
       { id:'toothbrush', label:'牙刷' },
       { id:'toothpaste', label:'牙膏' },
@@ -494,6 +516,7 @@ function getData(){
     ]},
     { key:'electronics', name:'電子用品', items: [
       { id:'laptop', label:'筆電' },
+      { id:'chargerBag', label:'充電袋' },
       { id:'charger', label:'充電器' },
       { id:'watchcable', label:'手錶充電線' },
     ]},
@@ -549,9 +572,10 @@ function currentDocItem(){
 }
 
 const STORAGE_KEY = 'packing-checklist-v2';
-let state = { days: 3, checked: {}, customItems: {}, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true, qtySettings: {}, tripStatus: 'packing', tripTitle: '' };
+let state = { days: 3, checked: {}, customItems: {}, qtyValues: {}, prepCollapsed: null, prepWasComplete: false, recheckMode: false, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true, qtySettings: {}, tripStatus: 'packing', tripTitle: '' };
 let editingId = null; // custom item currently being renamed
 let dragState = null; // active drag session
+let addModalOpen = false;
 
 function daysQtyText(days){ return String(days); }
 function lensQtyText(days){ return String(days + 1); }
@@ -612,17 +636,21 @@ function getCustomQtyConfig(item, days){
   return null;
 }
 
-function qtyTextFor(item, days, catKey){
-  if(item.isCustom){
-    const cfg = getCustomQtyConfig(item, days);
-    if(!cfg) return null;
-    return String(cfg.value);
+function qtyTextFor(item){
+  if(Object.prototype.hasOwnProperty.call(state.qtyValues || {}, item.id)){
+    const value = String(state.qtyValues[item.id] ?? '');
+    return value === '0' ? '' : value;
   }
-  if(item.qty === 'days') return daysQtyText(days);
-  if(item.qty === 'lens') return lensQtyText(days);
-  if(item.qty === 'fixed') return String(Math.max(1, parseInt(item.qtyValue || item.qtyText, 10) || 1));
-  if(item.followsDays) return daysQtyText(days);
-  return null;
+  if(item.isCustom) return '';
+  return defaultQtyTextFor(item, state.days) || '';
+}
+
+function setItemQty(itemId, value){
+  state.qtyValues = state.qtyValues || {};
+  const cleaned = String(value || '').replace(/[^0-9]/g, '').slice(0, 3);
+  state.qtyValues[itemId] = cleaned === '0' ? '' : cleaned;
+  saveState();
+  render();
 }
 
 function setQtySetting(itemId, next){
@@ -663,6 +691,11 @@ function isItemChecked(id){
 
 function cycleItemState(id){
   const current = getItemState(id);
+  if(state.recheckMode){
+    if(current === null) state.checked[id] = true;
+    else if(current === true) delete state.checked[id];
+    return;
+  }
   if(current === null){
     state.checked[id] = true;
   }else if(current === true){
@@ -682,10 +715,28 @@ function renderDocuments(){
   doneEl.style.display = done ? 'flex' : 'none';
   if(done){
     const typeLabel = state.flightType === 'international' ? '國際線' : '國內線';
-    doneEl.innerHTML = `✓ ${docItem.label}已收妥（${typeLabel}）`;
+    doneEl.innerHTML = '';
+    const doneText = document.createElement('span');
+    doneText.textContent = `✓ ${docItem.label}已收妥（${typeLabel}）`;
+    doneEl.appendChild(doneText);
+    if(state.editMode){
+      const undoBtn = document.createElement('button');
+      undoBtn.type = 'button';
+      undoBtn.className = 'doc-undo-btn';
+      undoBtn.textContent = '退回';
+      undoBtn.title = '退回未收妥';
+      undoBtn.addEventListener('click', () => {
+        delete state.checked[docItem.id];
+        state.docPacked[docItem.id] = true;
+        saveState();
+        render();
+      });
+      doneEl.appendChild(undoBtn);
+    }
   }
 
-  document.getElementById('flightToggle').style.display = packed ? 'none' : '';
+  document.getElementById('flightToggle').style.display = packed || state.recheckMode ? 'none' : '';
+  document.getElementById('docNote').style.display = state.recheckMode ? 'none' : '';
   document.querySelectorAll('#flightToggle button').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.type === state.flightType);
   });
@@ -738,6 +789,15 @@ function buildDocRow(docItem){
   return row;
 }
 
+function isPrepComplete(){
+  const section = getData().find(s => s.key === 'prep');
+  if(!section) return false;
+  const ids = [];
+  section.cats.forEach(cat => cat.items.forEach(item => ids.push(item.id)));
+  (state.customItems.prepTasks || []).forEach(item => ids.push(item.id));
+  return ids.length > 0 && ids.every(id => getItemState(id) === true);
+}
+
 function render(){
   closeAllCatLists();
   document.querySelectorAll('.cat-select-list').forEach(el => el.remove());
@@ -770,12 +830,31 @@ function render(){
     });
 
   });
+  const prepComplete = isPrepComplete();
+  if(prepComplete && !state.prepWasComplete){
+    state.prepCollapsed = true;
+  }else if(!prepComplete && state.prepWasComplete){
+    state.prepCollapsed = false;
+  }else if(state.prepCollapsed === null){
+    state.prepCollapsed = prepComplete;
+  }
+  state.prepWasComplete = prepComplete;
+  document.getElementById('prepSection').classList.toggle('prep-collapsed', state.prepCollapsed === true);
+  const prepToggle = document.getElementById('prepToggle');
+  const prepIsCollapsed = state.prepCollapsed === true;
+  prepToggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>';
+  prepToggle.setAttribute('aria-expanded', String(!prepIsCollapsed));
+  prepToggle.setAttribute('aria-label', prepIsCollapsed ? '展開出發前提醒' : '收起出發前提醒');
+  prepToggle.setAttribute('title', prepIsCollapsed ? '展開' : '收起');
   renderGlobalAddRow();
   document.getElementById('checkedToggle').classList.toggle('on', !!state.checkedEnabled);
   document.getElementById('carryOnToggle').classList.toggle('on', !!state.carryOnEnabled);
+  document.getElementById('checkedToggle').classList.toggle('recheck-locked', !!state.recheckMode);
+  document.getElementById('carryOnToggle').classList.toggle('recheck-locked', !!state.recheckMode);
   updateProgress();
   document.getElementById('editToggle').classList.toggle('active', state.editMode);
-  document.getElementById('editToggle').textContent = state.editMode ? '完成編輯' : '編輯';
+  document.getElementById('editToggle').setAttribute('aria-label', state.editMode ? '完成編輯' : '編輯項目');
+  document.getElementById('editToggle').setAttribute('title', state.editMode ? '完成編輯' : '編輯項目');
 }
 
 function getCatSelectOverlay(){
@@ -797,38 +876,47 @@ function closeAllCatLists(){
 function renderGlobalAddRow(){
   const host = document.getElementById('globalAddRow');
   host.innerHTML = '';
-  if(!state.editMode) return;
+  document.querySelectorAll('.add-modal-layer').forEach(el => el.remove());
+  if(!addModalOpen) return;
 
+  const layer = document.createElement('div');
+  layer.className = 'add-modal-layer';
+  const backdrop = document.createElement('div');
+  backdrop.className = 'add-modal-backdrop';
+  backdrop.addEventListener('click', closeAddModal);
+  layer.appendChild(backdrop);
   const wrap = document.createElement('div');
-  wrap.className = 'add-row show';
+  wrap.className = 'add-row show add-modal';
+  const title = document.createElement('h2');
+  title.className = 'add-modal-title';
+  title.textContent = '新增項目';
+  wrap.appendChild(title);
   const inputsRow = document.createElement('div');
   inputsRow.className = 'add-inputs';
   const input = document.createElement('input');
   input.type = 'text';
+  input.name = 'item';
   input.placeholder = '新增項目名稱';
   input.className = 'new-item-input';
-  const btn = document.createElement('button');
-  btn.className = 'add-btn';
-  btn.textContent = '新增';
-  inputsRow.append(input, btn);
+  input.autocomplete = 'off';
+  input.autocapitalize = 'off';
+  input.spellcheck = false;
+  inputsRow.appendChild(input);
   wrap.appendChild(inputsRow);
 
   const data = getData();
   const sections = [
-    { key:'personal', label:'02 隨身包', cats:data[0].cats },
-    { key:'carry', label:'03 手提行李', cats:data[1].cats },
-    { key:'checked', label:'04 托運行李', cats:data[2].cats },
-    { key:'prep', label:'05 出發前提醒', cats:data[3].cats },
+    { key:'personal', label:'Personal 隨身包', cats:data[0].cats },
+    { key:'carry', label:'Carry-on 手提行李', cats:data[1].cats },
+    { key:'checked', label:'Checked Baggage 托運行李', cats:data[2].cats },
+    { key:'prep', label:'Pre-departure reminders 出發前提醒', cats:data[3].cats },
   ].filter(section => (section.key !== 'carry' || state.carryOnEnabled) && (section.key !== 'checked' || state.checkedEnabled));
-
   const categoryRow = document.createElement('div');
   categoryRow.className = 'add-category-row';
   const majorSelect = document.createElement('select');
   sections.forEach(section => {
     const option = document.createElement('option');
-    option.value = section.key;
-    option.textContent = section.label;
-    majorSelect.appendChild(option);
+    option.value = section.key; option.textContent = section.label; majorSelect.appendChild(option);
   });
   categoryRow.appendChild(majorSelect);
   const subSelect = document.createElement('select');
@@ -838,36 +926,40 @@ function renderGlobalAddRow(){
 
   const selectedSection = () => sections.find(section => section.key === majorSelect.value) || sections[0];
   const refreshSubcategory = () => {
-    const section = selectedSection();
-    subSelect.innerHTML = '';
+    const section = selectedSection(); subSelect.innerHTML = '';
     const showSubcategory = section && section.key === 'carry' && section.cats.length > 1;
     subSelect.style.display = showSubcategory ? 'block' : 'none';
-    if(showSubcategory){
-      section.cats.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat.key;
-        option.textContent = cat.name || cat.key;
-        subSelect.appendChild(option);
-      });
-    }
+    if(showSubcategory) section.cats.forEach(cat => {
+      const option = document.createElement('option'); option.value = cat.key; option.textContent = cat.name || cat.key; subSelect.appendChild(option);
+    });
   };
-  majorSelect.addEventListener('change', refreshSubcategory);
-  refreshSubcategory();
+  majorSelect.addEventListener('change', refreshSubcategory); refreshSubcategory();
+
+  const actions = document.createElement('div');
+  actions.className = 'add-modal-actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button'; cancelBtn.className = 'add-modal-cancel'; cancelBtn.textContent = '取消';
+  cancelBtn.addEventListener('click', closeAddModal);
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'add-modal-confirm'; btn.textContent = '新增';
+  actions.append(cancelBtn, btn); wrap.appendChild(actions);
 
   const doAdd = () => {
-    const label = input.value.trim();
-    const section = selectedSection();
+    const label = input.value.trim(); const section = selectedSection();
     if(!label || !section) return;
     const catKey = section.key === 'carry' && subSelect.style.display !== 'none' ? subSelect.value : section.cats[0].key;
     const id = 'custom_' + catKey + '_' + Date.now();
     if(!state.customItems[catKey]) state.customItems[catKey] = [];
-    state.customItems[catKey].push({ id, label });
-    saveState();
-    render();
+    state.customItems[catKey].push({ id, label }); addModalOpen = false; saveState(); render();
   };
   input.addEventListener('keydown', e => { if(e.key === 'Enter') doAdd(); });
   btn.addEventListener('click', doAdd);
-  host.appendChild(wrap);
+  layer.appendChild(wrap); document.body.appendChild(layer);
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeAddModal(){
+  addModalOpen = false; renderGlobalAddRow();
 }
 
 function buildItemRow(item, isCustom, catKey){
@@ -887,10 +979,20 @@ function buildItemRow(item, isCustom, catKey){
   box.addEventListener('click', () => {
     if(state.editMode) return;
     if(isPrepItem){
-      if(itemState === true) delete state.checked[item.id];
-      else state.checked[item.id] = true;
-      saveState();
-      render();
+      if(state.recheckMode){
+        if(itemState === null) state.checked[item.id] = true;
+        else if(itemState === true) delete state.checked[item.id];
+        saveState();
+        render();
+      }else if(itemState === true){
+        delete state.checked[item.id];
+        saveState();
+        render();
+      }else{
+        state.checked[item.id] = true;
+        saveState();
+        render();
+      }
       return;
     }
     toggleItem(item.id);
@@ -923,13 +1025,14 @@ function buildItemRow(item, isCustom, catKey){
     row.appendChild(label);
   }
 
-  const qtyText = qtyTextFor(item, state.days, catKey);
-  if(qtyText && editingId !== item.id){
-    const qtyEl = document.createElement('div');
-    qtyEl.className = 'item-qty';
-    qtyEl.textContent = qtyText;
-    row.appendChild(qtyEl);
-  }
+  const qtyInput = document.createElement('input');
+  qtyInput.type = 'number'; qtyInput.min = '1'; qtyInput.max = '999'; qtyInput.inputMode = 'numeric';
+  qtyInput.className = 'item-qty-input'; qtyInput.value = qtyTextFor(item);
+  qtyInput.placeholder = ''; qtyInput.readOnly = !state.editMode;
+  qtyInput.setAttribute('aria-label', item.label + '數量');
+  qtyInput.addEventListener('click', e => e.stopPropagation());
+  qtyInput.addEventListener('change', () => setItemQty(item.id, qtyInput.value));
+  row.appendChild(qtyInput);
 
   if(isCustom && state.editMode){
     const editBtn = document.createElement('button');
@@ -951,49 +1054,7 @@ function buildItemRow(item, isCustom, catKey){
     handle.innerHTML = DRAG_SVG;
     row.appendChild(handle);
 
-    if(catKey === 'clothes' && !isCustom){
-      const qtySetting = getQtySetting(item);
-      const settings = document.createElement('div');
-      settings.className = 'item-settings';
 
-      const showLabel = document.createElement('label');
-      showLabel.className = 'item-setting-label';
-      const showInput = document.createElement('input');
-      showInput.type = 'checkbox';
-      showInput.checked = qtySetting.show;
-      showInput.addEventListener('change', () => {
-        setQtySetting(item.id, { show: showInput.checked });
-      });
-      showLabel.appendChild(showInput);
-      showLabel.appendChild(document.createTextNode('有數量'));
-      settings.appendChild(showLabel);
-
-      const qtyInput = document.createElement('input');
-      qtyInput.type = 'number';
-      qtyInput.min = '1';
-      qtyInput.step = '1';
-      qtyInput.className = 'item-setting-input';
-      qtyInput.value = qtySetting.value;
-      qtyInput.disabled = !qtySetting.show;
-      qtyInput.addEventListener('change', () => {
-        const value = Math.max(1, parseInt(qtyInput.value, 10) || 1);
-        setQtySetting(item.id, { show: true, mode: 'fixed', value });
-      });
-      settings.appendChild(qtyInput);
-
-      if(hasDefaultQty(item)){
-        const autoBtn = document.createElement('button');
-        autoBtn.type = 'button';
-        autoBtn.className = 'item-setting-btn' + (qtySetting.mode === 'auto' ? ' active' : '');
-        autoBtn.textContent = '跟天數';
-        autoBtn.addEventListener('click', () => {
-          setQtySetting(item.id, { show: true, mode: 'auto', value: qtySetting.value });
-        });
-        settings.appendChild(autoBtn);
-      }
-
-      row.appendChild(settings);
-    }
   }
 
   return row;
@@ -1015,19 +1076,26 @@ function updateProgress(){
   const docId = currentDocItem().id;
   const ids = allItemIds();
   const total = ids.length;
-  const pending = ids.filter(id => id === docId ? (!state.docPacked[id] && getItemState(id) !== false) : getItemState(id) === null).length;
-  const done = total - pending;
+  const packingPending = ids.filter(id => id === docId ? !state.docPacked[id] : getItemState(id) === null).length;
+  const docStored = !!state.docPacked[docId] && getItemState(docId) === true;
+  const readyPending = packingPending + (docStored ? 0 : 1);
+  const done = ids.filter(id => id === docId ? !!state.docPacked[id] : getItemState(id) !== null).length;
 
-  const statusText = pending > 0
-    ? `🐹 要出發了！還有 ${pending} 項沒帶。`
+  const statusText = packingPending > 0
+    ? `🐹 要出發了！還有 ${packingPending} 項沒帶。`
     : '🐹 行李整理完成！ ✈️';
-  state.tripStatus = pending > 0 ? 'packing' : 'packed';
+  state.tripStatus = docStored && packingPending === 0 ? 'packed' : 'packing';
 
   document.getElementById('doneCount').textContent = done;
   document.getElementById('totalCount').textContent = total;
   const pct = total ? Math.round((done/total)*100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('pctHeadline').textContent = statusText;
+  document.getElementById('statusSubtitle').style.display = packingPending > 0 ? '' : 'none';
+  const recheckBtn = document.getElementById('recheckBtn');
+  const canRecheck = readyPending === 0;
+  recheckBtn.style.display = canRecheck ? 'inline-flex' : 'none';
+  recheckBtn.setAttribute('aria-hidden', String(!canRecheck));
   document.getElementById('dayVal').value = state.days;
 }
 
@@ -1042,9 +1110,10 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'' }, parsed);
+      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, tripStatus:'packing', tripTitle:'' }, parsed);
       delete state.itemPlacement;
       state.qtySettings = state.qtySettings || {};
+      state.qtyValues = state.qtyValues || {};
       state.tripStatus = state.tripStatus === 'packed' ? 'packed' : 'packing';
       state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : '';
     }
@@ -1086,10 +1155,11 @@ function importTripFile(file){
       if(!imported || typeof imported !== 'object' || Array.isArray(imported) || !imported.checked || !imported.customItems){
         throw new Error('invalid travel file');
       }
-      const defaults = { days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'' };
+      const defaults = { days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, tripStatus:'packing', tripTitle:'' };
       state = Object.assign(defaults, imported);
       state.editMode = false;
       state.qtySettings = state.qtySettings || {};
+      state.qtyValues = state.qtyValues || {};
       state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : (typeof payload.tripTitle === 'string' ? payload.tripTitle : '');
       editingId = null;
       dragState = null;
@@ -1114,7 +1184,6 @@ document.getElementById('tripTitle').addEventListener('input', e => {
   state.tripTitle = e.target.value;
   saveState();
 });
-document.getElementById('quickExportBtn').addEventListener('click', exportTrip);
 document.getElementById('panelExportBtn').addEventListener('click', exportTrip);
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', e => {
@@ -1126,10 +1195,15 @@ document.getElementById('dayVal').addEventListener('change', e => {
   render(); saveState();
 });
 document.getElementById('recheckBtn').addEventListener('click', () => {
+  const prepIds = new Set();
+  const prepSection = getData().find(section => section.key === 'prep');
+  prepSection?.cats.forEach(cat => cat.items.forEach(item => prepIds.add(item.id)));
+  (state.customItems.prepTasks || []).forEach(item => prepIds.add(item.id));
   Object.keys(state.checked).forEach(id => {
-    if(state.checked[id] === true) delete state.checked[id];
+    if(state.checked[id] === true && !prepIds.has(id)) delete state.checked[id];
   });
   state.docPacked = {};
+  state.recheckMode = true;
   state.tripStatus = 'packing';
   render(); saveState();
 });
@@ -1137,13 +1211,24 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   state.checked = {};
   state.docPacked = {};
   state.flightType = 'domestic';
+  state.recheckMode = false;
+  state.prepCollapsed = null;
+  state.prepWasComplete = false;
   state.tripStatus = 'packing';
   render(); saveState();
 });
+document.getElementById('quickResetBtn').addEventListener('click', () => {
+  document.getElementById('resetBtn').click();
+});
 document.getElementById('editToggle').addEventListener('click', () => {
+  closeAddModal();
   state.editMode = !state.editMode;
   editingId = null;
   render(); saveState();
+});
+document.getElementById('addItemBtn').addEventListener('click', () => {
+  addModalOpen = true;
+  renderGlobalAddRow();
 });
 document.querySelectorAll('#flightToggle button').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1153,6 +1238,10 @@ document.querySelectorAll('#flightToggle button').forEach(btn => {
     state.checkedEnabled = isIntl;
     render(); saveState();
   });
+});
+document.getElementById('prepToggle').addEventListener('click', () => {
+  state.prepCollapsed = state.prepCollapsed === true ? false : true;
+  render(); saveState();
 });
 document.getElementById('checkedToggle').addEventListener('click', () => {
   state.checkedEnabled = !state.checkedEnabled;
@@ -1243,6 +1332,8 @@ function setFontScale(scale, persist = true){
     try{ localStorage.setItem(FONT_SCALE_KEY, value); }catch(e){ /* storage unavailable */ }
   }
 }
+
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && addModalOpen) closeAddModal(); });
 
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsPanel = document.getElementById('settingsPanel');

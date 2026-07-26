@@ -1,3 +1,43 @@
+## 2026-07-26 — Final controls, recheck behavior, and icon organization
+
+**What changed**:
+
+1. Added a top-level briefcase icon for 「開始新的旅程」 while keeping the footer action; removed the top export icon and kept JSON export inside Settings. The product title no longer includes the hamster emoji.
+2. Added the final recheck behavior: the recheck control appears only after packing is complete and the document is stowed; in recheck mode, crossed-out items and baggage toggles are locked, while packed items can be checked or unchecked for the new pass.
+3. Added edit-mode recovery for a document marked 「已收妥」, returning it to 「帶了」 without losing the packed state. Section 05 now auto-collapses when complete and supports manual expand/collapse.
+4. Refined the recheck icon and kept its source as `resources/recheck.svg`, with a matching inline copy in `index.html` for direct file opening. Each custom SVG has an individual file under `resources/`; the old `resource/` directory was renamed.
+5. Disabled autofill for the add-item name field with `name="item"` and `autocomplete="off"`.
+
+**Files touched**:
+- `index.html`
+- `manifest.json`
+- `service-worker.js`
+- `README.md`
+- `README.en.md`
+- `dev-log.md`
+- `resources/*.svg`
+
+## 2026-07-26 — Recheck flow, packing controls, and resource icons
+
+**What changed**:
+
+1. Added the final packing flow: the document's 「① 帶了」 state counts toward progress immediately, while 「② 已收好」 is required before the recheck control appears. Edit mode can undo 「已收妥」 without removing the packed state.
+2. Added recheck mode for hotel/home transitions: crossed-out items remain locked, blank items can be checked or unchecked, and baggage toggles plus flight instructions are locked or hidden.
+3. Added automatic Section 05 collapse when all reminders are checked, with a manual chevron expand/collapse control.
+4. Reorganized the top controls into Start New Trip, Add, Edit, Export, and Settings icons; the footer Start New Trip button remains available.
+5. Added the normal item quantity field behavior: numbers are plain text outside edit mode, inputs with steppers appear in edit mode, and empty/zero quantities stay blank.
+6. Added 「洗漱袋」, 「藥品袋」, and 「充電袋」 as regular checklist items.
+7. Reworked the add dialog to a centered, solid modal with custom Add/Cancel buttons, backdrop/Esc closing, and mobile-safe sizing.
+8. Renamed `resource/` to `resources/`; each custom SVG now has an individual copy in `resources/`, while inline SVG remains in `index.html` so direct file opening still works.
+
+**Files touched**:
+- `index.html`
+- `README.md`
+- `README.en.md`
+- `manifest.json`
+- `service-worker.js`
+- `resources/*.svg`
+
 ## 2026-07-26 — Trip naming, JSON backup, and compact controls
 
 **What changed**:
@@ -38,7 +78,7 @@
    - Editing mode shows one shared add panel at the bottom instead of one add row per section.
    - Users choose a major section first; selecting section 03 reveals its subcategory picker.
 7. Added subtle visual separation for custom items, the add panel, and section 05. The 🐹 was removed from the top brand line, while status prompts keep their hamster emoji.
-8. Moved HamsterGo images into `resource/`, including the current 192/512 PWA icons and the retained candidate logo `hamstergo-logo-candidate.png`.
+8. Moved HamsterGo images into `resources/`, including the current 192/512 PWA icons and the retained candidate logo `hamstergo-logo-candidate.png`.
 9. Updated the Service Worker to use a stable cache name with network-first fetching and cached offline fallback, so future deployments do not require manually incrementing a cache version.
 
 **Files touched**:
@@ -47,9 +87,9 @@
 - `service-worker.js`
 - `README.md`
 - `README.en.md`
-- `resource/icon-192.png`
-- `resource/icon-512.png`
-- `resource/hamstergo-logo-candidate.png`
+- `resources/icon-192.png`
+- `resources/icon-512.png`
+- `resources/hamstergo-logo-candidate.png`
 
 # Dev Log
 
