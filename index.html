@@ -427,7 +427,7 @@
           <svg class="recheck-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" stroke-width="1.35"></path><path d="M14.4 4.3 17.66 6.34 17.05 3.55" fill="none" stroke="currentColor" stroke-width="1.35"></path><path d="M8 12.6 10.4 15 15.4 9"></path></svg>
         </button>
       </div>
-      <p class="subtitle" id="statusSubtitle">出發前，把每一項確認裝進行李。</p>
+      <p class="subtitle" id="statusSubtitle">出發前，確認每一件都裝進行李。</p>
 
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
       <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已確認</div>
@@ -1098,7 +1098,7 @@ function updateProgress(){
   const done = ids.filter(id => id === docId ? !!state.docPacked[id] : getItemState(id) !== null).length;
 
   const statusText = packingPending > 0
-    ? `🐹 要出發了！還有 ${packingPending} 項沒帶。`
+    ? `🐹 要出發了！還有 ${packingPending} 件物品沒帶。`
     : '🐹 行李整理完成！ ✈️';
   state.tripStatus = docStored && packingPending === 0 ? 'packed' : 'packing';
 
