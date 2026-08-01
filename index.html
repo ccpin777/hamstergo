@@ -129,7 +129,14 @@
     align-items:center; justify-content:center; line-height:1; overflow:hidden;
   }
   .recheck-icon{ width:18px; height:18px; display:block; flex:0 0 18px; }
+  .status-layout{ display:flex; align-items:center; gap:8px; }
+  .status-copy{ flex:1; min-width:0; }
   .route h1{ font-family:'Oswald', sans-serif; font-weight:700; font-size:clamp(calc(16px * var(--font-scale, 1)), 4vw, calc(22px * var(--font-scale, 1))); line-height:1.2; margin:0; color:var(--navy); white-space:nowrap; text-overflow:ellipsis; }
+  #pctHeadline{ white-space:normal; }
+  .status-pending{ display:block; }
+  .status-copy .progress-track{ width:100%; }
+  .status-copy .progress-label{ text-align:left; }
+  .status-mascot{ width:140px; height:140px; flex:0 0 140px; object-fit:contain; display:block; }
   .route .dot{ display:none; }
   .subtitle{ font-size:calc(13px * var(--font-scale, 1)); color:var(--navy-soft); margin:0 0 18px; }
   .trip-meta{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 14px; margin-bottom:18px; }
@@ -421,16 +428,20 @@
           </div>
         </div>
       </div>
-      <div class="route">
-        <h1 id="pctHeadline">0% 完成</h1>
-        <button class="secondary-btn packed-recheck" id="recheckBtn" aria-label="再次檢查" title="再次檢查">
-          <svg class="recheck-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" stroke-width="1.35"></path><path d="M14.4 4.3 17.66 6.34 17.05 3.55" fill="none" stroke="currentColor" stroke-width="1.35"></path><path d="M8 12.6 10.4 15 15.4 9"></path></svg>
-        </button>
+      <div class="status-layout">
+        <div class="status-copy">
+          <div class="route">
+            <h1 id="pctHeadline">要出發了！<span class="status-pending">還有 0 件物品沒帶</span></h1>
+            <button class="secondary-btn packed-recheck" id="recheckBtn" aria-label="再次檢查" title="再次檢查">
+              <svg class="recheck-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" stroke-width="1.35"></path><path d="M14.4 4.3 17.66 6.34 17.05 3.55" fill="none" stroke="currentColor" stroke-width="1.35"></path><path d="M8 12.6 10.4 15 15.4 9"></path></svg>
+            </button>
+          </div>
+          <p class="subtitle" id="statusSubtitle">出發前，確認每一件都裝進行李。</p>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已確認</div>
+        </div>
+        <img class="status-mascot" src="resources/hamstergo-icon-source.png" alt="" aria-hidden="true">
       </div>
-      <p class="subtitle" id="statusSubtitle">出發前，確認每一件都裝進行李。</p>
-
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已確認</div>
     </div>
 
     <div class="perforation"></div>
@@ -1098,15 +1109,15 @@ function updateProgress(){
   const done = ids.filter(id => id === docId ? !!state.docPacked[id] : getItemState(id) !== null).length;
 
   const statusText = packingPending > 0
-    ? `🐹 要出發了！還有 ${packingPending} 件物品沒帶。`
-    : '🐹 行李整理完成！ ✈️';
+    ? `要出發了！<span class="status-pending">還有 ${packingPending} 件物品沒帶</span>`
+    : '行李整理完成！ ✈️';
   state.tripStatus = docStored && packingPending === 0 ? 'packed' : 'packing';
 
   document.getElementById('doneCount').textContent = done;
   document.getElementById('totalCount').textContent = total;
   const pct = total ? Math.round((done/total)*100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('pctHeadline').textContent = statusText;
+  document.getElementById('pctHeadline').innerHTML = statusText;
   document.getElementById('statusSubtitle').style.display = packingPending > 0 ? '' : 'none';
   const recheckBtn = document.getElementById('recheckBtn');
   const canRecheck = readyPending === 0;
