@@ -1,10 +1,11 @@
-const CACHE_NAME = 'packing-checklist-cache';
+const CACHE_NAME = 'packing-checklist-cache-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './resources/icon-192.png',
   './resources/icon-512.png',
+  './resources/hamstergo-icon.webp',
   './resources/briefcase.svg',
   './resources/plus.svg',
   './resources/pencil.svg',
@@ -36,6 +37,18 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if(event.request.method !== 'GET') return;
+
+  if (event.request.destination === 'image') {
+    event.respondWith(
+      caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+        if (response && response.status === 200 && response.type === 'basic') {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+        }
+        return response;
+      }))
+    );
+    return;
+  }
 
   event.respondWith(
     fetch(event.request).then((response) => {
