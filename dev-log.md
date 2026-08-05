@@ -1,3 +1,21 @@
+## 2026-08-05 — 更新 HamsterGo PWA App Icon
+
+**變更**：
+
+1. 將新的 `hamster_boarding_pass_1024x1024_2.png` 重新命名為 `resources/hamster_boarding_pass_current.png`，作為目前的 icon 原始圖。
+2. 由新的原始圖重新產生 PWA icon：
+   - `resources/icon-512.png`（512×512）
+   - `resources/icon-192.png`（192×192）
+3. 將 `resources/old/` 內所有舊圖片加上 `archived-` 前綴，避免與目前使用中的 icon 混淆。
+4. `manifest.json` 與 `index.html` 繼續使用 `icon-192.png` 和 `icon-512.png`，不需要更改參照路徑。
+
+**Files touched**:
+- `dev-log.md`
+- `resources/icon-192.png`
+- `resources/icon-512.png`
+- `resources/hamster_boarding_pass_current.png`
+- `resources/old/*`
+
 ## 2026-07-26 — Final controls, recheck behavior, and icon organization
 
 **What changed**:
