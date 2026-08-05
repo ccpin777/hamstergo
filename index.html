@@ -238,7 +238,7 @@
   .new-trip-confirm-message{ margin:0; color:var(--navy-soft); font-size:calc(13px * var(--font-scale, 1)); line-height:1.55; white-space:pre-line; }
   .add-row.add-modal.recheck-mode-confirm{ width:min(100%, 360px); }
   .recheck-mode-confirm .new-trip-confirm-message{ text-align:center; }
-  .recheck-mode-options{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:14px; }
+  .recheck-mode-options{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; margin-top:14px; }
   .mode-option{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; width:100%; min-height:82px; padding:10px 6px; color:var(--navy); background:var(--paper-dim); border:1px solid var(--line); border-radius:12px; text-align:left; cursor:pointer; }
   .mode-option:active{ background:rgba(232,163,61,0.22); border-color:var(--amber); }
   .mode-option-icon{ display:flex; align-items:center; justify-content:center; width:32px; height:32px; flex:0 0 32px; color:var(--navy); background:var(--amber); border-radius:50%; font-size:18px; font-weight:700; }
@@ -1109,23 +1109,19 @@ function openRecheckModeConfirm(){
   wrap.className = "add-row show add-modal recheck-mode-confirm";
   const title = document.createElement("h2");
   title.className = "add-modal-title";
-  title.textContent = "再次檢查";
+  title.textContent = "接下來要帶行李去哪裡？";
   wrap.appendChild(title);
-  const message = document.createElement("p");
-  message.className = "new-trip-confirm-message";
-  message.textContent = "請選擇接下來的模式";
-  wrap.appendChild(message);
   const options = document.createElement("div");
   options.className = "recheck-mode-options";
   const moveBtn = document.createElement("button");
   moveBtn.type = "button";
   moveBtn.className = "mode-option";
-  moveBtn.innerHTML = "<span class='mode-option-icon' aria-hidden='true'>↗</span><span class='mode-option-copy'><span class='mode-option-title'>移動</span></span>";
+  moveBtn.innerHTML = "<span class='mode-option-icon' aria-hidden='true'>↗</span><span class='mode-option-copy'><span class='mode-option-title'>換旅館</span></span>";
   moveBtn.addEventListener("click", () => { closeRecheckModeConfirm(); beginRecheck("move"); });
   const returnBtn = document.createElement("button");
   returnBtn.type = "button";
   returnBtn.className = "mode-option";
-  returnBtn.innerHTML = "<span class='mode-option-icon' aria-hidden='true'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M9 7H4m0 0 3-3M4 7l3 3M4 7h8a6 6 0 0 1 0 12H9'></path></svg></span><span class='mode-option-copy'><span class='mode-option-title'>回程</span></span>";
+  returnBtn.innerHTML = "<span class='mode-option-icon' aria-hidden='true'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 10.5 12 3l9 7.5'></path><path d='M5.5 9.5V20h13V9.5'></path><path d='M9.5 20v-5h5v5'></path></svg></span><span class='mode-option-copy'><span class='mode-option-title'>回家</span></span>";
   returnBtn.addEventListener("click", () => { closeRecheckModeConfirm(); beginRecheck("return"); });
   options.append(moveBtn, returnBtn);
   wrap.appendChild(options);
@@ -1321,7 +1317,9 @@ function updateProgress(){
   const docOnlyPending = !state.recheckMode && !state.docPacked[docId] && total > 0 && otherPending === 0;
   const moveDocOnlyPending = isMoveMode && total > 0 && !state.checked[docId] && otherPending === 0;
   const returnMode = state.recheckMode && state.moveMode === 'return';
-  const statusText = docOnlyPending || moveDocOnlyPending
+  const returnDocOnlyPending = returnMode && total > 0 && !state.docPacked[docId] && otherPending === 0;
+  const docOnlyStatus = docOnlyPending || moveDocOnlyPending || returnDocOnlyPending;
+  const statusText = docOnlyStatus
     ? '只剩證件未確認'
     : state.recheckMode
     ? (returnMode
@@ -1342,8 +1340,8 @@ function updateProgress(){
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('pctHeadline').innerHTML = statusText;
   const statusSubtitle = document.getElementById('statusSubtitle');
-  statusSubtitle.textContent = docOnlyPending || moveDocOnlyPending ? '別忘了證件噢 👀' : (returnMode ? '別忘了把所有東西帶回家' : (isMoveMode ? '移動前確認每一件物品都帶上了' : '出發前確認每一件東西都裝進行李'));
-  statusSubtitle.style.display = docOnlyPending || moveDocOnlyPending || (returnMode || isMoveMode || !state.recheckMode) && packingPending > 0 ? '' : 'none';
+  statusSubtitle.textContent = docOnlyStatus ? '別忘了證件噢 👀' : (returnMode ? '別忘了把所有東西帶回家' : (isMoveMode ? '移動前確認每一件物品都帶上了' : '出發前確認每一件東西都裝進行李'));
+  statusSubtitle.style.display = docOnlyStatus || (returnMode || isMoveMode || !state.recheckMode) && packingPending > 0 ? '' : 'none';
   const recheckBtn = document.getElementById('recheckBtn');
   const canRecheck = readyPending === 0;
   recheckBtn.style.display = canRecheck ? 'inline-flex' : 'none';
