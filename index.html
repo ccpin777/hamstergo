@@ -150,8 +150,9 @@
   .trip-meta{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 14px; margin-bottom:18px; }
   .flight-info{ box-sizing:border-box; height:47px; margin:2px 24px 12px; border:1px solid var(--line); border-radius:10px; background:var(--paper-dim); overflow:hidden; }
   .flight-info.editing{ height:auto; overflow:visible; }
-  .flight-info-toggle{ width:100%; display:flex; align-items:center; gap:8px; height:100%; padding:12px 14px; border:0; background:transparent; color:var(--navy); font:600 calc(14.5px * var(--font-scale, 1)) var(--font-display); text-align:left; cursor:pointer; }
+  .flight-info-toggle{ width:100%; display:flex; align-items:center; gap:8px; height:100%; padding:6px 14px; border:0; background:transparent; color:var(--navy); font:600 calc(14.5px * var(--font-scale, 1)) var(--font-display); text-align:left; cursor:pointer; }
   .flight-info-summary{ margin-left:auto; color:var(--navy-soft); font-weight:400; white-space:pre-line; text-align:left; flex:1; overflow:hidden; text-overflow:ellipsis; }
+  .flight-info-summary{ line-height:1.2; }
   .flight-info-chevron{ color:var(--navy-soft); font-size:15px; transition:transform .15s ease; }
   .flight-info-toggle[aria-expanded="true"] .flight-info-chevron{ transform:rotate(180deg); }
   .flight-info-body{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 12px; }
@@ -981,7 +982,8 @@ function flightTimestamp(flight){
 }
 
 function flightSummary(flight){
-  return [flight.code, formatFlightTime(flight.time), flight.airportTerminal].filter(Boolean).join(" ");
+  const firstLine = [flight.code, formatFlightTime(flight.time)].filter(Boolean).join(" ");
+  return [firstLine, flight.airportTerminal].filter(Boolean).join("\n");
 }
 
 function renderFlightSummary(){
@@ -1001,7 +1003,8 @@ function renderFlightEditor(){
     row.className = "flight-leg";
     const title = document.createElement("div");
     title.className = "flight-leg-title";
-    title.textContent = "航班 " + (index + 1);
+    title.dataset.flightTitle = String(index);
+    title.textContent = flightSummary(flight) || ("航班 " + (index + 1));
     if(getFlights().length > 2){
       const remove = document.createElement("button");
       remove.type = "button"; remove.className = "flight-leg-remove"; remove.textContent = "移除"; remove.dataset.flightRemove = String(index);
@@ -1586,6 +1589,18 @@ document.getElementById('tripTitle').addEventListener('input', e => {
   state.tripTitle = e.target.value;
   saveState();
 });
+document.getElementById("flightInfoBody").addEventListener("keydown", e => {
+  const input = e.target;
+  if(!input.matches('[data-flight-field="time"]') || e.key !== "Backspace" || input.selectionStart !== input.selectionEnd) return;
+  const position = input.selectionStart;
+  if(position === 0 || /\d/.test(input.value.charAt(position - 1))) return;
+  let digit = position - 1;
+  while(digit >= 0 && !/\d/.test(input.value.charAt(digit))) digit--;
+  if(digit < 0) return;
+  e.preventDefault();
+  input.setSelectionRange(digit, position);
+  input.setRangeText("", digit, position, "start"); input.dispatchEvent(new Event("input", { bubbles:true }));
+});
 document.getElementById("flightInfoBody").addEventListener("input", e => {
   const input = e.target;
   if(!input.matches("[data-flight-index]")) return;
@@ -1594,7 +1609,10 @@ document.getElementById("flightInfoBody").addEventListener("input", e => {
   const value = input.dataset.flightField === "time" ? input.value.replace(/\D/g, "").slice(0, 12) : input.value;
   flight[input.dataset.flightField] = value;
   input.value = input.dataset.flightField === "time" ? formatFlightTimeInput(value) : value;
-  renderFlightSummary();
+  const title = document.querySelector('[data-flight-title="' + input.dataset.flightIndex + '"]');
+  if(title) title.firstChild.textContent = flightSummary(flight) || ("航班 " + (Number(input.dataset.flightIndex) + 1));
+  // 主頁摘要在完成編輯時才更新，避免輸入中跟著跳動
+  document.getElementById("flightInfoSummary").textContent = getFlights().some(item => flightSummary(item)) ? "" : "尚未填寫航班";
   saveState();
 });
 document.getElementById("flightInfoBody").addEventListener("click", e => {
