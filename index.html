@@ -108,6 +108,8 @@
   .font-option{ flex:1; padding:7px 4px; font-size:12px; color:var(--paper-dim); background:transparent;
     border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; }
   .font-option.active{ color:var(--navy); background:var(--amber); border-color:var(--amber); font-weight:600; }
+  .lens-setting{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; margin-bottom:16px; color:var(--paper-dim); font-size:12px; }
+  .lens-setting input{ width:70px; padding:7px 8px; color:var(--navy); background:var(--paper); border:1px solid var(--line); border-radius:8px; font:inherit; text-align:center; }
   .data-title{ margin-top:8px; margin-bottom:10px; }
   .data-actions{ display:flex; gap:8px; margin-top:0; }
   .data-btn{ flex:1; padding:8px 10px; color:var(--paper-dim); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; font-size:12px; }
@@ -139,6 +141,8 @@
   .status-copy .progress-track{ width:100%; }
   .status-copy .progress-label{ text-align:left; }
   .status-mascot{ width:140px; height:140px; flex:0 0 140px; object-fit:contain; display:block; }
+  .mascot-reset-btn{ width:140px; height:140px; flex:0 0 140px; padding:0; border:0; background:transparent; cursor:default; touch-action:manipulation; }
+  .mascot-reset-btn:focus-visible{ outline:2px solid var(--amber); outline-offset:4px; border-radius:12px; }
   .route .dot{ display:none; }
   .subtitle{ font-size:calc(13px * var(--font-scale, 1)); color:var(--navy-soft); margin:0 0 18px; }
   .trip-meta{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 14px; margin-bottom:18px; }
@@ -231,6 +235,19 @@
   .add-modal-confirm{ color:var(--paper); background:var(--navy); border:1px solid var(--navy); }
   .add-modal-cancel:active{ background:var(--paper-dim); }
   .add-modal-confirm:active{ background:var(--navy-soft); }
+  .new-trip-confirm-message{ margin:0; color:var(--navy-soft); font-size:calc(13px * var(--font-scale, 1)); line-height:1.55; white-space:pre-line; }
+  .add-row.add-modal.recheck-mode-confirm{ width:min(100%, 360px); }
+  .recheck-mode-confirm .new-trip-confirm-message{ text-align:center; }
+  .recheck-mode-options{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:14px; }
+  .mode-option{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; width:100%; min-height:82px; padding:10px 6px; color:var(--navy); background:var(--paper-dim); border:1px solid var(--line); border-radius:12px; text-align:left; cursor:pointer; }
+  .mode-option:active{ background:rgba(232,163,61,0.22); border-color:var(--amber); }
+  .mode-option-icon{ display:flex; align-items:center; justify-content:center; width:32px; height:32px; flex:0 0 32px; color:var(--navy); background:var(--amber); border-radius:50%; font-size:18px; font-weight:700; }
+  .mode-option-icon svg{ display:block; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .mode-option-copy{ display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; }
+  .mode-option-title{ font-size:calc(14px * var(--font-scale, 1)); font-weight:700; }
+  .mode-option-help{ color:var(--navy-soft); font-size:calc(12px * var(--font-scale, 1)); line-height:1.4; }
+  .recheck-mode-cancel{ align-self:center; width:auto; min-width:88px; margin-top:10px; padding:8px 8px; border-radius:999px; color:var(--navy); background:rgba(232,163,61,0.08); border-color:rgba(232,163,61,0.38); }
+  .recheck-mode-cancel:active{ background:rgba(232,163,61,0.18); }
   .add-row{ display:none; gap:8px; flex-direction:column; margin:0; padding:12px; background:rgba(232,163,61,0.08); border:1px solid rgba(232,163,61,0.28); border-radius:12px; width:100%; }
   .add-row.show{ display:flex; }
   .add-row .add-inputs{ display:flex; gap:6px; }
@@ -316,6 +333,8 @@
   }
   .stage-btn.done{ background:var(--green); border-color:var(--green); color:var(--paper); font-weight:600; }
   .stage-btn.disabled{ opacity:0.4; cursor:not-allowed; }
+  .move-doc-confirm{ flex:0 0 auto; }
+  .item.checklist-locked{ opacity:1; }
   .doc-done{
     display:flex; align-items:center; gap:8px; font-size:calc(13.5px * var(--font-scale, 1)); font-weight:600; color:var(--green);
     background:rgba(94,140,106,0.1); border:1px solid rgba(94,140,106,0.35); border-radius:10px; padding:12px 14px;
@@ -403,7 +422,11 @@
     </div>
   </div>
 
-  <div class="settings-panel" id="settingsPanel" aria-hidden="true">
+  <div class="settings-panel" id="settingsPanel" aria-hidden='true'>
+    <div class="settings-title data-title">備用隱形眼鏡</div>
+    <label class="lens-setting" for="lensBuffer">
+      <input id="lensBuffer" type="number" min="0" max="30" step="1" inputmode="numeric" aria-label="備用隱形眼鏡數量">
+    </label>
     <div class="settings-title">文字大小</div>
     <div class="font-options" role="group" aria-label="文字大小">
       <button class="font-option" data-font-scale="0.9">小</button>
@@ -422,7 +445,7 @@
   <div class="ticket">
     <div class="ticket-top">
       <div class="trip-meta">
-        <input class="trip-title" id="tripTitle" name="trip" type="text" maxlength="80" placeholder="此次旅行名稱" aria-label="此次旅行名稱" autocomplete="off" autocapitalize="off">
+        <input class="trip-title" id="tripTitle" name="travel_title" type="text" maxlength="80" placeholder="此次旅行名稱" aria-label="此次旅行名稱" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
         <div class="days-row" aria-label="行程天數">
           <div class="days-input">
             <input class="val" id="dayVal" type="number" min="1" max="30" step="1" inputmode="numeric" aria-label="行程天數">
@@ -435,14 +458,14 @@
           <div class="route">
             <h1 id="pctHeadline">要出發了！<span class="status-pending">還有 0 件物品沒帶</span></h1>
             <button class="secondary-btn packed-recheck" id="recheckBtn" aria-label="再次檢查" title="再次檢查">
-              <svg class="recheck-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" stroke-width="1.35"></path><path d="M14.4 4.3 17.66 6.34 17.05 3.55" fill="none" stroke="currentColor" stroke-width="1.35"></path><path d="M8 12.6 10.4 15 15.4 9"></path></svg>
+              <svg class="recheck-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden='true'><path d="M20 12a8 8 0 1 1-2.34-5.66" stroke-width="1.35"></path><path d="M14.4 4.3 17.66 6.34 17.05 3.55" fill="none" stroke="currentColor" stroke-width="1.35"></path><path d="M8 12.6 10.4 15 15.4 9"></path></svg>
             </button>
           </div>
-          <p class="subtitle" id="statusSubtitle">出發前確認每一件都裝進行李。</p>
+          <p class="subtitle" id="statusSubtitle">出發前確認每一件東西都裝進行李</p>
           <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-          <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已確認</div>
+          <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已帶上</div>
         </div>
-        <img class="status-mascot" src="resources/hamstergo-icon.webp" width="140" height="140" alt="" aria-hidden="true">
+        <button class="mascot-reset-btn" id="mascotResetBtn" type="button" aria-label="雙點倉鼠開始新的旅程"><img class="status-mascot" src="resources/hamstergo-icon.webp" width="140" height="140" alt="" aria-hidden='true'></button>
       </div>
     </div>
 
@@ -601,13 +624,21 @@ function currentDocItem(){
 }
 
 const STORAGE_KEY = 'packing-checklist-v2';
-let state = { days: 3, checked: {}, customItems: {}, qtyValues: {}, prepCollapsed: null, prepWasComplete: false, recheckMode: false, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true, qtySettings: {}, tripStatus: 'packing', tripTitle: '' };
+let state = { days: 3, lensBuffer: 2, moveMode: null, checklistLocked: false, completionPromptShown: false, checked: {}, customItems: {}, qtyValues: {}, prepCollapsed: null, prepWasComplete: false, recheckMode: false, editMode: false, flightType: 'domestic', docPacked: {}, itemOrder: {}, checkedEnabled: false, carryOnEnabled: true, qtySettings: {}, tripStatus: 'packing', tripTitle: '' };
 let editingId = null; // custom item currently being renamed
 let dragState = null; // active drag session
 let addModalOpen = false;
+let newTripConfirmOpen = false;
+let recheckModeConfirmOpen = false;
+let docUndoVisible = false;
+let docUndoTimer = null;
 
 function daysQtyText(days){ return String(days); }
-function lensQtyText(days){ return String(days + 1); }
+function normalizeLensBuffer(value){
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? Math.min(30, Math.max(0, parsed)) : 2;
+}
+function lensQtyText(days){ return String(days + normalizeLensBuffer(state.lensBuffer)); }
 
 function getMainItemIds(){
   const ids = [ currentDocItem().id ];
@@ -719,6 +750,7 @@ function isItemChecked(id){
 }
 
 function cycleItemState(id){
+  if(state.checklistLocked) return;
   const current = getItemState(id);
   if(state.recheckMode){
     if(current === null) state.checked[id] = true;
@@ -738,6 +770,7 @@ function renderDocuments(){
   const docItem = currentDocItem();
   const done = isItemChecked(docItem.id);
   const packed = !!state.docPacked[docItem.id];
+  const doneLabel = '已收好';
 
   document.getElementById('docActive').style.display = done ? 'none' : '';
   const doneEl = document.getElementById('docDone');
@@ -746,14 +779,31 @@ function renderDocuments(){
     const typeLabel = state.flightType === 'international' ? '國際線' : '國內線';
     doneEl.innerHTML = '';
     const doneText = document.createElement('span');
-    doneText.textContent = `✓ ${docItem.label}已收妥（${typeLabel}）`;
+    doneText.textContent = "✓ " + docItem.label + doneLabel + "（" + typeLabel + "）";
     doneEl.appendChild(doneText);
+    if(docUndoVisible && !state.editMode){
+      const undoBtn = document.createElement("button");
+      undoBtn.type = "button";
+      undoBtn.className = "doc-undo-btn";
+      undoBtn.textContent = "返回";
+      undoBtn.title = "返回尚未收好";
+      undoBtn.addEventListener("click", () => {
+        docUndoVisible = false;
+        if(docUndoTimer) clearTimeout(docUndoTimer);
+        docUndoTimer = null;
+        state.checklistLocked = false;
+        delete state.checked[docItem.id];
+        saveState();
+        render();
+      });
+      doneEl.appendChild(undoBtn);
+    }
     if(state.editMode){
       const undoBtn = document.createElement('button');
       undoBtn.type = 'button';
       undoBtn.className = 'doc-undo-btn';
       undoBtn.textContent = '退回';
-      undoBtn.title = '退回未收妥';
+      undoBtn.title = '退回未收好';
       undoBtn.addEventListener('click', () => {
         delete state.checked[docItem.id];
         state.docPacked[docItem.id] = true;
@@ -773,8 +823,31 @@ function renderDocuments(){
   const rowContainer = document.getElementById('docItemRow');
   rowContainer.innerHTML = '';
   if(!done){
-    rowContainer.appendChild(buildDocRow(docItem));
+    rowContainer.appendChild(state.recheckMode && state.moveMode === 'move' ? buildMoveDocRow(docItem) : buildDocRow(docItem));
   }
+}
+
+function buildMoveDocRow(docItem){
+  const row = document.createElement("div");
+  row.className = "doc-row";
+  const label = document.createElement("div");
+  label.className = "doc-row-label";
+  label.textContent = docItem.label;
+  row.appendChild(label);
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "stage-btn move-doc-confirm";
+  confirmBtn.textContent = "證件已收好";
+  confirmBtn.addEventListener("click", () => {
+    if(state.checklistLocked) return;
+    state.checked[docItem.id] = true;
+    state.checklistLocked = true;
+    showDocUndo();
+    saveState();
+    render();
+  });
+  row.appendChild(confirmBtn);
+  return row;
 }
 
 function buildDocRow(docItem){
@@ -806,10 +879,12 @@ function buildDocRow(docItem){
   stage2.textContent = '② 已收好';
   if(packed){
     stage2.addEventListener('click', () => {
+      if(state.checklistLocked) return;
       state.checked[docItem.id] = true;
+      state.checklistLocked = true;
+      showDocUndo();
       saveState();
-      renderDocuments();
-      updateProgress();
+      render();
     });
   }
   stageWrap.appendChild(stage2);
@@ -987,6 +1062,135 @@ function renderGlobalAddRow(){
   setTimeout(() => input.focus(), 0);
 }
 
+function showDocUndo(){
+  docUndoVisible = true;
+  if(docUndoTimer) clearTimeout(docUndoTimer);
+  docUndoTimer = setTimeout(() => {
+    docUndoVisible = false;
+    docUndoTimer = null;
+    renderDocuments();
+  }, 5000);
+}
+
+function beginRecheck(mode){
+  const prepIds = new Set();
+  const prepSection = getData().find(section => section.key === "prep");
+  prepSection?.cats.forEach(cat => cat.items.forEach(item => prepIds.add(item.id)));
+  (state.customItems.prepTasks || []).forEach(item => prepIds.add(item.id));
+  Object.keys(state.checked).forEach(id => {
+    if(state.checked[id] === true && !prepIds.has(id)) delete state.checked[id];
+  });
+  docUndoVisible = false;
+  if(docUndoTimer) clearTimeout(docUndoTimer);
+  docUndoTimer = null;
+  state.checklistLocked = false;
+  state.completionPromptShown = false;
+  state.docPacked = {};
+  const recheckDocId = currentDocItem().id;
+  delete state.checked[recheckDocId];
+  delete state.docPacked[recheckDocId];
+  if(mode === "move") state.docPacked[recheckDocId] = true;
+  state.moveMode = mode;
+  state.recheckMode = true;
+  state.tripStatus = "packing";
+  render(); saveState();
+}
+
+function openRecheckModeConfirm(){
+  if(recheckModeConfirmOpen) return;
+  recheckModeConfirmOpen = true;
+  const layer = document.createElement("div");
+  layer.className = "add-modal-layer recheck-mode-confirm-layer";
+  const backdrop = document.createElement("div");
+  backdrop.className = "add-modal-backdrop";
+  backdrop.addEventListener("click", closeRecheckModeConfirm);
+  layer.appendChild(backdrop);
+  const wrap = document.createElement("div");
+  wrap.className = "add-row show add-modal recheck-mode-confirm";
+  const title = document.createElement("h2");
+  title.className = "add-modal-title";
+  title.textContent = "再次檢查";
+  wrap.appendChild(title);
+  const message = document.createElement("p");
+  message.className = "new-trip-confirm-message";
+  message.textContent = "請選擇接下來的模式";
+  wrap.appendChild(message);
+  const options = document.createElement("div");
+  options.className = "recheck-mode-options";
+  const moveBtn = document.createElement("button");
+  moveBtn.type = "button";
+  moveBtn.className = "mode-option";
+  moveBtn.innerHTML = "<span class='mode-option-icon' aria-hidden='true'>↗</span><span class='mode-option-copy'><span class='mode-option-title'>移動</span></span>";
+  moveBtn.addEventListener("click", () => { closeRecheckModeConfirm(); beginRecheck("move"); });
+  const returnBtn = document.createElement("button");
+  returnBtn.type = "button";
+  returnBtn.className = "mode-option";
+  returnBtn.innerHTML = "<span class='mode-option-icon' aria-hidden='true'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M9 7H4m0 0 3-3M4 7l3 3M4 7h8a6 6 0 0 1 0 12H9'></path></svg></span><span class='mode-option-copy'><span class='mode-option-title'>回程</span></span>";
+  returnBtn.addEventListener("click", () => { closeRecheckModeConfirm(); beginRecheck("return"); });
+  options.append(moveBtn, returnBtn);
+  wrap.appendChild(options);
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "add-modal-cancel recheck-mode-cancel";
+  cancelBtn.textContent = "取消";
+  cancelBtn.addEventListener("click", closeRecheckModeConfirm);
+  wrap.appendChild(cancelBtn);
+  layer.appendChild(wrap);
+  document.body.appendChild(layer);
+  setTimeout(() => moveBtn.focus(), 0);
+}
+
+function closeRecheckModeConfirm(){
+  recheckModeConfirmOpen = false;
+  document.querySelectorAll(".recheck-mode-confirm-layer").forEach(el => el.remove());
+}
+
+function openNewTripConfirm(){
+  if(newTripConfirmOpen) return;
+  newTripConfirmOpen = true;
+  const layer = document.createElement('div');
+  layer.className = 'add-modal-layer new-trip-confirm-layer';
+  const backdrop = document.createElement('div');
+  backdrop.className = 'add-modal-backdrop';
+  backdrop.addEventListener('click', closeNewTripConfirm);
+  layer.appendChild(backdrop);
+  const wrap = document.createElement('div');
+  wrap.className = 'add-row show add-modal new-trip-confirm';
+  const title = document.createElement('h2');
+  title.className = 'add-modal-title';
+  title.textContent = '開始新的旅程？';
+  wrap.appendChild(title);
+  const message = document.createElement('p');
+  message.className = 'new-trip-confirm-message';
+  message.textContent = "請選擇接下來的模式";
+  wrap.appendChild(message);
+  const actions = document.createElement('div');
+  actions.className = 'add-modal-actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'add-modal-cancel';
+  cancelBtn.textContent = '取消';
+  cancelBtn.addEventListener('click', closeNewTripConfirm);
+  const confirmBtn = document.createElement('button');
+  confirmBtn.type = 'button';
+  confirmBtn.className = 'add-modal-confirm';
+  confirmBtn.textContent = '開始新的旅程';
+  confirmBtn.addEventListener('click', () => {
+    closeNewTripConfirm();
+    startNewTrip();
+  });
+  actions.append(cancelBtn, confirmBtn);
+  wrap.appendChild(actions);
+  layer.appendChild(wrap);
+  document.body.appendChild(layer);
+  setTimeout(() => cancelBtn.focus(), 0);
+}
+
+function closeNewTripConfirm(){
+  newTripConfirmOpen = false;
+  document.querySelectorAll('.new-trip-confirm-layer').forEach(el => el.remove());
+}
+
 function closeAddModal(){
   addModalOpen = false; renderGlobalAddRow();
 }
@@ -996,17 +1200,17 @@ function buildItemRow(item, isCustom, catKey){
   const itemState = getItemState(item.id);
   const isPrepItem = catKey === 'prepTasks';
   const prepChecked = isPrepItem && itemState === true;
-  row.className = 'item' + (isCustom ? ' custom-item' : '') + (!isPrepItem && itemState === true ? ' checked' : '') + (!isPrepItem && itemState === false ? ' skipped' : '') + (prepChecked ? ' checked' : '');
+  row.className = 'item' + (isCustom ? ' custom-item' : '') + (!isPrepItem && itemState === true ? ' checked' : '') + (!isPrepItem && itemState === false ? ' skipped' : '') + (prepChecked ? ' checked' : '') + (state.checklistLocked ? ' checklist-locked' : '');
   row.dataset.id = item.id;
   row.dataset.custom = isCustom ? '1' : '0';
 
   const box = document.createElement('div');
   box.className = 'checkbox';
   box.innerHTML = isPrepItem ? (prepChecked ? CHECK_SVG : '') : (itemState === false ? X_SVG : CHECK_SVG);
-  box.style.cursor = state.editMode ? 'default' : 'pointer';
+  box.style.cursor = state.editMode || state.checklistLocked ? 'default' : 'pointer';
   box.addEventListener('mousedown', e => e.preventDefault());
   box.addEventListener('click', () => {
-    if(state.editMode) return;
+    if(state.editMode || state.checklistLocked) return;
     if(isPrepItem){
       if(state.recheckMode){
         if(itemState === null) state.checked[item.id] = true;
@@ -1046,7 +1250,7 @@ function buildItemRow(item, isCustom, catKey){
     const label = document.createElement('div');
     label.className = 'item-label';
     label.textContent = item.label;
-    label.style.cursor = (state.editMode || isPrepItem) ? 'default' : 'pointer';
+    label.style.cursor = (state.editMode || isPrepItem || state.checklistLocked) ? 'default' : 'pointer';
     if(!isPrepItem){
       label.addEventListener('mousedown', e => e.preventDefault());
       label.addEventListener('click', () => { if(!state.editMode) toggleItem(item.id); });
@@ -1104,15 +1308,32 @@ function allItemIds(){
 function updateProgress(){
   const docId = currentDocItem().id;
   const ids = allItemIds();
-  const total = ids.length;
-  const packingPending = ids.filter(id => id === docId ? !state.docPacked[id] : getItemState(id) === null).length;
+  const progressIds = ids.filter(id => getItemState(id) !== false);
+  const total = progressIds.length;
   const docStored = !!state.docPacked[docId] && getItemState(docId) === true;
+  const docProgressDone = state.recheckMode && state.moveMode === "move" ? docStored : !!state.docPacked[docId];
+  const packingPending = progressIds.filter(id => id === docId ? !docProgressDone : getItemState(id) === null).length;
   const readyPending = packingPending + (docStored ? 0 : 1);
-  const done = ids.filter(id => id === docId ? !!state.docPacked[id] : getItemState(id) !== null).length;
+  const done = progressIds.filter(id => id === docId ? docProgressDone : getItemState(id) === true).length;
 
-  const statusText = packingPending > 0
-    ? `要出發了！<span class="status-pending">還有 ${packingPending} 件物品沒帶</span>`
-    : '行李整理完成！ ✈️';
+  const otherPending = progressIds.filter(id => id !== docId && getItemState(id) === null).length;
+  const isMoveMode = state.recheckMode && state.moveMode === 'move';
+  const docOnlyPending = !state.recheckMode && !state.docPacked[docId] && total > 0 && otherPending === 0;
+  const moveDocOnlyPending = isMoveMode && total > 0 && !state.checked[docId] && otherPending === 0;
+  const returnMode = state.recheckMode && state.moveMode === 'return';
+  const statusText = docOnlyPending || moveDocOnlyPending
+    ? '只剩證件未確認'
+    : state.recheckMode
+    ? (returnMode
+      ? (packingPending > 0
+        ? '準備回家！<span class="status-pending">還有 ' + packingPending + ' 件物品尚未確認</span>'
+        : (docStored ? 'Bon voyage! 🛫' : '安心回家！'))
+      : (packingPending > 0
+        ? '準備移動了！<span class="status-pending">還有 ' + packingPending + ' 件物品尚未確認</span>'
+        : '可以移動了！'))
+    : (packingPending > 0
+      ? '要出發了！<span class="status-pending">還有 ' + packingPending + ' 件物品沒帶</span>'
+      : (docStored ? 'Bon voyage! 🛫' : '行李都整理好了！ ✈️'));
   state.tripStatus = docStored && packingPending === 0 ? 'packed' : 'packing';
 
   document.getElementById('doneCount').textContent = done;
@@ -1120,13 +1341,16 @@ function updateProgress(){
   const pct = total ? Math.round((done/total)*100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('pctHeadline').innerHTML = statusText;
-  document.getElementById('statusSubtitle').style.display = packingPending > 0 ? '' : 'none';
+  const statusSubtitle = document.getElementById('statusSubtitle');
+  statusSubtitle.textContent = docOnlyPending || moveDocOnlyPending ? '別忘了證件噢 👀' : (returnMode ? '別忘了把所有東西帶回家' : (isMoveMode ? '移動前確認每一件物品都帶上了' : '出發前確認每一件東西都裝進行李'));
+  statusSubtitle.style.display = docOnlyPending || moveDocOnlyPending || (returnMode || isMoveMode || !state.recheckMode) && packingPending > 0 ? '' : 'none';
   const recheckBtn = document.getElementById('recheckBtn');
   const canRecheck = readyPending === 0;
   recheckBtn.style.display = canRecheck ? 'inline-flex' : 'none';
   recheckBtn.setAttribute('aria-hidden', String(!canRecheck));
   document.getElementById('dayVal').value = state.days;
-}
+  document.getElementById('lensBuffer').value = state.lensBuffer;
+ }
 
 function saveState(){
   try{
@@ -1139,10 +1363,14 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      state = Object.assign({ days:3, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, tripStatus:'packing', tripTitle:'' }, parsed);
+      state = Object.assign({ days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, tripStatus:'packing', tripTitle:'' }, parsed);
       delete state.itemPlacement;
       state.qtySettings = state.qtySettings || {};
       state.qtyValues = state.qtyValues || {};
+      state.lensBuffer = normalizeLensBuffer(state.lensBuffer);
+      state.moveMode = state.moveMode === 'move' || state.moveMode === 'return' ? state.moveMode : null;
+      state.checklistLocked = state.checklistLocked === true;
+      state.completionPromptShown = state.completionPromptShown === true;
       state.tripStatus = state.tripStatus === 'packed' ? 'packed' : 'packing';
       state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : '';
     }
@@ -1189,6 +1417,10 @@ function importTripFile(file){
       state.editMode = false;
       state.qtySettings = state.qtySettings || {};
       state.qtyValues = state.qtyValues || {};
+      state.lensBuffer = normalizeLensBuffer(state.lensBuffer);
+      state.moveMode = state.moveMode === 'move' || state.moveMode === 'return' ? state.moveMode : null;
+      state.checklistLocked = state.checklistLocked === true;
+      state.completionPromptShown = state.completionPromptShown === true;
       state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : (typeof payload.tripTitle === 'string' ? payload.tripTitle : '');
       editingId = null;
       dragState = null;
@@ -1223,28 +1455,38 @@ document.getElementById('dayVal').addEventListener('change', e => {
   state.days = Math.min(30, Math.max(1, parseInt(e.target.value, 10) || 1));
   render(); saveState();
 });
-document.getElementById('recheckBtn').addEventListener('click', () => {
-  const prepIds = new Set();
-  const prepSection = getData().find(section => section.key === 'prep');
-  prepSection?.cats.forEach(cat => cat.items.forEach(item => prepIds.add(item.id)));
-  (state.customItems.prepTasks || []).forEach(item => prepIds.add(item.id));
-  Object.keys(state.checked).forEach(id => {
-    if(state.checked[id] === true && !prepIds.has(id)) delete state.checked[id];
-  });
-  state.docPacked = {};
-  state.recheckMode = true;
-  state.tripStatus = 'packing';
+document.getElementById('lensBuffer').addEventListener('change', e => {
+  state.lensBuffer = normalizeLensBuffer(e.target.value);
+  e.target.value = state.lensBuffer;
   render(); saveState();
 });
-document.getElementById('resetBtn').addEventListener('click', () => {
+document.getElementById("recheckBtn").addEventListener("click", openRecheckModeConfirm);
+function startNewTrip(){
   state.checked = {};
   state.docPacked = {};
   state.flightType = 'domestic';
   state.recheckMode = false;
+  state.moveMode = null;
+  state.checklistLocked = false;
+  state.completionPromptShown = false;
   state.prepCollapsed = null;
   state.prepWasComplete = false;
   state.tripStatus = 'packing';
+  state.tripTitle = '';
+  document.getElementById('tripTitle').value = '';
   render(); saveState();
+}
+document.getElementById('resetBtn').addEventListener('click', startNewTrip);
+
+let lastMascotTap = 0;
+document.getElementById('mascotResetBtn').addEventListener('pointerup', () => {
+  const now = Date.now();
+  if(now - lastMascotTap < 400){
+    lastMascotTap = 0;
+    openNewTripConfirm();
+  }else{
+    lastMascotTap = now;
+  }
 });
 document.getElementById('editToggle').addEventListener('click', () => {
   closeAddModal();
@@ -1359,7 +1601,12 @@ function setFontScale(scale, persist = true){
   }
 }
 
-document.addEventListener('keydown', e => { if(e.key === 'Escape' && addModalOpen) closeAddModal(); });
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  if(newTripConfirmOpen) closeNewTripConfirm();
+  else if(recheckModeConfirmOpen) closeRecheckModeConfirm();
+  else if(addModalOpen) closeAddModal();
+});
 
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsPanel = document.getElementById('settingsPanel');
