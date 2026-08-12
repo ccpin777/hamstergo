@@ -62,6 +62,8 @@
   }
   .brand-title{font-family:var(--brand-font); font-size:calc(15px * var(--font-scale, 1));}
   .brand-subtitle{font-family:var(--font-body);}
+  .brand-separator{display:inline;}
+  html[data-app-font] .brand-separator{display:none;}
   html[data-app-font] .header-strip .brand{line-height:1.15;}
   html[data-app-font] .brand-title, html[data-app-font] .brand-subtitle{display:block;}
   html[data-app-font] .brand-title{font-size:calc(25px * var(--font-scale, 1));}
@@ -97,21 +99,29 @@
 
   @media (max-width:420px){
     .header-strip{
-      display:block;
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      align-items:end;
+      gap:8px;
       padding-bottom:14px;
     }
     .header-strip .brand{
-    text-align:left;
+      grid-column:1;
+      grid-row:1;
       display:block;
-      width:100%;
-      margin-bottom:10px;
+      width:auto;
+      margin:0;
       white-space:normal;
       overflow:visible;
       text-overflow:clip;
       line-height:1.35;
     }
     .header-actions{
+      grid-column:2;
+      grid-row:1;
       justify-content:flex-end;
+      align-self:end;
+      transform:translateY(8px);
     }
   }
   .settings-panel{
@@ -467,7 +477,7 @@
 <body>
 <div class="pass">
   <div class="header-strip">
-    <div class="brand"><span class="brand-title">HamsterGo</span><span class="brand-subtitle">倉鼠打包小幫手</span></div>
+    <div class="brand"><span class="brand-title">HamsterGo</span><span class="brand-separator"> · </span><span class="brand-subtitle">倉鼠打包小幫手</span></div>
     <div class="header-actions">
       <button class="toolbar-btn" id="addItemBtn" aria-label="新增項目" title="新增項目">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
