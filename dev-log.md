@@ -1,3 +1,26 @@
+## 2026-08-12 — Cloud sync, encryption, deployment, and desktop build
+
+Added Cloudflare D1 synchronization for HamsterGo. Travel state is encrypted in the browser with AES-GCM before upload; the encryption password is kept locally on the device and is not sent to Cloudflare. Sync requests now send the sync code through the Authorization header instead of putting it in the new request URL. The legacy /record/<sync-key> endpoint remains available for compatibility.
+
+Added automatic upload after local changes, a compact sync status light in the header, password visibility toggles, and an advanced sync settings section containing the sync tools. The current daily workflow remains sync code plus encryption password; the experimental account API is not shown in the frontend.
+
+Added a PyWebView macOS desktop build flow. command/build.command builds dist/HamsterGo.app with resources/icon-1024.png; temporary PyInstaller output and dist/HamsterGo are removed after a successful build. The local desktop server uses a stable localhost port so browser storage can persist between launches.
+
+Added separate deployment entry points:
+- deploy-github.command for the frontend GitHub push workflow
+- deploy-worker.command for Cloudflare Worker deployment
+
+Files touched:
+- index.html
+- app.py
+- cloudflare/src/index.js
+- cloudflare/migrations/0002_add_encrypted_payload.sql
+- cloudflare/migrations/0003_add_accounts.sql
+- command/build.command
+- deploy-worker.command
+- deploy-github.command
+- dev-log.md
+
 ## 2026-08-05 — 航班資訊與最近航班顯示
 
 新增可收合的航班資訊列：主頁顯示最近一班尚未出發的航班，飛機 icon 可進入／完成編輯；編輯模式至少保留兩班航班，支援新增與移除。航班資料包含航班編號、出發時間、機場／航廈，並支援匯出與匯入。出發時間使用純數字輸入，會即時格式化；主頁摘要以 12 小時制顯示 AM／PM，已出發航班會自動隱藏。

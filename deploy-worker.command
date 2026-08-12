@@ -5,20 +5,20 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 WORKER_DIR="$SCRIPT_DIR/cloudflare"
 
 if [[ ! -d "$WORKER_DIR" ]]; then
-  echo "找不到 cloudflare 資料夾。"
+  echo "cloudflare directory not found."
   exit 1
 fi
 
 cd "$WORKER_DIR"
 
-echo "正在部署 HamsterGo Cloudflare Worker..."
-echo "如果顯示未登入，請先執行：npx wrangler login"
+echo "Deploying the HamsterGo Cloudflare Worker..."
+echo "If Wrangler reports that you are not logged in, run: npx wrangler login"
 echo ""
 
 npx wrangler deploy
 
 echo ""
-echo "Worker 部署完成。"
+echo "Worker deployment complete."
 if [[ -t 0 ]]; then
-  read -r "?按 Enter 關閉..."
+  read -r "?Press Enter to close..."
 fi
