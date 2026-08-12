@@ -1,4 +1,4 @@
-const CACHE_NAME = 'packing-checklist-cache-v5';
+const CACHE_NAME = 'packing-checklist-cache-v8';
 const ASSETS = [
   './',
   './index.html',
