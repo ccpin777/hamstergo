@@ -1,3 +1,19 @@
+## 2026-08-12 — Desktop layout, font persistence, visibility icons, and deployment script organization
+
+Updated the packaged desktop window to use a blank native title bar. Font size and heading-font preferences are now part of the local travel state and encrypted cloud sync payload, with migration from the previous standalone localStorage keys. Added reusable `resources/eye-open.svg` and `resources/eye-closed.svg` assets for the sync-code and password visibility controls.
+
+Reorganized deployment helpers: `Run.command` is at the HamsterGo project root, `deploy-worker.command` is in `cloudflare/`, and `deploy-github.command` is in the HamsterGo project root. Updated each script to resolve the correct project or Worker directory, and verified both moved scripts point to their intended locations and pass shell syntax checks. Added ignore rules for screenshots and kept credentials out of committed source files.
+
+Files touched:
+- app.py
+- index.html
+- Run.command
+- cloudflare/deploy-worker.command
+- deploy-github.command
+- resources/eye-open.svg
+- resources/eye-closed.svg
+- .gitignore
+
 ## 2026-08-12 — Cloud sync, encryption, deployment, and desktop build
 
 Added Cloudflare D1 synchronization for HamsterGo. Travel state is encrypted in the browser with AES-GCM before upload; the encryption password is kept locally on the device and is not sent to Cloudflare. Sync requests now send the sync code through the Authorization header instead of putting it in the new request URL. The legacy /record/<sync-key> endpoint remains available for compatibility.

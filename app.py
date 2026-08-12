@@ -37,7 +37,7 @@ def main() -> None:
 
     url = f"http://127.0.0.1:{server.server_address[1]}/index.html"
     window = webview.create_window(
-        "HamsterGo · 倉鼠打包小幫手",
+        "",
         url,
         width=520,
         height=860,

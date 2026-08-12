@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-PROJECT_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+PROJECT_DIR="$SCRIPT_DIR"
 cd "$PROJECT_DIR"
 
 PYTHON_BIN="${PYTHON_BIN:-python3}"

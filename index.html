@@ -154,8 +154,8 @@
   .sync-setting input{ flex:1; min-width:0; padding:7px 8px; color:var(--navy); background:var(--paper); border:1px solid var(--line); border-radius:8px; font:inherit; font-size:12px; }
   .sync-password-wrap{ display:flex; flex:1; min-width:0; }
   .sync-password-wrap input{ width:100%; border-radius:8px 0 0 8px; }
-  .sync-password-toggle{ width:36px; border:1px solid var(--line); border-left:0; border-radius:0 8px 8px 0; color:var(--navy-soft); background:var(--paper); cursor:pointer; }
-  .sync-password-toggle svg{ width:16px; height:16px; }
+  .sync-password-toggle{ position:relative; width:36px; border:1px solid var(--line); border-left:0; border-radius:0 8px 8px 0; color:var(--navy-soft); background:var(--paper); cursor:pointer; }
+  .sync-password-toggle img{ width:16px; height:16px; display:block; margin:auto; }
   .sync-note{ margin:-2px 0 10px 84px; color:var(--paper-dim); font-size:10px; line-height:1.4; }
   .sync-actions{ display:flex; gap:8px; margin:4px 0 7px; }
   .account-setting, .account-actions, .account-status{ display:none !important; }
@@ -531,7 +531,7 @@
       <label for="accountPassword">密碼</label>
       <div class="sync-password-wrap">
         <input id="accountPassword" type="password" minlength="8" placeholder="至少 8 個字元" autocomplete="current-password" spellcheck="false">
-        <button class="sync-password-toggle" type="button" data-target="accountPassword" aria-label="顯示密碼" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.4-5 9.5-5 9.5 5 9.5 5-3.4 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+        <button class="sync-password-toggle" type="button" data-target="accountPassword" data-visible="false" aria-label="顯示密碼" aria-pressed="false"><img src="resources/eye-closed.svg" alt=""></button>
       </div>
     </div>
     <div class="account-actions">
@@ -550,14 +550,14 @@
       <label for="syncKey">同步碼</label>
       <div class="sync-password-wrap">
         <input id="syncKey" type="password" minlength="32" maxlength="64" placeholder="兩台裝置使用同一組同步碼" autocomplete="off" spellcheck="false">
-        <button class="sync-password-toggle" type="button" data-target="syncKey" aria-label="顯示同步碼" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.4-5 9.5-5 9.5 5 9.5 5-3.4 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+        <button class="sync-password-toggle" type="button" data-target="syncKey" data-visible="false" aria-label="顯示同步碼" aria-pressed="false"><img src="resources/eye-closed.svg" alt=""></button>
       </div>
     </div>
     <div class="sync-setting">
       <label for="syncEncryptionPassword">加密密碼</label>
       <div class="sync-password-wrap">
         <input id="syncEncryptionPassword" type="password" minlength="8" placeholder="兩台裝置輸入同一組密碼" autocomplete="new-password" spellcheck="false">
-        <button class="sync-password-toggle" type="button" data-target="syncEncryptionPassword" aria-label="顯示加密密碼" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.4-5 9.5-5 9.5 5 9.5 5-3.4 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+        <button class="sync-password-toggle" type="button" data-target="syncEncryptionPassword" data-visible="false" aria-label="顯示加密密碼" aria-pressed="false"><img src="resources/eye-closed.svg" alt=""></button>
       </div>
     </div>
     <div class="sync-note">密碼只保存在這台裝置，不會上傳到 Cloudflare。</div>
@@ -773,7 +773,7 @@ const SYNC_ENCRYPTION_PASSWORD_KEY = 'hamstergo-sync-encryption-password';
 const ENCRYPTION_ITERATIONS = 600000;
 const AUTH_TOKEN_KEY = 'hamstergo-auth-token';
 const ACCOUNT_USERNAME_KEY = 'hamstergo-account-username';
-let state = { days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' };
+let state = { days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', fontScale:'1', fontFamily:'system', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' };
 let editingId = null; // custom item currently being renamed
 let dragState = null; // active drag session
 let addModalOpen = false;
@@ -1631,7 +1631,7 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      state = Object.assign({ days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' }, parsed);
+      state = Object.assign({ days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', fontScale:'1', fontFamily:'system', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' }, parsed);
       delete state.itemPlacement;
       state.qtySettings = state.qtySettings || {};
       state.qtyValues = state.qtyValues || {};
@@ -1643,6 +1643,12 @@ function loadState(){
       state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : '';
     }
   }catch(e){ /* first run, no saved state */ }
+  const legacyFontScale = (() => { try{ return localStorage.getItem(FONT_SCALE_KEY) || "1"; }catch(e){ return "1"; } })();
+  const legacyFontFamily = (() => { try{ return localStorage.getItem(FONT_FAMILY_KEY) || "system"; }catch(e){ return "system"; } })();
+  state.fontScale = ["0.9", "1", "1.15", "1.3"].includes(String(state.fontScale)) ? String(state.fontScale) : legacyFontScale;
+  state.fontFamily = ["system", "gochi-hand", "permanent-marker", "caveat", "marker-felt"].includes(state.fontFamily) ? state.fontFamily : legacyFontFamily;
+  setFontScale(state.fontScale, false);
+  setFontFamily(state.fontFamily, false);
   render();
 }
 
@@ -1680,7 +1686,7 @@ function importTripFile(file){
       if(!imported || typeof imported !== 'object' || Array.isArray(imported) || !imported.checked || !imported.customItems){
         throw new Error('invalid travel file');
       }
-      const defaults = { days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:null, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' };
+      const defaults = { days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:null, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', fontScale:'1', fontFamily:'system', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' };
       state = Object.assign(defaults, imported);
       state.editMode = false;
       state.qtySettings = state.qtySettings || {};
@@ -1905,15 +1911,13 @@ function setFontFamily(value, persist = true){
   else document.documentElement.dataset.appFont = value;
   const select = document.getElementById('font-family-select');
   if(select) select.value = value;
-  if(persist){ try{ localStorage.setItem(FONT_FAMILY_KEY, value); }catch(e){ /* storage unavailable */ } }
+  if(persist){ state.fontFamily = value; try{ localStorage.setItem(FONT_FAMILY_KEY, value); }catch(e){ /* storage unavailable */ } saveState(); }
 }
 function setFontScale(scale, persist = true){
-  const value = String(scale);
+  const value = ["0.9", "1", "1.15", "1.3"].includes(String(scale)) ? String(scale) : "1";
   document.documentElement.style.setProperty('--font-scale', value);
   document.querySelectorAll('.font-option').forEach(btn => btn.classList.toggle('active', btn.dataset.fontScale === value));
-  if(persist){
-    try{ localStorage.setItem(FONT_SCALE_KEY, value); }catch(e){ /* storage unavailable */ }
-  }
+  if(persist){ state.fontScale = value; try{ localStorage.setItem(FONT_SCALE_KEY, value); }catch(e){ /* storage unavailable */ } saveState(); }
 }
 
 document.addEventListener('keydown', e => {
@@ -2169,6 +2173,10 @@ async function downloadStateFromCloud(){
     }
     cloudSyncSuppress = true;
     state = Object.assign({}, state, remoteState);
+    state.fontScale = ["0.9", "1", "1.15", "1.3"].includes(String(state.fontScale)) ? String(state.fontScale) : "1";
+    state.fontFamily = ["system", "gochi-hand", "permanent-marker", "caveat", "marker-felt"].includes(state.fontFamily) ? state.fontFamily : "system";
+    setFontScale(state.fontScale, false);
+    setFontFamily(state.fontFamily, false);
     state.editMode = false;
     state.moveMode = null;
     editingId = null;
@@ -2201,6 +2209,9 @@ document.querySelectorAll('.sync-password-toggle').forEach(button => {
     input.type = visible ? 'password' : 'text';
     button.setAttribute('aria-pressed', String(!visible));
     button.setAttribute('aria-label', visible ? '顯示密碼' : '隱藏密碼');
+    button.dataset.visible = String(!visible);
+    const icon = button.querySelector("img");
+    if(icon) icon.src = visible ? "resources/eye-open.svg" : "resources/eye-closed.svg";
   });
 });
 document.getElementById('downloadCloudBtn').addEventListener('click', downloadStateFromCloud);
