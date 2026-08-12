@@ -63,11 +63,11 @@
   .brand-title{font-family:var(--brand-font); font-size:calc(15px * var(--font-scale, 1));}
   .brand-subtitle{font-family:var(--font-body);}
   .brand-separator{display:inline;}
-  html[data-app-font] .brand-separator{display:none;}
+  html[data-app-font] .brand-separator{display:inline;}
   html[data-app-font] .header-strip{align-items:flex-end;}
   html[data-app-font] .header-strip .header-actions{align-self:flex-end; transform:translateY(0px);}
   html[data-app-font] .header-strip .brand{line-height:1.15;}
-  html[data-app-font] .brand-title, html[data-app-font] .brand-subtitle{display:block;}
+  html[data-app-font] .brand-title, html[data-app-font] .brand-subtitle{display:inline;}
   html[data-app-font] .brand-title{font-size:calc(25px * var(--font-scale, 1));}
   .edit-toggle{
     font-family:var(--font-display); font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.015em;
@@ -130,12 +130,15 @@
       align-self:end;
       transform:translateY(0px);
     }
+    html[data-app-font] .brand-title, html[data-app-font] .brand-subtitle{display:block;}
+    html[data-app-font] .brand-separator{display:none;}
   }
   .settings-panel{
     display:none; margin:0 0 12px; padding:14px 16px; color:var(--paper);
     background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:12px;
   }
   .settings-panel.show{ display:block; }
+  .app-version{margin-top:18px;color:rgba(241,236,224,.62);font-size:10px;text-align:center;letter-spacing:.04em;}
   .settings-title{ font-size:13px; font-weight:600; margin-bottom:10px; }
   .font-options{ display:flex; gap:7px; margin-bottom:14px; }
   .font-option{ flex:1; padding:7px 4px; font-size:12px; color:var(--paper-dim); background:transparent;
@@ -574,6 +577,7 @@
       <button class="data-btn" id="importBtn">匯入 JSON</button>
     </div>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <div class="app-version">HamsterGo v0.3.0</div>
   </div>
 
   <div class="ticket">
@@ -1715,6 +1719,8 @@ function toggleItem(id){
 }
 
 document.getElementById('tripTitle').value = state.tripTitle || '';
+window.addEventListener('pywebviewready',loadNativePreferences);
+if(window.pywebview?.api) loadNativePreferences();
 document.getElementById('tripTitle').addEventListener('input', e => {
   state.tripTitle = e.target.value;
   saveState();
@@ -1904,6 +1910,13 @@ window.addEventListener('resize', closeAllCatLists);
 
 const FONT_SCALE_KEY = 'hamstergo-font-scale';
 const FONT_FAMILY_KEY = 'hamstergo-font-family';
+let nativePreferences = {};
+let nativePreferencesReady = false;
+function saveNativePreferences(){
+  if(!nativePreferencesReady || !window.pywebview?.api?.save_preferences) return;
+  nativePreferences = {...nativePreferences, syncEndpoint:document.getElementById('syncEndpoint')?.value.trim().replace(/\/$/,'')||'', syncKey:document.getElementById('syncKey')?.value.trim()||'', syncEncryptionPassword:document.getElementById('syncEncryptionPassword')?.value||'', fontScale:state.fontScale||'1', fontFamily:state.fontFamily||'system'};
+  window.pywebview.api.save_preferences(nativePreferences).catch(()=>{});
+}
 function setFontFamily(value, persist = true){
   const allowed = ['system', 'gochi-hand', 'permanent-marker', 'caveat', 'marker-felt'];
   if(!allowed.includes(value)) value = 'system';
@@ -1911,13 +1924,13 @@ function setFontFamily(value, persist = true){
   else document.documentElement.dataset.appFont = value;
   const select = document.getElementById('font-family-select');
   if(select) select.value = value;
-  if(persist){ state.fontFamily = value; try{ localStorage.setItem(FONT_FAMILY_KEY, value); }catch(e){ /* storage unavailable */ } saveState(); }
+  if(persist){ state.fontFamily = value; try{ localStorage.setItem(FONT_FAMILY_KEY, value); }catch(e){ /* storage unavailable */ } saveState(); saveNativePreferences(); }
 }
 function setFontScale(scale, persist = true){
   const value = ["0.9", "1", "1.15", "1.3"].includes(String(scale)) ? String(scale) : "1";
   document.documentElement.style.setProperty('--font-scale', value);
   document.querySelectorAll('.font-option').forEach(btn => btn.classList.toggle('active', btn.dataset.fontScale === value));
-  if(persist){ state.fontScale = value; try{ localStorage.setItem(FONT_SCALE_KEY, value); }catch(e){ /* storage unavailable */ } saveState(); }
+  if(persist){ state.fontScale = value; try{ localStorage.setItem(FONT_SCALE_KEY, value); }catch(e){ /* storage unavailable */ } saveState(); saveNativePreferences(); }
 }
 
 document.addEventListener('keydown', e => {
@@ -2021,6 +2034,7 @@ function saveSyncSettings(){
     localStorage.setItem(SYNC_KEY_KEY, syncKeyInput.value.trim());
     localStorage.setItem(SYNC_ENCRYPTION_PASSWORD_KEY, document.getElementById('syncEncryptionPassword').value);
   }catch(e){ /* storage unavailable */ }
+  saveNativePreferences();
 }
 
 function loadSyncSettings(){
@@ -2031,6 +2045,18 @@ function loadSyncSettings(){
   }catch(e){ /* first run */ }
 }
 
+async function loadNativePreferences(){
+  if(!window.pywebview?.api?.load_preferences) return;
+  try{
+    nativePreferences=await window.pywebview.api.load_preferences()||{};
+    nativePreferencesReady=true;
+    if(typeof nativePreferences.fontScale==='string') setFontScale(nativePreferences.fontScale,false);
+    if(typeof nativePreferences.fontFamily==='string') setFontFamily(nativePreferences.fontFamily,false);
+    if(typeof nativePreferences.syncEndpoint==='string') syncEndpointInput.value=nativePreferences.syncEndpoint||SYNC_DEFAULT_ENDPOINT;
+    if(typeof nativePreferences.syncKey==='string') syncKeyInput.value=nativePreferences.syncKey;
+    if(typeof nativePreferences.syncEncryptionPassword==='string') document.getElementById('syncEncryptionPassword').value=nativePreferences.syncEncryptionPassword;
+  }catch(e){}
+}
 function createSyncKey(){
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
