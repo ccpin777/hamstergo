@@ -127,6 +127,7 @@
   .sync-setting{ display:flex; align-items:center; gap:8px; margin:0 0 9px; }
   .sync-setting label{ flex:0 0 76px; color:var(--paper-dim); font-size:12px; }
   .sync-setting input{ flex:1; min-width:0; padding:7px 8px; color:var(--navy); background:var(--paper); border:1px solid var(--line); border-radius:8px; font:inherit; font-size:12px; }
+  .sync-note{ margin:-2px 0 10px 84px; color:var(--paper-dim); font-size:10px; line-height:1.4; }
   .sync-actions{ display:flex; gap:8px; margin:4px 0 7px; }
   .sync-btn{ flex:1; padding:8px 7px; color:var(--paper-dim); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; font-size:12px; }
   .sync-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
@@ -493,6 +494,11 @@
       <label for="syncKey">同步碼</label>
       <input id="syncKey" type="text" minlength="32" maxlength="64" placeholder="兩台裝置使用同一組同步碼" autocomplete="off" spellcheck="false">
     </div>
+    <div class="sync-setting">
+      <label for="syncEncryptionPassword">加密密碼</label>
+      <input id="syncEncryptionPassword" type="password" minlength="8" placeholder="兩台裝置輸入同一組密碼" autocomplete="new-password" spellcheck="false">
+    </div>
+    <div class="sync-note">密碼只在裝置上使用，不會上傳或儲存；忘記後無法解密雲端資料。</div>
     <div class="sync-actions">
       <button class="sync-btn" id="generateSyncKeyBtn" type="button">產生同步碼</button>
       <button class="sync-btn" id="uploadCloudBtn" type="button">上傳到雲端</button>
@@ -700,6 +706,7 @@ const STORAGE_KEY = 'packing-checklist-v2';
 const SYNC_API_URL_KEY = 'hamstergo-sync-api-url';
 const SYNC_DEFAULT_ENDPOINT = 'https://hamstergo-sync.knbcnzcd2q.workers.dev';
 const SYNC_KEY_KEY = 'hamstergo-sync-key';
+const ENCRYPTION_ITERATIONS = 600000;
 let state = { days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' };
 let editingId = null; // custom item currently being renamed
 let dragState = null; // active drag session
@@ -1910,29 +1917,101 @@ function syncRequestReady(){
   return { endpoint, syncKey };
 }
 
+function bytesToBase64(bytes){
+  let binary = '';
+  for(const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+function base64ToBytes(value){
+  const binary = atob(value);
+  return Uint8Array.from(binary, char => char.charCodeAt(0));
+}
+
+async function deriveEncryptionKey(password, salt){
+  const material = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(password),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt, iterations:ENCRYPTION_ITERATIONS, hash:'SHA-256' },
+    material,
+    { name:'AES-GCM', length:256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptState(value, password){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveEncryptionKey(password, salt);
+  const plaintext = new TextEncoder().encode(JSON.stringify(value));
+  const ciphertext = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, plaintext);
+  return {
+    format:'HamsterGo encrypted sync',
+    version:1,
+    algorithm:'AES-GCM',
+    kdf:'PBKDF2-SHA-256',
+    iterations:ENCRYPTION_ITERATIONS,
+    salt:bytesToBase64(salt),
+    iv:bytesToBase64(iv),
+    ciphertext:bytesToBase64(new Uint8Array(ciphertext))
+  };
+}
+
+async function decryptState(payload, password){
+  if(!payload || payload.format !== 'HamsterGo encrypted sync' || payload.version !== 1){
+    throw new Error('unsupported encrypted payload');
+  }
+  const salt = base64ToBytes(payload.salt);
+  const iv = base64ToBytes(payload.iv);
+  const ciphertext = base64ToBytes(payload.ciphertext);
+  const key = await deriveEncryptionKey(password, salt);
+  const plaintext = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ciphertext);
+  return JSON.parse(new TextDecoder().decode(plaintext));
+}
+
+function syncEncryptionPasswordReady(){
+  const password = document.getElementById('syncEncryptionPassword').value;
+  if(password.length < 8){
+    setSyncStatus('請輸入至少 8 個字元的加密密碼。', true);
+    return null;
+  }
+  return password;
+}
+
 async function uploadStateToCloud(){
   const settings = syncRequestReady();
   if(!settings) return;
-  setSyncStatus('正在上傳…');
+  const password = syncEncryptionPasswordReady();
+  if(!password) return;
+  setSyncStatus('正在加密並上傳…');
   try{
     saveState();
+    const payload = await encryptState(state, password);
     const response = await fetch(settings.endpoint + '/record/' + encodeURIComponent(settings.syncKey), {
       method:'PUT',
       headers:{'content-type':'application/json'},
-      body:JSON.stringify({state})
+      body:JSON.stringify({payload})
     });
     if(!response.ok) throw new Error('HTTP ' + response.status);
     const result = await response.json();
-    setSyncStatus('已上傳到雲端 · ' + new Date(result.updatedAt).toLocaleString());
+    setSyncStatus('已加密上傳到雲端 · ' + new Date(result.updatedAt).toLocaleString());
   }catch(e){
-    setSyncStatus('上傳失敗，請確認 Worker 網址與同步碼。', true);
+    setSyncStatus('上傳失敗，請確認 Worker、同步碼與加密密碼。', true);
   }
 }
 
 async function downloadStateFromCloud(){
   const settings = syncRequestReady();
   if(!settings) return;
-  setSyncStatus('正在下載…');
+  const password = syncEncryptionPasswordReady();
+  if(!password) return;
+  setSyncStatus('正在下載並解密…');
   try{
     const response = await fetch(settings.endpoint + '/record/' + encodeURIComponent(settings.syncKey));
     if(response.status === 404){
@@ -1941,10 +2020,14 @@ async function downloadStateFromCloud(){
     }
     if(!response.ok) throw new Error('HTTP ' + response.status);
     const remote = await response.json();
-    if(!remote.state || typeof remote.state !== 'object' || Array.isArray(remote.state) || !remote.state.checked || !remote.state.customItems){
+    if(remote.state){
+      throw new Error('legacy_plaintext_record');
+    }
+    const remoteState = await decryptState(remote.payload, password);
+    if(!remoteState || typeof remoteState !== 'object' || Array.isArray(remoteState) || !remoteState.checked || !remoteState.customItems){
       throw new Error('invalid state');
     }
-    state = Object.assign({}, state, remote.state);
+    state = Object.assign({}, state, remoteState);
     state.editMode = false;
     state.moveMode = null;
     editingId = null;
@@ -1952,9 +2035,10 @@ async function downloadStateFromCloud(){
     render();
     document.getElementById('tripTitle').value = state.tripTitle || '';
     saveState();
-    setSyncStatus('已從雲端下載 · ' + new Date(remote.updatedAt).toLocaleString());
+    setSyncStatus('已解密並下載 · ' + new Date(remote.updatedAt).toLocaleString());
   }catch(e){
-    setSyncStatus('下載失敗，請確認 Worker 網址與同步碼。', true);
+    if(e.message === 'legacy_plaintext_record') setSyncStatus('這是舊版未加密資料，請先用新版本上傳覆蓋。', true);
+    else setSyncStatus('解密失敗，請確認加密密碼是否正確。', true);
   }
 }
 
