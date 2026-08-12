@@ -31,7 +31,7 @@ def main() -> None:
         QuietRequestHandler,
         directory=str(root),
     )
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 8765), handler)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
 

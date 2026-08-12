@@ -49,6 +49,11 @@
     display:flex; justify-content:space-between; align-items:center; gap:8px;
     color:var(--paper); padding:0 6px 14px;
   }
+  .sync-indicator{ display:inline-flex; align-items:center; justify-content:center; width:14px; height:28px; color:var(--paper-dim); cursor:default; }
+  .sync-indicator-dot{ width:8px; height:8px; border-radius:50%; background:#9CA3AF; box-shadow:0 0 0 2px rgba(156,163,175,0.18); }
+  .sync-indicator[data-state="syncing"] .sync-indicator-dot{ background:#E8A33D; box-shadow:0 0 0 2px rgba(232,163,61,0.2); }
+  .sync-indicator[data-state="success"] .sync-indicator-dot{ background:#72B87A; box-shadow:0 0 0 2px rgba(114,184,122,0.22); }
+  .sync-indicator[data-state="error"] .sync-indicator-dot{ background:#D96A5A; box-shadow:0 0 0 2px rgba(217,106,90,0.22); }
   .header-strip .brand{
     text-align:left;
     font-family:var(--font-display); font-weight:600; letter-spacing:0.02em;
@@ -127,8 +132,19 @@
   .sync-setting{ display:flex; align-items:center; gap:8px; margin:0 0 9px; }
   .sync-setting label{ flex:0 0 76px; color:var(--paper-dim); font-size:12px; }
   .sync-setting input{ flex:1; min-width:0; padding:7px 8px; color:var(--navy); background:var(--paper); border:1px solid var(--line); border-radius:8px; font:inherit; font-size:12px; }
+  .sync-password-wrap{ display:flex; flex:1; min-width:0; }
+  .sync-password-wrap input{ width:100%; border-radius:8px 0 0 8px; }
+  .sync-password-toggle{ width:36px; border:1px solid var(--line); border-left:0; border-radius:0 8px 8px 0; color:var(--navy-soft); background:var(--paper); cursor:pointer; }
+  .sync-password-toggle svg{ width:16px; height:16px; }
   .sync-note{ margin:-2px 0 10px 84px; color:var(--paper-dim); font-size:10px; line-height:1.4; }
   .sync-actions{ display:flex; gap:8px; margin:4px 0 7px; }
+  .account-setting, .account-actions, .account-status{ display:none !important; }
+  .account-actions{ display:flex; gap:8px; margin:4px 0 10px; }
+  .account-btn{ flex:1; padding:8px 7px; color:var(--paper-dim); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; font-size:12px; }
+  .account-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .account-status{ min-height:16px; margin:0 0 10px; color:var(--paper-dim); font-size:11px; }
+  .legacy-sync-details{ margin-top:8px; }
+  .legacy-sync-details summary{ color:var(--paper-dim); cursor:pointer; font-size:11px; margin-bottom:10px; }
   .sync-btn{ flex:1; padding:8px 7px; color:var(--paper-dim); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; font-size:12px; }
   .sync-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
   .sync-status{ min-height:16px; margin:0 0 12px; color:var(--paper-dim); font-size:11px; }
@@ -460,6 +476,7 @@
       <button class="settings-btn" id="settingsBtn" aria-label="開啟設定" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0L6.2 6.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
+      <div class="sync-indicator" id="syncIndicator" data-state="idle" title="尚未同步" aria-label="尚未同步"><span class="sync-indicator-dot" aria-hidden="true"></span></div>
     </div>
   </div>
 
@@ -486,24 +503,50 @@
       </select>
     </label>
     <div class="settings-title data-title">雲端同步</div>
+    <div class="sync-setting account-setting">
+      <label for="accountUsername">帳號</label>
+      <input id="accountUsername" type="text" minlength="3" maxlength="32" placeholder="共用帳號" autocomplete="username" spellcheck="false">
+    </div>
+    <div class="sync-setting account-setting">
+      <label for="accountPassword">密碼</label>
+      <div class="sync-password-wrap">
+        <input id="accountPassword" type="password" minlength="8" placeholder="至少 8 個字元" autocomplete="current-password" spellcheck="false">
+        <button class="sync-password-toggle" type="button" data-target="accountPassword" aria-label="顯示密碼" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.4-5 9.5-5 9.5 5 9.5 5-3.4 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+      </div>
+    </div>
+    <div class="account-actions">
+      <button class="account-btn" id="registerAccountBtn" type="button">註冊</button>
+      <button class="account-btn" id="loginAccountBtn" type="button">登入</button>
+      <button class="account-btn" id="logoutAccountBtn" type="button">登出</button>
+    </div>
+    <div class="account-status" id="accountStatus" role="status" aria-live="polite"></div>
+    <details class="legacy-sync-details">
+      <summary>進階同步設定</summary>
     <div class="sync-setting">
       <label for="syncEndpoint">Worker 網址</label>
       <input id="syncEndpoint" type="url" placeholder="https://hamstergo-sync.xxx.workers.dev" autocomplete="off" spellcheck="false">
     </div>
     <div class="sync-setting">
       <label for="syncKey">同步碼</label>
-      <input id="syncKey" type="text" minlength="32" maxlength="64" placeholder="兩台裝置使用同一組同步碼" autocomplete="off" spellcheck="false">
+      <div class="sync-password-wrap">
+        <input id="syncKey" type="password" minlength="32" maxlength="64" placeholder="兩台裝置使用同一組同步碼" autocomplete="off" spellcheck="false">
+        <button class="sync-password-toggle" type="button" data-target="syncKey" aria-label="顯示同步碼" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.4-5 9.5-5 9.5 5 9.5 5-3.4 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+      </div>
     </div>
     <div class="sync-setting">
       <label for="syncEncryptionPassword">加密密碼</label>
-      <input id="syncEncryptionPassword" type="password" minlength="8" placeholder="兩台裝置輸入同一組密碼" autocomplete="new-password" spellcheck="false">
+      <div class="sync-password-wrap">
+        <input id="syncEncryptionPassword" type="password" minlength="8" placeholder="兩台裝置輸入同一組密碼" autocomplete="new-password" spellcheck="false">
+        <button class="sync-password-toggle" type="button" data-target="syncEncryptionPassword" aria-label="顯示加密密碼" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.4-5 9.5-5 9.5 5 9.5 5-3.4 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+      </div>
     </div>
-    <div class="sync-note">密碼只在裝置上使用，不會上傳或儲存；忘記後無法解密雲端資料。</div>
+    <div class="sync-note">密碼只保存在這台裝置，不會上傳到 Cloudflare。</div>
     <div class="sync-actions">
       <button class="sync-btn" id="generateSyncKeyBtn" type="button">產生同步碼</button>
       <button class="sync-btn" id="uploadCloudBtn" type="button">上傳到雲端</button>
       <button class="sync-btn" id="downloadCloudBtn" type="button">從雲端下載</button>
     </div>
+    </details>
     <div class="sync-status" id="syncStatus" role="status" aria-live="polite"></div>
     <div class="settings-title data-title">旅行資料</div>
     <div class="data-actions">
@@ -706,7 +749,10 @@ const STORAGE_KEY = 'packing-checklist-v2';
 const SYNC_API_URL_KEY = 'hamstergo-sync-api-url';
 const SYNC_DEFAULT_ENDPOINT = 'https://hamstergo-sync.knbcnzcd2q.workers.dev';
 const SYNC_KEY_KEY = 'hamstergo-sync-key';
+const SYNC_ENCRYPTION_PASSWORD_KEY = 'hamstergo-sync-encryption-password';
 const ENCRYPTION_ITERATIONS = 600000;
+const AUTH_TOKEN_KEY = 'hamstergo-auth-token';
+const ACCOUNT_USERNAME_KEY = 'hamstergo-account-username';
 let state = { days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' };
 let editingId = null; // custom item currently being renamed
 let dragState = null; // active drag session
@@ -715,6 +761,9 @@ let newTripConfirmOpen = false;
 let recheckModeConfirmOpen = false;
 let docUndoVisible = false;
 let docUndoTimer = null;
+let cloudSyncTimer = null;
+let cloudSyncBusy = false;
+let cloudSyncSuppress = false;
 
 function daysQtyText(days){ return String(days); }
 function normalizeLensBuffer(value){
@@ -1554,6 +1603,7 @@ function saveState(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }catch(e){ console.error('save failed', e); }
+  scheduleCloudUpload();
 }
 
 function loadState(){
@@ -1876,16 +1926,76 @@ setFontFamily(savedFontFamily, false);
 const syncEndpointInput = document.getElementById('syncEndpoint');
 const syncKeyInput = document.getElementById('syncKey');
 const syncStatus = document.getElementById('syncStatus');
+const accountUsernameInput = document.getElementById('accountUsername');
+const accountPasswordInput = document.getElementById('accountPassword');
+const accountStatus = document.getElementById('accountStatus');
+let authToken = '';
+let accountUsername = '';
+try{ authToken = localStorage.getItem(AUTH_TOKEN_KEY) || ''; accountUsername = localStorage.getItem(ACCOUNT_USERNAME_KEY) || ''; }catch(e){ /* first run */ }
+accountUsernameInput.value = accountUsername;
 
 function setSyncStatus(message, isError = false){
   syncStatus.textContent = message;
   syncStatus.style.color = isError ? 'var(--red)' : 'var(--paper-dim)';
+  const indicator = document.getElementById('syncIndicator');
+  if(indicator){
+    const stateName = isError ? 'error' : (message.includes('正在') ? 'syncing' : (message.includes('已') ? 'success' : 'idle'));
+    indicator.dataset.state = stateName;
+    indicator.title = message;
+    indicator.setAttribute('aria-label', message);
+  }
 }
+
+function setAccountStatus(message, isError = false){
+  accountStatus.textContent = message;
+  accountStatus.style.color = isError ? 'var(--red)' : 'var(--paper-dim)';
+}
+function saveAccountSession(result){
+  authToken = result.token || '';
+  accountUsername = result.username || accountUsernameInput.value.trim();
+  try{ localStorage.setItem(AUTH_TOKEN_KEY, authToken); localStorage.setItem(ACCOUNT_USERNAME_KEY, accountUsername); }catch(e){ /* storage unavailable */ }
+  accountUsernameInput.value = accountUsername;
+  setAccountStatus('已登入：' + accountUsername);
+}
+function clearAccountSession(){
+  authToken = '';
+  try{ localStorage.removeItem(AUTH_TOKEN_KEY); localStorage.removeItem(ACCOUNT_USERNAME_KEY); }catch(e){ /* storage unavailable */ }
+  setAccountStatus('已登出。');
+}
+async function accountRequest(path, body){
+  const endpoint = syncEndpointInput.value.trim().replace(/\/$/, '') || SYNC_DEFAULT_ENDPOINT;
+  const response = await fetch(endpoint + path, { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body) });
+  const result = await response.json().catch(() => ({}));
+  if(!response.ok) throw new Error(result.error || ('HTTP ' + response.status));
+  return result;
+}
+async function registerAccount(){
+  const username = accountUsernameInput.value.trim();
+  const password = accountPasswordInput.value;
+  if(!/^[A-Za-z0-9_-]{3,32}$/.test(username) || password.length < 8){ setAccountStatus('帳號需 3–32 個英數字元，密碼至少 8 個字元。', true); return; }
+  setAccountStatus('正在註冊…');
+  try{ saveSyncSettings(); saveAccountSession(await accountRequest('/auth/register', {username, password})); }catch(e){ setAccountStatus(e.message === 'username_taken' ? '這個帳號已存在，請直接登入。' : '註冊失敗，請稍後再試。', true); }
+}
+async function loginAccount(){
+  const username = accountUsernameInput.value.trim();
+  const password = accountPasswordInput.value;
+  if(!username || !password){ setAccountStatus('請輸入帳號和密碼。', true); return; }
+  setAccountStatus('正在登入…');
+  try{ saveSyncSettings(); saveAccountSession(await accountRequest('/auth/login', {username, password})); }catch(e){ setAccountStatus('帳號或密碼錯誤。', true); }
+}
+async function logoutAccount(){
+  if(authToken){ try{ await fetch((syncEndpointInput.value.trim().replace(/\/$/, '') || SYNC_DEFAULT_ENDPOINT) + '/auth/logout', {method:'POST', headers:{authorization:'Bearer ' + authToken}}); }catch(e){ /* logout locally anyway */ } }
+  clearAccountSession();
+}
+document.getElementById('registerAccountBtn').addEventListener('click', registerAccount);
+document.getElementById('loginAccountBtn').addEventListener('click', loginAccount);
+document.getElementById('logoutAccountBtn').addEventListener('click', logoutAccount);
 
 function saveSyncSettings(){
   try{
     localStorage.setItem(SYNC_API_URL_KEY, syncEndpointInput.value.trim().replace(/\/$/, ''));
     localStorage.setItem(SYNC_KEY_KEY, syncKeyInput.value.trim());
+    localStorage.setItem(SYNC_ENCRYPTION_PASSWORD_KEY, document.getElementById('syncEncryptionPassword').value);
   }catch(e){ /* storage unavailable */ }
 }
 
@@ -1893,6 +2003,7 @@ function loadSyncSettings(){
   try{
     syncEndpointInput.value = localStorage.getItem(SYNC_API_URL_KEY) || SYNC_DEFAULT_ENDPOINT;
     syncKeyInput.value = localStorage.getItem(SYNC_KEY_KEY) || '';
+    document.getElementById('syncEncryptionPassword').value = localStorage.getItem(SYNC_ENCRYPTION_PASSWORD_KEY) || '';
   }catch(e){ /* first run */ }
 }
 
@@ -1903,16 +2014,11 @@ function createSyncKey(){
 }
 
 function syncRequestReady(){
-  const endpoint = syncEndpointInput.value.trim().replace(/\/$/, '');
+  const endpoint = syncEndpointInput.value.trim().replace(/\/$/, '') || SYNC_DEFAULT_ENDPOINT;
+  if(authToken) return { endpoint, authToken };
   const syncKey = syncKeyInput.value.trim();
-  if(!endpoint || !/^https?:\/\//i.test(endpoint)){
-    setSyncStatus('請先輸入 Worker 網址。', true);
-    return null;
-  }
-  if(!/^[A-Za-z0-9_-]{32,64}$/.test(syncKey)){
-    setSyncStatus('同步碼需要 32–64 個英數字元。', true);
-    return null;
-  }
+  if(!endpoint || !/^https?:\/\//i.test(endpoint)){ setSyncStatus('請先設定同步服務。', true); return null; }
+  if(!/^[A-Za-z0-9_-]{32,64}$/.test(syncKey)){ setSyncStatus('請先登入，或在進階設定輸入同步碼。', true); return null; }
   saveSyncSettings();
   return { endpoint, syncKey };
 }
@@ -1976,7 +2082,7 @@ async function decryptState(payload, password){
 }
 
 function syncEncryptionPasswordReady(){
-  const password = document.getElementById('syncEncryptionPassword').value;
+  const password = authToken ? accountPasswordInput.value : document.getElementById('syncEncryptionPassword').value;
   if(password.length < 8){
     setSyncStatus('請輸入至少 8 個字元的加密密碼。', true);
     return null;
@@ -1984,18 +2090,30 @@ function syncEncryptionPasswordReady(){
   return password;
 }
 
-async function uploadStateToCloud(){
+function scheduleCloudUpload(){
+  const endpoint = document.getElementById('syncEndpoint')?.value.trim();
+  const syncKey = document.getElementById('syncKey')?.value.trim();
+  const password = document.getElementById('syncEncryptionPassword')?.value;
+  if(cloudSyncSuppress || cloudSyncTimer || !endpoint || (!authToken && !syncKey) || !password) return;
+  cloudSyncTimer = setTimeout(() => {
+    cloudSyncTimer = null;
+    if((authToken ? accountPasswordInput.value : document.getElementById('syncEncryptionPassword')?.value)) uploadStateToCloud(true);
+  }, 1800);
+}
+
+async function uploadStateToCloud(isAutomatic = false){
   const settings = syncRequestReady();
   if(!settings) return;
   const password = syncEncryptionPasswordReady();
   if(!password) return;
-  setSyncStatus('正在加密並上傳…');
+  if(cloudSyncBusy) return;
+  cloudSyncBusy = true;
+  setSyncStatus(isAutomatic ? '正在自動同步…' : '正在加密並上傳…');
   try{
-    saveState();
     const payload = await encryptState(state, password);
-    const response = await fetch(settings.endpoint + '/record/' + encodeURIComponent(settings.syncKey), {
+    const response = await fetch(settings.endpoint + (settings.authToken ? '/me/record' : '/record'), {
       method:'PUT',
-      headers:{'content-type':'application/json'},
+      headers:{'content-type':'application/json', authorization:'Bearer ' + (settings.authToken || settings.syncKey)},
       body:JSON.stringify({payload})
     });
     if(!response.ok) throw new Error('HTTP ' + response.status);
@@ -2003,6 +2121,8 @@ async function uploadStateToCloud(){
     setSyncStatus('已加密上傳到雲端 · ' + new Date(result.updatedAt).toLocaleString());
   }catch(e){
     setSyncStatus('上傳失敗，請確認 Worker、同步碼與加密密碼。', true);
+  } finally {
+    cloudSyncBusy = false;
   }
 }
 
@@ -2013,7 +2133,7 @@ async function downloadStateFromCloud(){
   if(!password) return;
   setSyncStatus('正在下載並解密…');
   try{
-    const response = await fetch(settings.endpoint + '/record/' + encodeURIComponent(settings.syncKey));
+    const response = await fetch(settings.endpoint + (settings.authToken ? '/me/record' : '/record'), { headers:{authorization:'Bearer ' + (settings.authToken || settings.syncKey)} });
     if(response.status === 404){
       setSyncStatus('雲端還沒有資料，請先上傳。', true);
       return;
@@ -2027,6 +2147,7 @@ async function downloadStateFromCloud(){
     if(!remoteState || typeof remoteState !== 'object' || Array.isArray(remoteState) || !remoteState.checked || !remoteState.customItems){
       throw new Error('invalid state');
     }
+    cloudSyncSuppress = true;
     state = Object.assign({}, state, remoteState);
     state.editMode = false;
     state.moveMode = null;
@@ -2036,7 +2157,9 @@ async function downloadStateFromCloud(){
     document.getElementById('tripTitle').value = state.tripTitle || '';
     saveState();
     setSyncStatus('已解密並下載 · ' + new Date(remote.updatedAt).toLocaleString());
+    cloudSyncSuppress = false;
   }catch(e){
+    cloudSyncSuppress = false;
     if(e.message === 'legacy_plaintext_record') setSyncStatus('這是舊版未加密資料，請先用新版本上傳覆蓋。', true);
     else setSyncStatus('解密失敗，請確認加密密碼是否正確。', true);
   }
@@ -2049,10 +2172,21 @@ document.getElementById('generateSyncKeyBtn').addEventListener('click', () => {
 });
 syncEndpointInput.addEventListener('change', saveSyncSettings);
 syncKeyInput.addEventListener('change', saveSyncSettings);
-document.getElementById('uploadCloudBtn').addEventListener('click', uploadStateToCloud);
+document.getElementById('syncEncryptionPassword').addEventListener('change', saveSyncSettings);
+document.getElementById('uploadCloudBtn').addEventListener('click', () => uploadStateToCloud(false));
+document.querySelectorAll('.sync-password-toggle').forEach(button => {
+  button.addEventListener('click', () => {
+    const input = document.getElementById(button.dataset.target);
+    const visible = input.type === 'text';
+    input.type = visible ? 'password' : 'text';
+    button.setAttribute('aria-pressed', String(!visible));
+    button.setAttribute('aria-label', visible ? '顯示密碼' : '隱藏密碼');
+  });
+});
 document.getElementById('downloadCloudBtn').addEventListener('click', downloadStateFromCloud);
 
 loadSyncSettings();
+if(authToken) setAccountStatus('已登入：' + accountUsername);
 loadState();
 document.getElementById('tripTitle').value = state.tripTitle || '';
 
