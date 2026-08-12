@@ -64,6 +64,8 @@
   .brand-subtitle{font-family:var(--font-body);}
   .brand-separator{display:inline;}
   html[data-app-font] .brand-separator{display:none;}
+  html[data-app-font] .header-strip{align-items:flex-end;}
+  html[data-app-font] .header-strip .header-actions{align-self:flex-end; transform:translateY(8px);}
   html[data-app-font] .header-strip .brand{line-height:1.15;}
   html[data-app-font] .brand-title, html[data-app-font] .brand-subtitle{display:block;}
   html[data-app-font] .brand-title{font-size:calc(25px * var(--font-scale, 1));}
@@ -104,6 +106,11 @@
       align-items:end;
       gap:8px;
       padding-bottom:14px;
+    }
+    html:not([data-app-font]) .header-strip .brand{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
     .header-strip .brand{
       grid-column:1;
