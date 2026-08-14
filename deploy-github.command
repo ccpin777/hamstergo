@@ -25,13 +25,6 @@ if [ -z "$msg" ]; then
     exit 1
 fi
 
-latest_tag=$(git tag --sort=-version:refname | head -1)
-if [ -n "$latest_tag" ]; then
-    echo "Current latest version: $latest_tag"
-fi
-echo "Tag this version? (e.g. 1.0) — Press Enter to skip"
-read tag
-
 git add .
 if git diff --cached --quiet; then
     echo "No new changes to commit, pushing existing content..."
@@ -39,19 +32,10 @@ else
     git commit -m "$msg" || { echo "Commit failed, aborting. Nothing was deployed."; read; exit 1; }
 fi
 
-if [ -n "$tag" ]; then
-    git tag "v$tag"
-    if git push -u origin main --tags; then
-        echo "Deployed and tagged as v$tag!"
-    else
-        echo "Push failed, nothing was actually deployed. Check the error above."
-    fi
+if git push -u origin main; then
+    echo "Deployed!"
 else
-    if git push -u origin main; then
-        echo "Deployed!"
-    else
-        echo "Push failed, nothing was actually deployed. Check the error above."
-    fi
+    echo "Push failed, nothing was actually deployed. Check the error above."
 fi
 
 echo ""

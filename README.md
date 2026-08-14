@@ -59,7 +59,7 @@ python3 -m http.server 8000
 5. 等 1–2 分鐘後，會拿到一個網址：`https://你的帳號.github.io/repo名稱/`
 6. 手機瀏覽器打開這個網址 → 加到主畫面，即可像 App 一樣全螢幕使用
 
-之後每次修改完，雙擊 `deploy.command`，輸入這次改了什麼、要不要打版號，就會自動 commit + push。
+之後每次修改完，雙擊 `deploy.command`，輸入這次改了什麼，就會自動 commit + push。
 
 ## 資料儲存說明
 

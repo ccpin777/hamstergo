@@ -56,7 +56,7 @@ First-time setup:
 5. After 1–2 minutes you'll get a URL: `https://your-username.github.io/repo-name/`
 6. Open that URL on your phone's browser → add to home screen to use it like a full-screen app
 
-After that, double-click `deploy.command` any time you make changes, type a description (and optionally a version bump), and it'll commit + push automatically.
+After that, double-click `deploy.command` any time you make changes, type a description, and it'll commit + push automatically.
 
 ## Data storage notes
 
