@@ -54,6 +54,7 @@
   .sync-indicator[data-state="syncing"] .sync-indicator-dot{ background:#E8A33D; box-shadow:0 0 0 2px rgba(232,163,61,0.2); }
   .sync-indicator[data-state="success"] .sync-indicator-dot{ background:#72B87A; box-shadow:0 0 0 2px rgba(114,184,122,0.22); }
   .sync-indicator[data-state="error"] .sync-indicator-dot{ background:#D96A5A; box-shadow:0 0 0 2px rgba(217,106,90,0.22); }
+  .sync-indicator[data-state="idle"] .sync-indicator-dot, .sync-indicator[data-state="success"] .sync-indicator-dot{ opacity:0; }
   .header-strip .brand{
     text-align:left;
     font-family:var(--font-display); font-weight:600; letter-spacing:0.02em;
@@ -489,6 +490,7 @@
   <div class="header-strip">
     <div class="brand"><span class="brand-title">HamsterGo</span><span class="brand-separator"> · </span><span class="brand-subtitle">倉鼠打包小幫手</span></div>
     <div class="header-actions">
+      <div class="sync-indicator" id="syncIndicator" data-state="idle" title="尚未同步" aria-label="尚未同步"><span class="sync-indicator-dot" aria-hidden="true"></span></div>
       <button class="toolbar-btn" id="addItemBtn" aria-label="新增項目" title="新增項目">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
       </button>
@@ -499,7 +501,6 @@
       <button class="settings-btn" id="settingsBtn" aria-label="開啟設定" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0L6.2 6.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
-      <div class="sync-indicator" id="syncIndicator" data-state="idle" title="尚未同步" aria-label="尚未同步"><span class="sync-indicator-dot" aria-hidden="true"></span></div>
     </div>
   </div>
 
