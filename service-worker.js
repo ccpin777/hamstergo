@@ -6,6 +6,7 @@ const ASSETS = [
   './resources/hamstergo-icon-192.png?v=hamstergo-icon-v2',
   './resources/hamstergo-icon-512.png?v=hamstergo-icon-v2',
   './resources/hamstergo-desktop-icon-v1.png?v=hamstergo-desktop-icon-v1',
+  './resources/hamstergo-tab-icon-v2.png?v=hamstergo-tab-icon-v2',
   './resources/hamstergo-icon.webp',
   './resources/briefcase.svg',
   './resources/plus.svg',
