@@ -2,9 +2,9 @@ const CACHE_NAME = 'packing-checklist-cache-v8';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  './resources/icon-192.png',
-  './resources/icon-512.png',
+  './manifest.json?v=hamstergo-manifest-v2',
+  './resources/hamstergo-icon-192.png?v=hamstergo-icon-v2',
+  './resources/hamstergo-icon-512.png?v=hamstergo-icon-v2',
   './resources/hamstergo-icon.webp',
   './resources/briefcase.svg',
   './resources/plus.svg',

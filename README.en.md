@@ -66,4 +66,4 @@ All data lives in **this phone, this browser** (`localStorage`) — it doesn't s
 
 - To change checklist items or categories, edit the `getData()` function in `index.html`
 - To change the color scheme, edit the CSS variables at the top of `index.html` under `:root` (`--navy`, `--amber`, etc.)
-- To change the app icons, regenerate `resources/icon-192.png` / `resources/icon-512.png` with the same filenames; individual UI SVG copies also live in `resources/`, while the page keeps inline SVG for direct `index.html` opening
+- To change the app icons, regenerate `resources/hamstergo-icon-192.png` / `resources/hamstergo-icon-512.png` with the same filenames; individual UI SVG copies also live in `resources/`, while the page keeps inline SVG for direct `index.html` opening
