@@ -1,3 +1,7 @@
+# 2026-08-17 — PWA product version display
+
+- Standardized the HamsterGo PWA display to two lines: `Version 1.0` and `Build 10` and advanced the Service Worker cache identifier to v10 so an installed PWA refreshes the updated shell.
+
 # HamsterGo — Dev Log
 
 ## 1.0 — 2026-08-17 — Version baseline
