@@ -1,6 +1,15 @@
+# 2026-08-17 — Native About menu and compact About modal
+
+- Added a custom PyWebView macOS application-menu About item that opens the shared HamsterGo web modal and removes the standard AppKit About action on the Cocoa main thread after the window is shown.
+- Kept the Settings-page 「關於」 button as the fallback entry point and reduced the About artwork to 150px for a more compact modal.
+
 # 2026-08-17 — PWA product version display
 
 - Standardized the HamsterGo PWA display to two lines: `Version 1.0` and `Build 10`; desktop mode hides the Build line, while the mobile brand title remains fixed-size and advanced the Service Worker cache identifier to v10 so an installed PWA refreshes the updated shell.
+- Added an About HamsterGo modal showing the product identity and Version 1.0; Build information remains in Settings only.
+- Mobile brand titles keep a fixed size while still responding to the selected title font.
+- The About modal now uses the current boarding-pass artwork and an OK action.
+- The About modal now uses the current boarding-pass artwork and an OK action.
 
 # HamsterGo — Dev Log
 

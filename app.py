@@ -4,12 +4,37 @@ import functools
 import http.server
 import json
 import os
+import platform
 import sys
 import tempfile
 import threading
 from pathlib import Path
 
 import webview
+
+
+_menu_main_thread_target = None
+
+
+def remove_default_macos_about_menu() -> None:
+    """Remove only macOS's standard About action from the application menu."""
+    if platform.system() != "Darwin":
+        return
+    try:
+        from AppKit import NSApp
+
+        main_menu = NSApp.mainMenu()
+        if main_menu is None or main_menu.numberOfItems() == 0:
+            return
+        app_menu = main_menu.itemAtIndex_(0).submenu()
+        if app_menu is None:
+            return
+        for index in range(app_menu.numberOfItems() - 1, -1, -1):
+            item = app_menu.itemAtIndex_(index)
+            if str(item.action()) == "orderFrontStandardAboutPanel:":
+                app_menu.removeItemAtIndex_(index)
+    except Exception:
+        return
 
 
 class QuietRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -75,7 +100,7 @@ def main() -> None:
     url = f"http://127.0.0.1:{server.server_address[1]}/index.html"
     preferences_api = PreferencesAPI()
     window = webview.create_window(
-        "",
+        "HamsterGo",
         url,
         width=520,
         height=860,
@@ -85,8 +110,42 @@ def main() -> None:
         js_api=preferences_api,
     )
 
+    def schedule_remove_default_macos_about_menu() -> None:
+        global _menu_main_thread_target
+        if platform.system() != "Darwin":
+            return
+        from Foundation import NSObject
+
+        if _menu_main_thread_target is None:
+            class MenuMainThreadTarget(NSObject):
+                def removeDefaultAbout_(self, sender):
+                    remove_default_macos_about_menu()
+
+            _menu_main_thread_target = MenuMainThreadTarget.alloc().init()
+        _menu_main_thread_target.performSelectorOnMainThread_withObject_waitUntilDone_(
+            "removeDefaultAbout:", None, False
+        )
+
+    def show_about() -> None:
+        schedule_remove_default_macos_about_menu()
+        if window is not None:
+            window.evaluate_js("if (typeof openAboutModal === 'function') { openAboutModal(); }")
+
+    from webview.menu import Menu, MenuAction
+    if platform.system() == "Darwin":
+        webview.settings["SHOW_DEFAULT_MENUS"] = False
+        app_menu = [Menu("__app__", [MenuAction("關於 HamsterGo", show_about)])]
+    else:
+        app_menu = [Menu("Help", [MenuAction("About HamsterGo", show_about)])]
+
+    def prepare_window() -> None:
+        schedule_remove_default_macos_about_menu()
+
+    window.events.before_show += prepare_window
+    window.events.shown += lambda: schedule_remove_default_macos_about_menu()
+
     try:
-        webview.start()
+        webview.start(menu=app_menu)
     finally:
         server.shutdown()
         server.server_close()
