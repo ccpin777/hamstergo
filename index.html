@@ -61,15 +61,15 @@
     font-size:calc(15px * var(--font-scale, 1)); color:var(--amber); text-transform:none;
     flex:1; min-width:0; white-space:pre-line; text-align:left; flex:1; overflow:hidden; text-overflow:ellipsis;
   }
-  .brand-title{font-family:var(--brand-font); font-size:calc(15px * var(--font-scale, 1));}
+  .brand-title{font-family:var(--font-display); font-size:calc(15px * var(--font-scale, 1));}html[data-native-app] .brand-title{font-family:var(--brand-font);}
   .brand-subtitle{font-family:var(--font-body);}
   .brand-separator{display:inline;}
-  html[data-app-font] .brand-separator{display:inline;}
-  html[data-app-font] .header-strip{align-items:flex-end;}
-  html[data-app-font] .header-strip .header-actions{align-self:flex-end; transform:translateY(0px);}
-  html[data-app-font] .header-strip .brand{line-height:1.15;}
-  html[data-app-font] .brand-title, html[data-app-font] .brand-subtitle{display:inline;}
-  html[data-app-font] .brand-title{font-size:calc(25px * var(--font-scale, 1));}
+  html[data-native-app][data-app-font] .brand-separator{display:inline;}
+  html[data-native-app][data-app-font] .header-strip{align-items:flex-end;}
+  html[data-native-app][data-app-font] .header-strip .header-actions{align-self:flex-end; transform:translateY(0px);}
+  html[data-native-app][data-app-font] .header-strip .brand{line-height:1.15;}
+  html[data-native-app][data-app-font] .brand-title, html[data-native-app][data-app-font] .brand-subtitle{display:inline;}
+  html[data-native-app][data-app-font] .brand-title{font-size:calc(25px * var(--font-scale, 1));}
   .edit-toggle{
     font-family:var(--font-display); font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.015em;
     text-transform:none; color:var(--paper-dim); background:rgba(255,255,255,0.08);
@@ -108,7 +108,7 @@
       gap:8px;
       padding-bottom:14px;
     }
-    html:not([data-app-font]) .header-strip .brand{
+    html:not([data-native-app][data-app-font]) .header-strip .brand{
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -131,8 +131,8 @@
       align-self:end;
       transform:translateY(0px);
     }
-    html[data-app-font] .brand-title, html[data-app-font] .brand-subtitle{display:block;}
-    html[data-app-font] .brand-separator{display:none;}
+    html[data-native-app][data-app-font] .brand-title, html[data-native-app][data-app-font] .brand-subtitle{display:block;}
+    html[data-native-app][data-app-font] .brand-separator{display:none;}
   }
   .settings-panel{
     display:none; margin:0 0 12px; padding:14px 16px; color:var(--paper);
@@ -578,7 +578,7 @@
       <button class="data-btn" id="importBtn">匯入 JSON</button>
     </div>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
-    <div class="app-version">HamsterGo v0.4.0</div>
+    <div class="app-version">HamsterGo v1.0</div>
   </div>
 
   <div class="ticket">
@@ -2046,7 +2046,9 @@ function loadSyncSettings(){
   }catch(e){ /* first run */ }
 }
 
+function markNativeApp(){ document.documentElement.dataset.nativeApp = "true"; }
 async function loadNativePreferences(){
+  markNativeApp();
   if(!window.pywebview?.api?.load_preferences) return;
   try{
     nativePreferences=await window.pywebview.api.load_preferences()||{};

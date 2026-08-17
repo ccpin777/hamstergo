@@ -1,3 +1,11 @@
+# HamsterGo — Dev Log
+
+## 1.0 — 2026-08-17 — Version baseline
+
+The current HamsterGo state is recorded as the first tracked version baseline: **1.0**, matching the version displayed in the app UI at that time. This establishes the starting point for the Apps Index version history; future product updates may advance it beyond 1.0.
+
+---
+
 ## 2026-08-12 — Desktop layout, font persistence, visibility icons, and deployment script organization
 
 Updated the packaged desktop window to use a blank native title bar. Font size and heading-font preferences are now part of the local travel state and encrypted cloud sync payload, with migration from the previous standalone localStorage keys. Added reusable `resources/eye-open.svg` and `resources/eye-closed.svg` assets for the sync-code and password visibility controls.
