@@ -21,7 +21,7 @@ The current HamsterGo state is recorded as the first tracked version baseline: *
 
 ## 2026-08-12 — Desktop layout, font persistence, visibility icons, and deployment script organization
 
-Updated the packaged desktop window to use a blank native title bar. Font size and heading-font preferences are now part of the local travel state and encrypted cloud sync payload, with migration from the previous standalone localStorage keys. Added reusable `resources/eye-open.svg` and `resources/eye-closed.svg` assets for the sync-code and password visibility controls.
+Updated the packaged desktop window to use a blank native title bar. Font size and heading-font preferences are now part of the local travel state and encrypted cloud sync payload, with migration from the previous standalone localStorage keys. Added reusable `resources/icons/eye-open.svg` and `resources/icons/eye-closed.svg` assets for the sync-code and password visibility controls.
 
 Reorganized deployment helpers: `Run.command` is at the HamsterGo project root, `deploy-worker.command` is in `cloudflare/`, and `deploy-github.command` is in the HamsterGo project root. Updated each script to resolve the correct project or Worker directory, and verified both moved scripts point to their intended locations and pass shell syntax checks. Added ignore rules for screenshots and kept credentials out of committed source files.
 
@@ -31,8 +31,8 @@ Files touched:
 - Run.command
 - cloudflare/deploy-worker.command
 - deploy-github.command
-- resources/eye-open.svg
-- resources/eye-closed.svg
+- resources/icons/eye-open.svg
+- resources/icons/eye-closed.svg
 - .gitignore
 
 ## 2026-08-12 — Cloud sync, encryption, deployment, and desktop build
@@ -41,7 +41,7 @@ Added Cloudflare D1 synchronization for HamsterGo. Travel state is encrypted in 
 
 Added automatic upload after local changes, a compact sync status light in the header, password visibility toggles, and an advanced sync settings section containing the sync tools. The current daily workflow remains sync code plus encryption password; the experimental account API is not shown in the frontend.
 
-Added a PyWebView macOS desktop build flow. command/build.command builds dist/HamsterGo.app with resources/icon-1024.png; temporary PyInstaller output and dist/HamsterGo are removed after a successful build. The local desktop server uses a stable localhost port so browser storage can persist between launches.
+Added a PyWebView macOS desktop build flow. command/build.command builds dist/HamsterGo.app with resources/images/icon-1024.png; temporary PyInstaller output and dist/HamsterGo are removed after a successful build. The local desktop server uses a stable localhost port so browser storage can persist between launches.
 
 Added separate deployment entry points:
 - deploy-github.command for the frontend GitHub push workflow
@@ -432,7 +432,7 @@ Files touched:
 1. Added a top-level briefcase icon for 「開始新的旅程」 while keeping the footer action; removed the top export icon and kept JSON export inside Settings. The product title no longer includes the hamster emoji.
 2. Added the final recheck behavior: the recheck control appears only after packing is complete and the document is stowed; in recheck mode, crossed-out items and baggage toggles are locked, while packed items can be checked or unchecked for the new pass.
 3. Added edit-mode recovery for a document marked 「已收妥」, returning it to 「帶了」 without losing the packed state. Section 05 now auto-collapses when complete and supports manual expand/collapse.
-4. Refined the recheck icon and kept its source as `resources/recheck.svg`, with a matching inline copy in `index.html` for direct file opening. Each custom SVG has an individual file under `resources/`; the old `resource/` directory was renamed.
+4. Refined the recheck icon and kept its source as `resources/icons/recheck.svg`, with a matching inline copy in `index.html` for direct file opening. Each custom SVG has an individual file under `resources/`; the old `resource/` directory was renamed.
 5. Disabled autofill for the add-item name field with `name="item"` and `autocomplete="off"`.
 
 **Files touched**:

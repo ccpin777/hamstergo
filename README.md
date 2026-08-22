@@ -31,9 +31,11 @@
 ├── manifest.json        # PWA 設定（名稱、圖示、顏色、啟動模式）
 ├── service-worker.js    # 離線快取邏輯
 ├── resources/
-│   ├── icon-192.png         # App 圖示（192×192）
-│   ├── icon-512.png         # App 圖示（512×512）
-│   └── *.svg                # 各個自製 icon 的獨立副本
+│   ├── images/               # 執行時圖片與 App/PWA 圖示
+│   ├── icons/                # 獨立 SVG UI icon
+│   ├── source/               # 原始與候選素材
+│   ├── fonts/                # 執行時字體
+│   └── font-preview/         # 字型預覽頁與預覽字體
 ├── deploy.command       # 雙擊即可 commit + push 到 GitHub 的部署腳本
 └── dev-log.md           # 開發紀錄
 ```
@@ -69,4 +71,4 @@ python3 -m http.server 8000
 
 - 想調整清單項目、分類，直接編輯 `index.html` 裡的 `getData()` 這個函式
 - 想換配色，改 `index.html` 最上面 `:root` 裡的 CSS 變數（`--navy`、`--amber` 等）
-- 想換 App 圖示，重新產生 `resources/hamstergo-icon-192.png` / `resources/hamstergo-icon-512.png` 並保持相同檔名即可；介面 SVG icon 的獨立副本也放在 `resources/`，頁面目前保留 inline SVG 以支援直接開啟 `index.html`
+- 想換 App 圖示，請更新 `resources/images/` 中目前被 manifest 與 build 使用的圖示；獨立 SVG UI icon 放在 `resources/icons/`，來源素材放在 `resources/source/`

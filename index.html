@@ -6,11 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json?v=hamstergo-manifest-v2">
-<link rel="apple-touch-icon" href="resources/hamstergo-safari-icon-v3.png">
-<link rel="icon" type="image/png" sizes="512x512" href="resources/hamstergo-favicon-v3.png">
+<link rel="apple-touch-icon" href="resources/images/hamstergo-safari-icon-v3.png">
+<link rel="icon" type="image/png" sizes="512x512" href="resources/images/hamstergo-favicon-v3.png">
 <meta name="theme-color" content="#1B2A4A">
 <title>HamsterGo · 倉鼠打包小幫手</title>
-<link rel="preload" as="image" href="resources/hamstergo-icon.webp" type="image/webp">
+<link rel="preload" as="image" href="resources/images/hamstergo-icon.webp" type="image/webp">
 <style>
   @font-face{font-family:"Gochi Hand";src:url("resources/fonts/GochiHand-Regular.ttf") format("truetype");font-display:swap;}
   @font-face{font-family:"Permanent Marker";src:url("resources/fonts/PermanentMarker-Regular.ttf") format("truetype");font-display:swap;}
@@ -540,7 +540,7 @@
       <label for="accountPassword">密碼</label>
       <div class="sync-password-wrap">
         <input id="accountPassword" type="password" minlength="8" placeholder="至少 8 個字元" autocomplete="current-password" spellcheck="false">
-        <button class="sync-password-toggle" type="button" data-target="accountPassword" data-visible="false" aria-label="顯示密碼" aria-pressed="false"><img src="resources/eye-closed.svg" alt=""></button>
+        <button class="sync-password-toggle" type="button" data-target="accountPassword" data-visible="false" aria-label="顯示密碼" aria-pressed="false"><img src="resources/icons/eye-closed.svg" alt=""></button>
       </div>
     </div>
     <div class="account-actions">
@@ -559,14 +559,14 @@
       <label for="syncKey">同步碼</label>
       <div class="sync-password-wrap">
         <input id="syncKey" type="password" minlength="32" maxlength="64" placeholder="兩台裝置使用同一組同步碼" autocomplete="off" spellcheck="false">
-        <button class="sync-password-toggle" type="button" data-target="syncKey" data-visible="false" aria-label="顯示同步碼" aria-pressed="false"><img src="resources/eye-closed.svg" alt=""></button>
+        <button class="sync-password-toggle" type="button" data-target="syncKey" data-visible="false" aria-label="顯示同步碼" aria-pressed="false"><img src="resources/icons/eye-closed.svg" alt=""></button>
       </div>
     </div>
     <div class="sync-setting">
       <label for="syncEncryptionPassword">加密密碼</label>
       <div class="sync-password-wrap">
         <input id="syncEncryptionPassword" type="password" minlength="8" placeholder="兩台裝置輸入同一組密碼" autocomplete="new-password" spellcheck="false">
-        <button class="sync-password-toggle" type="button" data-target="syncEncryptionPassword" data-visible="false" aria-label="顯示加密密碼" aria-pressed="false"><img src="resources/eye-closed.svg" alt=""></button>
+        <button class="sync-password-toggle" type="button" data-target="syncEncryptionPassword" data-visible="false" aria-label="顯示加密密碼" aria-pressed="false"><img src="resources/icons/eye-closed.svg" alt=""></button>
       </div>
     </div>
     <div class="sync-note">密碼只保存在這台裝置，不會上傳到 Cloudflare。</div>
@@ -611,7 +611,7 @@
           <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
           <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已帶上</div>
         </div>
-        <button class="mascot-reset-btn" id="mascotResetBtn" type="button" aria-label="雙點倉鼠開始新的旅程"><img class="status-mascot" src="resources/hamstergo-icon.webp" width="140" height="140" alt="" aria-hidden='true'></button>
+        <button class="mascot-reset-btn" id="mascotResetBtn" type="button" aria-label="雙點倉鼠開始新的旅程"><img class="status-mascot" src="resources/images/hamstergo-icon.webp" width="140" height="140" alt="" aria-hidden='true'></button>
       </div>
     </div>
 
@@ -1483,7 +1483,7 @@ function openAboutModal(){
   layer.appendChild(backdrop);
   const wrap = document.createElement("div");
   wrap.className = "add-row add-modal about-modal";
-  wrap.innerHTML = `<img class="about-image" src="resources/hamster_boarding_pass_current_1.png" alt="HamsterGo boarding pass"><h2>HamsterGo</h2><p class="about-tagline">倉鼠打包小幫手</p><p class="about-version">Version 1.0</p><p class="about-build">Build 10</p><p class="about-footer">© 2026 HamsterGo · Created by Pin</p><div class="add-modal-actions"><button type="button" class="add-modal-cancel">OK</button></div>`;
+  wrap.innerHTML = `<img class="about-image" src="resources/images/hamster_boarding_pass_current_1.png" alt="HamsterGo boarding pass"><h2>HamsterGo</h2><p class="about-tagline">倉鼠打包小幫手</p><p class="about-version">Version 1.0</p><p class="about-build">Build 10</p><p class="about-footer">© 2026 HamsterGo · Created by Pin</p><div class="add-modal-actions"><button type="button" class="add-modal-cancel">OK</button></div>`;
   wrap.querySelector(".add-modal-cancel").addEventListener("click", close);
   layer.appendChild(wrap);
   document.body.appendChild(layer);
@@ -2265,7 +2265,7 @@ document.querySelectorAll('.sync-password-toggle').forEach(button => {
     button.setAttribute('aria-label', visible ? '顯示密碼' : '隱藏密碼');
     button.dataset.visible = String(!visible);
     const icon = button.querySelector("img");
-    if(icon) icon.src = visible ? "resources/eye-open.svg" : "resources/eye-closed.svg";
+    if(icon) icon.src = visible ? "resources/icons/eye-open.svg" : "resources/icons/eye-closed.svg";
   });
 });
 document.getElementById('downloadCloudBtn').addEventListener('click', downloadStateFromCloud);

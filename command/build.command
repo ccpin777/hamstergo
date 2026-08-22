@@ -21,7 +21,7 @@ fail() {
 
 cleanup_success() {
     echo "Cleaning successful-build artifacts..."
-    rm -rf "$BUILD_VENV" "$BUILD_DIR/pyinstaller" "$ICONSET" "$ICON_ICNS" "$DIST_DIR/HamsterGo"
+    rm -rf "$BUILD_VENV" "$BUILD_DIR/pyinstaller" "$ICONSET" "$ICON_ICNS"
     rmdir "$BUILD_DIR" 2>/dev/null || true
 }
 
@@ -38,7 +38,7 @@ ICON_ICNS="$BUILD_DIR/hamstergo.icns"
 
 [[ -f "$PROJECT_DIR/app.py" ]] || fail "Missing app.py"
 [[ -f "$PROJECT_DIR/HamsterGo.spec" ]] || fail "Missing HamsterGo.spec"
-[[ -f "$PROJECT_DIR/resources/icon-1024.png" ]] || fail "Missing resources/icon-1024.png"
+[[ -f "$PROJECT_DIR/resources/images/icon-1024.png" ]] || fail "Missing resources/images/icon-1024.png"
 
 mkdir -p "$BUILD_DIR" "$DIST_DIR"
 
@@ -50,16 +50,16 @@ echo "Preparing isolated build environment..."
 echo "Preparing app icon..."
 rm -rf "$ICONSET"
 mkdir -p "$ICONSET"
-sips -z 16 16 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_16x16.png" >/dev/null
-sips -z 32 32 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_16x16@2x.png" >/dev/null
-sips -z 32 32 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_32x32.png" >/dev/null
-sips -z 64 64 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_32x32@2x.png" >/dev/null
-sips -z 128 128 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_128x128.png" >/dev/null
-sips -z 256 256 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_128x128@2x.png" >/dev/null
-sips -z 256 256 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_256x256.png" >/dev/null
-sips -z 512 512 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_256x256@2x.png" >/dev/null
-sips -z 512 512 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_512x512.png" >/dev/null
-sips -z 1024 1024 "$PROJECT_DIR/resources/icon-1024.png" --out "$ICONSET/icon_512x512@2x.png" >/dev/null
+sips -z 16 16 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_16x16.png" >/dev/null
+sips -z 32 32 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_16x16@2x.png" >/dev/null
+sips -z 32 32 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_32x32.png" >/dev/null
+sips -z 64 64 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_32x32@2x.png" >/dev/null
+sips -z 128 128 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_128x128.png" >/dev/null
+sips -z 256 256 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_128x128@2x.png" >/dev/null
+sips -z 256 256 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_256x256.png" >/dev/null
+sips -z 512 512 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_256x256@2x.png" >/dev/null
+sips -z 512 512 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_512x512.png" >/dev/null
+sips -z 1024 1024 "$PROJECT_DIR/resources/images/icon-1024.png" --out "$ICONSET/icon_512x512@2x.png" >/dev/null
 iconutil -c icns "$ICONSET" -o "$ICON_ICNS"
 
 echo "Cleaning previous output..."
