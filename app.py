@@ -87,6 +87,20 @@ def app_directory() -> Path:
     return candidates[0]
 
 
+def apply_macos_dock_icon(icon_path: Path) -> None:
+    """Use the app artwork for direct Run.command launches on macOS."""
+    if platform.system() != "Darwin" or not icon_path.exists():
+        return
+    try:
+        from AppKit import NSApplication, NSImage
+
+        image = NSImage.alloc().initWithContentsOfFile_(str(icon_path))
+        if image:
+            NSApplication.sharedApplication().setApplicationIconImage_(image)
+    except Exception:
+        return
+
+
 def main() -> None:
     root = app_directory()
     handler = functools.partial(
@@ -99,6 +113,7 @@ def main() -> None:
 
     url = f"http://127.0.0.1:{server.server_address[1]}/index.html"
     preferences_api = PreferencesAPI()
+    apply_macos_dock_icon(root / "resources" / "images" / "icon-1024.png")
     window = webview.create_window(
         "HamsterGo",
         url,

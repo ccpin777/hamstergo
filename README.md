@@ -2,7 +2,9 @@
 
 [English](README.en.md) ｜ 中文
 
-一個純前端的行李打包檢查清單，設計成登機證（boarding pass）的樣式，就像有一隻小倉鼠陪你一起打包行李。可以安裝到手機主畫面，當作一般 App 使用。
+一個以登機證（boarding pass）為視覺概念的行李打包檢查清單，就像有一隻小倉鼠陪你一起打包行李。
+
+HamsterGo 主要是前端 PWA，也可以透過 `app.py` 以 pywebview 包裝成桌面 App。預設資料只存在目前裝置；若自行設定同步服務，也可以把資料加密後同步到其他裝置。
 
 ## 功能
 
@@ -17,7 +19,9 @@
 - **再次檢查**：只有主要項目都已處理、證件已收妥後才會出現 icon。再次檢查會保留 X 項目；進入再次確認模式後，空白項目可勾選／取消，原本的 X 不可改回，手提／托運開關與航班說明也會鎖定或隱藏
 - **清單項目**：洗漱品和藥品中加入「洗漱袋」「藥品袋」，電子用品中加入「充電袋」；它們和其他物品一樣是普通 checklist 項目
 - **通關提醒**：出發前 / 安檢後兩個時間點的證件提醒
-- **本機儲存**：勾選狀態、天數設定、自訂項目都存在瀏覽器的 `localStorage`，只留在你自己的裝置上，不會上傳到任何伺服器
+- **本機優先**：勾選狀態、天數設定、自訂項目與旅程資料預設存在瀏覽器的 `localStorage`，不需要帳號，也不會自動上傳
+- **選擇性雲端同步**：可在設定中填入 Cloudflare Worker 網址、同步碼與加密密碼；資料會先在瀏覽器端以 AES-GCM 加密，再手動或自動上傳。同步不是預設啟用的功能
+- **同步 API**：`cloudflare/` 包含 Cloudflare Worker、D1 migration 與同步 API。Worker 目前支援同步碼模式，程式碼也保留帳號／session API；帳號介面目前不是主要使用流程
 - **可安裝成 PWA**：加到手機主畫面後可全螢幕開啟；有網路時優先取得最新頁面，離線時使用快取內容
 - **字體大小設定**：右上角齒輪可切換小、標準、大、特大文字，設定會保存在本機
 - **旅行紀錄匯出／匯入**：可在登機證上方命名此次旅行；匯出 JSON 會使用旅行名稱作為檔名，也可從齒輪設定匯入紀錄
@@ -28,16 +32,22 @@
 ```
 .
 ├── index.html          # 主要頁面與邏輯
+├── app.py              # pywebview 桌面版啟動器
+├── version.py          # 應用程式版本來源
 ├── manifest.json        # PWA 設定（名稱、圖示、顏色、啟動模式）
 ├── service-worker.js    # 離線快取邏輯
+├── HamsterGo.spec       # PyInstaller 打包設定
+├── Run.command          # 啟動桌面版
+├── command/             # 建置腳本
+├── cloudflare/          # 選擇性同步 Worker 與 D1 migrations
 ├── resources/
 │   ├── images/               # 執行時圖片與 App/PWA 圖示
 │   ├── icons/                # 獨立 SVG UI icon
 │   ├── source/               # 原始與候選素材
 │   ├── fonts/                # 執行時字體
 │   └── font-preview/         # 字型預覽頁與預覽字體
-├── deploy.command       # 雙擊即可 commit + push 到 GitHub 的部署腳本
-└── dev-log.md           # 開發紀錄
+├── deploy-github.command # 部署到 GitHub 的腳本
+└── doc/                  # 開發紀錄
 ```
 
 ## 本機測試
@@ -61,14 +71,33 @@ python3 -m http.server 8000
 5. 等 1–2 分鐘後，會拿到一個網址：`https://你的帳號.github.io/repo名稱/`
 6. 手機瀏覽器打開這個網址 → 加到主畫面，即可像 App 一樣全螢幕使用
 
-之後每次修改完，雙擊 `deploy.command`，輸入這次改了什麼，就會自動 commit + push。
+之後每次修改完，雙擊 `deploy-github.command`，輸入這次改了什麼，就會自動 commit + push。
 
-## 資料儲存說明
+## 資料儲存與同步
 
-所有資料都存在**這支手機、這個瀏覽器**裡（`localStorage`），不會同步到其他裝置，也不會有任何人（包含開發者）看到你的資料。清除瀏覽器資料或換手機都會讓資料重置。
+沒有設定同步時，資料存在**目前裝置、目前瀏覽器**的 `localStorage`，不會同步到其他裝置。清除瀏覽器資料或換手機都會讓本機資料重置；可使用 JSON 匯出／匯入保存或搬移旅程紀錄。
+
+桌面版另外會在 macOS 的 `~/Library/Application Support/HamsterGo/preferences.json` 保存桌面偏好，例如同步設定與字體設定。主要旅程狀態仍由頁面端保存。
+
+若設定同步服務：
+
+1. 前端使用同步碼或登入 session 取得 Worker 存取權限。
+2. 旅程狀態先在本機以 AES-GCM 加密。
+3. Cloudflare Worker 儲存加密 payload，不需要讀取明文旅程內容。
+4. 另一台裝置輸入相同的同步設定與加密密碼後，下載並在本機解密。
+
+同步目前是整份旅程狀態的上傳／下載，不是逐筆資料合併。請不要把同步碼或加密密碼公開分享。
 
 ## 客製化
 
 - 想調整清單項目、分類，直接編輯 `index.html` 裡的 `getData()` 這個函式
 - 想換配色，改 `index.html` 最上面 `:root` 裡的 CSS 變數（`--navy`、`--amber` 等）
 - 想換 App 圖示，請更新 `resources/images/` 中目前被 manifest 與 build 使用的圖示；獨立 SVG UI icon 放在 `resources/icons/`，來源素材放在 `resources/source/`
+
+## 隱私與目前限制
+
+- 不使用 analytics、telemetry、廣告或 AI API
+- 未設定同步時，不會向第三方服務傳送旅程資料
+- 啟用同步後，資料會傳送到你設定的 Worker；payload 在前端加密，但 Worker 仍會保存加密資料與同步時間
+- 同步目前以整份狀態覆蓋為主，沒有完整的衝突合併機制
+- Service Worker 負責快取頁面與資源，不代表資料本身會跨裝置同步
