@@ -782,6 +782,7 @@ const SYNC_API_URL_KEY = 'hamstergo-sync-api-url';
 const SYNC_DEFAULT_ENDPOINT = 'https://hamstergo-sync.ccpin777.workers.dev';
 const SYNC_KEY_KEY = 'hamstergo-sync-key';
 const SYNC_ENCRYPTION_PASSWORD_KEY = 'hamstergo-sync-encryption-password';
+const SYNC_VERSION_KEY_PREFIX = 'hamstergo-sync-version-v1-';
 const ENCRYPTION_ITERATIONS = 600000;
 const AUTH_TOKEN_KEY = 'hamstergo-auth-token';
 const ACCOUNT_USERNAME_KEY = 'hamstergo-account-username';
@@ -796,6 +797,10 @@ let docUndoTimer = null;
 let cloudSyncTimer = null;
 let cloudSyncBusy = false;
 let cloudSyncSuppress = false;
+let cloudSyncBlockedSettings = '';
+let localStateRevision = 0;
+let localStateLastWritten = null;
+const knownSyncVersions = new Map();
 
 function daysQtyText(days){ return String(days); }
 function normalizeLensBuffer(value){
@@ -1650,8 +1655,11 @@ function updateProgress(){
  }
 
 function saveState(){
+  localStateRevision += 1;
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const serialized = JSON.stringify(state);
+    localStorage.setItem(STORAGE_KEY, serialized);
+    localStateLastWritten = serialized;
   }catch(e){ console.error('save failed', e); }
   scheduleCloudUpload();
 }
@@ -1659,6 +1667,7 @@ function saveState(){
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
+    localStateLastWritten = raw;
     if(raw){
       const parsed = JSON.parse(raw);
       state = Object.assign({ days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', fontScale:'1', fontFamily:'system', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' }, parsed);
@@ -2168,11 +2177,46 @@ function syncEncryptionPasswordReady(){
   return password;
 }
 
+function syncSettingsIdentity(settings){
+  return settings.endpoint + '\n' + (settings.authToken ? 'account:' + settings.authToken : 'key:' + settings.syncKey);
+}
+
+async function syncVersionStorageKey(settings){
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(syncSettingsIdentity(settings)));
+  return SYNC_VERSION_KEY_PREFIX + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function knownSyncVersion(settings){
+  const key = await syncVersionStorageKey(settings);
+  if(!knownSyncVersions.has(key)){
+    let stored = null;
+    try{ stored = localStorage.getItem(key); }catch(e){ /* storage unavailable */ }
+    const version = Number(stored);
+    knownSyncVersions.set(key, stored !== null && Number.isSafeInteger(version) && version > 0 ? version : 0);
+  }
+  return knownSyncVersions.get(key);
+}
+
+async function rememberSyncVersion(settings, version){
+  if(!Number.isSafeInteger(version) || version < 1) throw new Error('invalid sync version');
+  const key = await syncVersionStorageKey(settings);
+  knownSyncVersions.set(key, version);
+  try{ localStorage.setItem(key, String(version)); }catch(e){ /* memory still protects this session */ }
+}
+
+async function requireConditionalSync(settings){
+  const response = await fetch(settings.endpoint + '/sync-capabilities', {cache:'no-store'});
+  if(!response.ok) throw new Error('sync_protocol_unavailable');
+  const capability = await response.json();
+  if(capability.protocol !== 2 || capability.conditionalWrites !== true) throw new Error('sync_protocol_unavailable');
+}
+
 function scheduleCloudUpload(){
   const endpoint = document.getElementById('syncEndpoint')?.value.trim();
   const syncKey = document.getElementById('syncKey')?.value.trim();
   const password = document.getElementById('syncEncryptionPassword')?.value;
   if(cloudSyncSuppress || cloudSyncTimer || !endpoint || (!authToken && !syncKey) || !password) return;
+  if(cloudSyncBlockedSettings === endpoint.replace(/\/$/, '') + '\n' + (authToken ? 'account:' + authToken : 'key:' + syncKey)) return;
   cloudSyncTimer = setTimeout(() => {
     cloudSyncTimer = null;
     if((authToken ? accountPasswordInput.value : document.getElementById('syncEncryptionPassword')?.value)) uploadStateToCloud(true);
@@ -2185,22 +2229,50 @@ async function uploadStateToCloud(isAutomatic = false){
   const password = syncEncryptionPasswordReady();
   if(!password) return;
   if(cloudSyncBusy) return;
+  if(cloudSyncTimer){ clearTimeout(cloudSyncTimer); cloudSyncTimer = null; }
   cloudSyncBusy = true;
   setSyncStatus(isAutomatic ? '正在自動同步…' : '正在加密並上傳…');
+  let submittedRevision = localStateRevision;
+  let shouldRetry = false;
   try{
-    const payload = await encryptState(state, password);
+    const snapshot = JSON.parse(JSON.stringify(state));
+    submittedRevision = localStateRevision;
+    await requireConditionalSync(settings);
+    const baseVersion = await knownSyncVersion(settings);
+    const payload = await encryptState(snapshot, password);
+    let latestLocalState = null;
+    try{ latestLocalState = localStorage.getItem(STORAGE_KEY); }catch(e){ /* storage unavailable */ }
+    if(latestLocalState !== localStateLastWritten){
+      cloudSyncBlockedSettings = syncSettingsIdentity(settings);
+      setSyncStatus('另一個視窗已修改本機紀錄，已停止上傳。請重新載入並檢查資料。', true);
+      return;
+    }
     const response = await fetch(settings.endpoint + (settings.authToken ? '/me/record' : '/record'), {
       method:'PUT',
       headers:{'content-type':'application/json', authorization:'Bearer ' + (settings.authToken || settings.syncKey)},
-      body:JSON.stringify({payload})
+      body:JSON.stringify({payload, baseVersion})
     });
+    if(response.status === 409){
+      cloudSyncBlockedSettings = syncSettingsIdentity(settings);
+      setSyncStatus('雲端已有較新的資料，已停止自動上傳。請下載雲端紀錄；下載前會先匯出本機備份。', true);
+      return;
+    }
+    if(response.status === 428){
+      setSyncStatus('同步服務版本不相容，請更新 Worker 後重試。', true);
+      return;
+    }
     if(!response.ok) throw new Error('HTTP ' + response.status);
     const result = await response.json();
+    await rememberSyncVersion(settings, result.version);
+    cloudSyncBlockedSettings = '';
+    shouldRetry = localStateRevision !== submittedRevision;
     setSyncStatus('已加密上傳到雲端 · ' + new Date(result.updatedAt).toLocaleString());
   }catch(e){
-    setSyncStatus('上傳失敗，請確認 Worker、同步碼與加密密碼。', true);
+    if(e.message === 'sync_protocol_unavailable') setSyncStatus('同步服務尚未支援安全版本檢查，請先更新 Worker。', true);
+    else setSyncStatus('上傳失敗，請確認 Worker、同步碼與加密密碼。', true);
   } finally {
     cloudSyncBusy = false;
+    if(shouldRetry) scheduleCloudUpload();
   }
 }
 
@@ -2209,6 +2281,27 @@ async function downloadStateFromCloud(){
   if(!settings) return;
   const password = syncEncryptionPasswordReady();
   if(!password) return;
+  if(cloudSyncBusy) return;
+  let localStateAtStart = null;
+  try{ localStateAtStart = localStorage.getItem(STORAGE_KEY); }catch(e){ /* storage unavailable */ }
+  const revisionAtStart = localStateRevision;
+  if(localStateAtStart !== localStateLastWritten){
+    cloudSyncBlockedSettings = syncSettingsIdentity(settings);
+    setSyncStatus('另一個視窗已修改本機紀錄，已停止下載。請重新載入並檢查資料。', true);
+    return;
+  }
+  if(localStateAtStart !== null){
+    if(!window.confirm('下載會取代這台裝置目前的旅行紀錄。繼續前會先匯出本機 JSON 備份。要繼續嗎？')){
+      setSyncStatus('已取消下載，本機紀錄沒有變更。');
+      return;
+    }
+    try{ exportTrip(); }catch(e){
+      setSyncStatus('無法匯出本機備份，已取消下載。', true);
+      return;
+    }
+  }
+  if(cloudSyncTimer){ clearTimeout(cloudSyncTimer); cloudSyncTimer = null; }
+  cloudSyncBusy = true;
   setSyncStatus('正在下載並解密…');
   try{
     const response = await fetch(settings.endpoint + (settings.authToken ? '/me/record' : '/record'), { headers:{authorization:'Bearer ' + (settings.authToken || settings.syncKey)} });
@@ -2225,6 +2318,15 @@ async function downloadStateFromCloud(){
     if(!remoteState || typeof remoteState !== 'object' || Array.isArray(remoteState) || !remoteState.checked || !remoteState.customItems){
       throw new Error('invalid state');
     }
+    if(!Number.isSafeInteger(remote.version) || remote.version < 1){
+      throw new Error('invalid sync version');
+    }
+    let latestLocalState = null;
+    try{ latestLocalState = localStorage.getItem(STORAGE_KEY); }catch(e){ /* storage unavailable */ }
+    if(localStateRevision !== revisionAtStart || latestLocalState !== localStateAtStart){
+      setSyncStatus('下載期間本機紀錄有變更，已取消取代。請檢查資料後再試。', true);
+      return;
+    }
     cloudSyncSuppress = true;
     state = Object.assign({}, state, remoteState);
     state.fontScale = ["0.9", "1", "1.15", "1.3"].includes(String(state.fontScale)) ? String(state.fontScale) : "1";
@@ -2238,12 +2340,18 @@ async function downloadStateFromCloud(){
     render();
     document.getElementById('tripTitle').value = state.tripTitle || '';
     saveState();
+    const downloadedRevision = localStateRevision;
+    await rememberSyncVersion(settings, remote.version);
+    cloudSyncBlockedSettings = '';
     setSyncStatus('已解密並下載 · ' + new Date(remote.updatedAt).toLocaleString());
     cloudSyncSuppress = false;
+    if(localStateRevision !== downloadedRevision) scheduleCloudUpload();
   }catch(e){
     cloudSyncSuppress = false;
     if(e.message === 'legacy_plaintext_record') setSyncStatus('這是舊版未加密資料，請先用新版本上傳覆蓋。', true);
     else setSyncStatus('解密失敗，請確認加密密碼是否正確。', true);
+  }finally{
+    cloudSyncBusy = false;
   }
 }
 
