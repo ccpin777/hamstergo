@@ -4,3 +4,4 @@
 
 - [2026-07](dev-log_archive/dev-log-2026-07.md)
 - [2026-08](dev-log_archive/dev-log-2026-08.md)
+- [2026-10](dev-log_archive/dev-log-2026-10.md)

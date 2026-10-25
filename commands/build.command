@@ -6,6 +6,25 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 cd "$PROJECT_DIR"
 
+LOG_DIR="$PROJECT_DIR/build-logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/build-hamstergo-$(date +%Y%m%d-%H%M%S)-$$.log"
+# Keep this attempt and the two most recent previous build logs (success or failure).
+: >> "$LOG_FILE"
+(
+  retention_dir=$(dirname -- "$LOG_FILE")
+  command ls -1t "$retention_dir"/build-*.log | while IFS= read -r older_log; do
+    [ "$older_log" != "$LOG_FILE" ] || continue
+    [ -f "$older_log" ] && [ ! -L "$older_log" ] || continue
+    retained_logs=${retained_logs:-1}
+    retained_logs=$((retained_logs + 1))
+    if [ "$retained_logs" -gt 3 ]; then
+      rm -f -- "$older_log" || printf 'Warning: could not remove old build log: %s\n' "$older_log" >&2
+    fi
+  done
+) || printf 'Warning: build log retention could not be completed.\n' >&2
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 pause() {
     if [[ -t 0 ]]; then
         read -r "?Press Return to close..."
@@ -23,6 +42,7 @@ cleanup_success() {
     echo "Cleaning successful-build artifacts..."
     rm -rf "$BUILD_VENV" "$BUILD_DIR/pyinstaller" "$ICONSET" "$ICON_ICNS"
     rmdir "$BUILD_DIR" 2>/dev/null || true
+    echo "Build log retained: $LOG_FILE"
 }
 
 if [[ "$(uname -s)" != "Darwin" ]]; then

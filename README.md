@@ -38,7 +38,7 @@ HamsterGo 主要是前端 PWA，也可以透過 `app.py` 以 pywebview 包裝成
 ├── service-worker.js    # 離線快取邏輯
 ├── HamsterGo.spec       # PyInstaller 打包設定
 ├── Run.command          # 啟動桌面版
-├── command/             # 建置腳本
+├── commands/             # 建置腳本
 ├── cloudflare/          # 選擇性同步 Worker 與 D1 migrations
 ├── resources/
 │   ├── images/               # 執行時圖片與 App/PWA 圖示
@@ -86,7 +86,7 @@ python3 -m http.server 8000
 3. Cloudflare Worker 儲存加密 payload，不需要讀取明文旅程內容。
 4. 另一台裝置輸入相同的同步設定與加密密碼後，下載並在本機解密。
 
-同步目前是整份旅程狀態的上傳／下載，不是逐筆資料合併。請不要把同步碼或加密密碼公開分享。
+同步目前是整份旅程狀態的上傳／下載，不是逐筆資料合併。上傳時會檢查雲端版本；若另一台裝置已更新，會停止上傳。下載前會先匯出本機 JSON 備份，再以雲端資料取代本機資料。請不要把同步碼或加密密碼公開分享。
 
 ## 客製化
 
@@ -99,5 +99,5 @@ python3 -m http.server 8000
 - 不使用 analytics、telemetry、廣告或 AI API
 - 未設定同步時，不會向第三方服務傳送旅程資料
 - 啟用同步後，資料會傳送到你設定的 Worker；payload 在前端加密，但 Worker 仍會保存加密資料與同步時間
-- 同步目前以整份狀態覆蓋為主，沒有完整的衝突合併機制
+- 同步目前以整份狀態為單位；版本衝突會停止上傳，但仍沒有逐筆衝突合併機制
 - Service Worker 負責快取頁面與資源，不代表資料本身會跨裝置同步

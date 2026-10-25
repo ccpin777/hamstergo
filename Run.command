@@ -5,9 +5,10 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_DIR="$SCRIPT_DIR"
 cd "$PROJECT_DIR"
 
-PYTHON_BIN="${PYTHON_BIN:-python3}"
+WORKSPACE_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
+PYTHON_BIN="${PYTHON_BIN:-$WORKSPACE_DIR/venv/bin/python}"
 
-if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+if [ ! -x "$PYTHON_BIN" ]; then
     echo "Python not found: $PYTHON_BIN"
     read "?Press Return to close..."
     exit 1
@@ -15,7 +16,7 @@ fi
 
 if ! "$PYTHON_BIN" -c "import webview" >/dev/null 2>&1; then
     echo "pywebview is not installed."
-    echo "Install it with: $PYTHON_BIN -m pip install pywebview"
+    echo "Run $WORKSPACE_DIR/system/setup_venv.command first."
     read "?Press Return to close..."
     exit 1
 fi

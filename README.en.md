@@ -35,7 +35,7 @@ HamsterGo is primarily a front-end PWA. It can also be wrapped as a desktop app 
 ├── service-worker.js    # offline caching logic
 ├── HamsterGo.spec       # PyInstaller packaging configuration
 ├── Run.command          # desktop launcher
-├── command/             # build scripts
+├── commands/             # build scripts
 ├── cloudflare/          # optional sync Worker and D1 migrations
 ├── resources/
 │   ├── images/               # runtime images and App/PWA icons
@@ -83,7 +83,7 @@ When sync is configured:
 3. The Cloudflare Worker stores the encrypted payload rather than the readable trip state.
 4. Another device downloads and decrypts the payload locally with the same sync settings and encryption password.
 
-Sync currently uploads and downloads the complete trip state rather than merging individual records. Do not share the sync key or encryption password.
+Sync uploads and downloads the complete trip state rather than merging individual records. Uploads check the remote version and stop if another device has updated it. Before replacing local data during a download, the app exports a local JSON backup. Do not share the sync key or encryption password.
 
 ## Customization
 
@@ -96,5 +96,5 @@ Sync currently uploads and downloads the complete trip state rather than merging
 - No analytics, telemetry, advertising, or AI API is used
 - Without sync, trip data is not sent to a third-party service
 - When sync is enabled, data is sent to the configured Worker; the payload is encrypted client-side, but the Worker still stores the encrypted payload and sync timestamp
-- Sync currently replaces the complete remote state and does not provide full conflict merging
+- Sync works with the complete state; version conflicts stop uploads, but individual changes are not merged
 - The Service Worker caches pages and assets; it does not provide cross-device data synchronization
