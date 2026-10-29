@@ -1,0 +1,2394 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json?v=hamstergo-manifest-v2">
+<link rel="apple-touch-icon" href="resources/images/hamstergo-safari-icon-v3.png">
+<link rel="icon" type="image/png" sizes="512x512" href="resources/images/hamstergo-favicon-v3.png">
+<meta name="theme-color" content="#1B2A4A">
+<title>HamsterGo · 倉鼠打包小幫手</title>
+<link rel="preload" as="image" href="resources/images/hamstergo-icon.webp" type="image/webp">
+<style>
+  @font-face{font-family:"Gochi Hand";src:url("resources/fonts/GochiHand-Regular.ttf") format("truetype");font-display:swap;}
+  @font-face{font-family:"Permanent Marker";src:url("resources/fonts/PermanentMarker-Regular.ttf") format("truetype");font-display:swap;}
+  @font-face{font-family:"Caveat";src:url("resources/fonts/Caveat.ttf") format("truetype");font-weight:100 900;font-display:swap;}
+  :root{
+    --font-body:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    --font-display:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    --brand-font:var(--font-display);
+    --font-mono:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    --paper:#FAF7F0;
+    --paper-dim:#F1ECE0;
+    --navy:#1B2A4A;
+    --navy-soft:#4A5A78;
+    --amber:#E8A33D;
+    --red:#C15B4A;
+    --line:#D9D2BF;
+    --green:#5E8C6A;
+    --font-scale:1;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--navy);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(232,163,61,0.10), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(232,163,61,0.08), transparent 40%);
+    font-family:var(--font-body);
+    color:var(--navy);
+    padding:28px 14px 60px;
+    display:flex;
+    justify-content:center;
+  }
+  .pass{ width:100%; max-width:460px; }
+  .header-strip{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    color:var(--paper); padding:0 6px 14px;
+  }
+  .sync-indicator{ display:inline-flex; align-items:center; justify-content:center; width:14px; height:28px; color:var(--paper-dim); cursor:default; }
+  .sync-indicator-dot{ width:8px; height:8px; border-radius:50%; background:#9CA3AF; box-shadow:0 0 0 2px rgba(156,163,175,0.18); }
+  .sync-indicator[data-state="syncing"] .sync-indicator-dot{ background:#E8A33D; box-shadow:0 0 0 2px rgba(232,163,61,0.2); }
+  .sync-indicator[data-state="success"] .sync-indicator-dot{ background:#72B87A; box-shadow:0 0 0 2px rgba(114,184,122,0.22); }
+  .sync-indicator[data-state="error"] .sync-indicator-dot{ background:#D96A5A; box-shadow:0 0 0 2px rgba(217,106,90,0.22); }
+  .sync-indicator[data-state="idle"] .sync-indicator-dot, .sync-indicator[data-state="success"] .sync-indicator-dot{ opacity:0; }
+  .header-strip .brand{
+    text-align:left;
+    font-family:var(--font-display); font-weight:600; letter-spacing:0.02em;
+    font-size:calc(15px * var(--font-scale, 1)); color:var(--amber); text-transform:none;
+    flex:1; min-width:0; white-space:pre-line; text-align:left; flex:1; overflow:hidden; text-overflow:ellipsis;
+  }
+  .brand-title{font-family:var(--font-display); font-size:calc(15px * var(--font-scale, 1));}html[data-native-app] .brand-title{font-family:var(--brand-font);}
+  .brand-subtitle{font-family:var(--font-body);}
+  .brand-separator{display:inline;}
+  html[data-native-app][data-app-font] .brand-separator{display:inline;}
+  html[data-native-app][data-app-font] .header-strip{align-items:flex-end;}
+  html[data-native-app][data-app-font] .header-strip .header-actions{align-self:flex-end; transform:translateY(0px);}
+  html[data-native-app][data-app-font] .header-strip .brand{line-height:1.15;}
+  html[data-native-app][data-app-font] .brand-title, html[data-native-app][data-app-font] .brand-subtitle{display:inline;}
+  html[data-native-app][data-app-font] .brand-title{font-size:calc(25px * var(--font-scale, 1));}
+  .edit-toggle{
+    font-family:var(--font-display); font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.015em;
+    text-transform:none; color:var(--paper-dim); background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.25); border-radius:14px; padding:5px 12px;
+    cursor:pointer;
+  }
+  .edit-toggle.active{ background:var(--amber); color:var(--navy); border-color:var(--amber); font-weight:600; }
+  .header-actions{ display:flex; align-items:center; gap:5px; flex:0 0 auto; }
+  .toolbar-btn{
+    width:28px; height:28px; padding:0; display:flex; align-items:center; justify-content:center;
+    color:var(--paper-dim); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25);
+    border-radius:50%; cursor:pointer;
+  }
+  .toolbar-btn:active, .toolbar-btn.active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .toolbar-btn svg{ width:15px; height:15px; }
+  .export-btn{
+    height:28px; width:28px; padding:0; justify-content:center; display:flex; align-items:center; gap:5px;
+    color:var(--paper-dim); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25);
+    border-radius:16px; cursor:pointer; font-family:var(--font-display); font-size:11px; letter-spacing:0.01em;
+  }
+  .export-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .export-btn svg{ width:14px; height:14px; }
+  .settings-btn{
+    width:28px; height:28px; padding:0; display:flex; align-items:center; justify-content:center;
+    color:var(--paper-dim); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25);
+    border-radius:50%; cursor:pointer;
+  }
+  .settings-btn:active, .settings-btn.open{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .settings-btn svg{ width:15px; height:15px; }
+
+  @media (max-width:420px){
+    .header-strip{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      align-items:end;
+      gap:8px;
+      padding-bottom:14px;
+    }
+    html:not([data-native-app][data-app-font]) .header-strip .brand{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .header-strip .brand{
+      grid-column:1;
+      grid-row:1;
+      display:block;
+      width:auto;
+      margin:0;
+      white-space:normal;
+      overflow:visible;
+      text-overflow:clip;
+      line-height:1.35;
+    }
+    .header-actions{
+      grid-column:2;
+      grid-row:1;
+      justify-content:flex-end;
+      align-self:end;
+      transform:translateY(0px);
+    }
+    html[data-native-app][data-app-font] .brand-title, html[data-native-app][data-app-font] .brand-subtitle{display:block;}
+    html[data-native-app][data-app-font] .brand-separator{display:none;}
+  }
+  .settings-panel{
+    display:none; margin:0 0 12px; padding:14px 16px; color:var(--paper);
+    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:12px;
+  }
+  .settings-panel.show{ display:block; }
+  .app-version{margin-top:18px;color:rgba(241,236,224,.62);font-size:10px;text-align:center;letter-spacing:.04em}.app-build{margin-top:3px;color:rgba(241,236,224,.48);font-size:9px;text-align:center;letter-spacing:.04em;}html[data-native-app] .app-build{display:none;}
+  .about-button{display:block;width:fit-content;margin:12px auto 0;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--paper-dim);font:600 12px var(--font-body);cursor:pointer}.about-button:active{background:var(--paper-dim);color:var(--navy);}
+  .about-modal{text-align:center;align-items:center;}.about-image{display:block;width:min(100%,150px);height:auto;margin:0 auto 10px;border-radius:12px;}
+  .about-modal h2{margin:0 0 6px;font-family:"Gochi Hand",cursive;font-size:24px;color:var(--navy)}.about-tagline{margin:0 0 16px;color:var(--navy-soft);font-size:13px}.about-version{margin:0;color:var(--navy);font-size:12px}.about-build{display:none;margin:3px 0 0;color:var(--navy-soft);font-size:10px}.about-footer{margin:18px 0 0;color:var(--navy-soft);font-size:10px;}
+  @media (max-width:760px){html:not([data-native-app]) .header-strip .brand{font-size:15px;} html:not([data-native-app]) .brand-title{font-size:15px;}}
+  @media (max-width:760px){html:not([data-native-app])[data-app-font] .brand-title{font-family:var(--brand-font);font-size:15px;}}
+  .settings-title{ font-size:13px; font-weight:600; margin-bottom:10px; }
+  .font-options{ display:flex; gap:7px; margin-bottom:14px; }
+  .font-option{ flex:1; padding:7px 4px; font-size:12px; color:var(--paper-dim); background:transparent;
+    border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; }
+  .font-option.active{ color:var(--navy); background:var(--amber); border-color:var(--amber); font-weight:600; }
+  html[data-app-font="gochi-hand"]{--brand-font:"Gochi Hand",cursive;}
+  html[data-app-font="permanent-marker"]{--brand-font:"Permanent Marker",cursive;}
+  html[data-app-font="caveat"]{--brand-font:"Caveat",cursive;}
+  html[data-app-font="marker-felt"]{--brand-font:"Marker Felt","Bradley Hand",cursive;}
+  .font-family-select-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:2px; margin-bottom:16px; color:var(--paper-dim); font-size:13px; font-weight:600; }
+  .font-family-select{ min-width:0; width:158px; padding:7px 9px; color:var(--navy); background:var(--paper); border:1px solid var(--line); border-radius:8px; font:inherit; }
+  .lens-setting{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; margin-bottom:16px; color:var(--paper-dim); font-size:12px; }
+  .lens-setting input{ width:70px; padding:7px 8px; color:var(--navy); background:var(--paper); border:1px solid var(--line); border-radius:8px; font:inherit; text-align:center; }
+  .sync-setting{ display:flex; align-items:center; gap:8px; margin:0 0 9px; }
+  .sync-setting label{ flex:0 0 76px; color:var(--paper-dim); font-size:12px; }
+  .sync-setting input{ flex:1; min-width:0; padding:7px 8px; color:var(--navy); background:var(--paper); border:1px solid var(--line); border-radius:8px; font:inherit; font-size:12px; }
+  .sync-password-wrap{ display:flex; flex:1; min-width:0; }
+  .sync-password-wrap input{ width:100%; border-radius:8px 0 0 8px; }
+  .sync-password-toggle{ position:relative; width:36px; border:1px solid var(--line); border-left:0; border-radius:0 8px 8px 0; color:var(--navy-soft); background:var(--paper); cursor:pointer; }
+  .sync-password-toggle img{ width:16px; height:16px; display:block; margin:auto; }
+  .sync-note{ margin:-2px 0 10px 84px; color:var(--paper-dim); font-size:10px; line-height:1.4; }
+  .sync-actions{ display:flex; gap:8px; margin:4px 0 7px; }
+  .account-setting, .account-actions, .account-status{ display:none !important; }
+  .account-actions{ display:flex; gap:8px; margin:4px 0 10px; }
+  .account-btn{ flex:1; padding:8px 7px; color:var(--paper-dim); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; font-size:12px; }
+  .account-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .account-status{ min-height:16px; margin:0 0 10px; color:var(--paper-dim); font-size:11px; }
+  .legacy-sync-details{ margin-top:8px; }
+  .legacy-sync-details summary{ color:var(--paper-dim); cursor:pointer; font-size:11px; margin-bottom:10px; }
+  .sync-btn{ flex:1; padding:8px 7px; color:var(--paper-dim); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; font-size:12px; }
+  .sync-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .sync-status{ min-height:16px; margin:0 0 12px; color:var(--paper-dim); font-size:11px; }
+  .data-title{ margin-top:8px; margin-bottom:10px; }
+  .data-actions{ display:flex; gap:8px; margin-top:0; }
+  .data-btn{ flex:1; padding:8px 10px; color:var(--paper-dim); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:8px; cursor:pointer; font-size:12px; }
+  .data-btn:active{ background:var(--amber); color:var(--navy); border-color:var(--amber); }
+  .trip-title{
+    flex:1 1 180px; min-width:0; width:auto; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:0 0 8px;
+    margin:0; background:transparent; color:var(--navy);
+    font-family:var(--font-display); font-size:calc(18px * var(--font-scale, 1)); font-weight:600;
+    letter-spacing:0.01em; outline:none;
+  }
+  .trip-title::placeholder{ color:var(--navy-soft); opacity:0.65; }
+  .trip-title:focus{ border-bottom-color:var(--amber); }
+  .ticket{
+    background:var(--paper); border-radius:18px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35); overflow:hidden; position:relative;
+  }
+  .ticket-top{ padding:22px 24px 0; }
+  .route{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
+  .packed-recheck{
+    display:none; flex:0 0 30px; width:30px; height:30px; padding:0 !important;
+    align-items:center; justify-content:center; line-height:1; overflow:hidden;
+  }
+  .recheck-icon{ width:18px; height:18px; display:block; flex:0 0 18px; }
+  .status-layout{ display:flex; align-items:center; gap:8px; }
+  .status-copy{ flex:1; min-width:0; }
+  .route h1{ font-family:var(--font-display); font-weight:700; font-size:clamp(calc(16px * var(--font-scale, 1)), 4vw, calc(22px * var(--font-scale, 1))); line-height:1.2; margin:0; color:var(--navy); white-space:nowrap; text-overflow:ellipsis; }
+  #pctHeadline{ white-space:normal; }
+  .status-pending{ display:block; }
+  .status-copy .progress-track{ width:100%; }
+  .status-copy .progress-label{ text-align:left; }
+  .status-mascot{ width:140px; height:140px; flex:0 0 140px; object-fit:contain; display:block; }
+  .mascot-reset-btn{ width:140px; height:140px; flex:0 0 140px; padding:0; border:0; background:transparent; cursor:default; touch-action:manipulation; }
+  .mascot-reset-btn:focus-visible{ outline:2px solid var(--amber); outline-offset:4px; border-radius:12px; }
+  .route .dot{ display:none; }
+  .subtitle{ font-size:calc(13px * var(--font-scale, 1)); color:var(--navy-soft); margin:0 0 18px; }
+  .trip-meta{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 14px; margin-bottom:18px; }
+  .flight-info{ box-sizing:border-box; height:47px; margin:2px 24px 12px; border:1px solid var(--line); border-radius:10px; background:var(--paper-dim); overflow:hidden; }
+  .flight-info.editing{ height:auto; overflow:visible; }
+  .flight-info-toggle{ width:100%; display:flex; align-items:center; gap:8px; height:100%; padding:6px 14px; border:0; background:transparent; color:var(--navy); font:600 calc(14.5px * var(--font-scale, 1)) var(--font-display); text-align:left; cursor:pointer; }
+  .flight-info-summary{ margin-left:auto; color:var(--navy-soft); font-weight:400; white-space:pre-line; text-align:left; flex:1; overflow:hidden; text-overflow:ellipsis; }
+  .flight-info-summary{ line-height:1.2; }
+  .flight-info-chevron{ color:var(--navy-soft); font-size:15px; transition:transform .15s ease; }
+  .flight-info-toggle[aria-expanded="true"] .flight-info-chevron{ transform:rotate(180deg); }
+  .flight-info-body{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 12px; }
+  .flight-leg{ display:grid; grid-template-columns:1fr; gap:8px; grid-column:1 / -1; padding-top:10px; border-top:1px solid var(--line); }
+  .flight-leg:first-child{ padding-top:0; border-top:0; }
+  .flight-leg-title{ grid-column:1 / -1; color:var(--navy); font:700 calc(11px * var(--font-scale, 1)) var(--font-display); }
+  .flight-leg-remove{ margin-left:auto; padding:3px 7px; border:1px solid var(--line); border-radius:6px; background:var(--paper); color:var(--navy-soft); font:400 calc(10px * var(--font-scale, 1)) var(--font-display); cursor:pointer; }
+  .flight-add-btn{ grid-column:1 / -1; justify-self:center; margin-top:2px; }
+  .flight-info-field{ display:flex; flex-direction:column; gap:4px; color:var(--navy-soft); font-size:calc(11px * var(--font-scale, 1)); }
+  .flight-info-field.departure-field{ grid-column:1 / -1; }
+  .flight-info-field input{ width:100%; box-sizing:border-box; padding:8px 9px; border:1px solid var(--line); border-radius:7px; background:var(--paper); color:var(--navy); font:inherit; font-size:calc(13px * var(--font-scale, 1)); outline:0; }
+  .flight-info-field input:focus{ border-color:var(--amber); }
+  .days-row{ display:flex; align-items:center; gap:5px; flex:0 0 auto; margin:0; }
+  .days-row label{ font-family:var(--font-display); font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.015em; text-transform:none; color:var(--navy-soft); }
+  .days-input{ display:flex; align-items:center; gap:5px; }
+  .days-input .val{
+    -webkit-appearance:none; -moz-appearance:textfield; appearance:none; width:38px; height:30px; padding:2px 0;
+    border:0; border-bottom:1px solid var(--line); border-radius:0; outline:0;
+    background:transparent; color:var(--navy); font-family:var(--font-mono); font-weight:700;
+    font-size:calc(17px * var(--font-scale, 1)); text-align:center;
+  }
+  .days-input .val::-webkit-inner-spin-button, .days-input .val::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .days-input .val:focus{ border-bottom-color:var(--amber); }
+  .days-input .unit{ font-family:var(--font-display); font-size:calc(13px * var(--font-scale, 1)); color:var(--navy-soft); letter-spacing:0.01em; }
+  .progress-track{ height:8px; background:var(--line); border-radius:5px; overflow:hidden; }
+  .progress-fill{ height:100%; background:var(--navy); box-shadow:0 0 10px rgba(27,42,74,0.5); width:0%; transition:width 0.35s ease; }
+  .progress-label{ font-family:var(--font-mono); font-size:calc(11px * var(--font-scale, 1)); color:var(--navy-soft); margin-top:6px; text-align:right; }
+  .perforation{ position:relative; height:0; border-top:2px dashed var(--line); margin:4px 0 0; }
+  .perforation::before, .perforation::after{ content:""; position:absolute; top:-11px; width:22px;height:22px; border-radius:50%; background:var(--navy); }
+  .perforation::before{ left:-25px; } .perforation::after{ right:-25px; }
+  .section{ padding:18px 24px; }
+  .section + .section{ border-top:1px solid var(--line); }
+  .section-title{ display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-size:calc(12px * var(--font-scale, 1)); font-weight:700; letter-spacing:0.02em; text-transform:none; color:var(--navy); margin-bottom:10px; }
+  .section-title .idx{ font-family:var(--font-mono); color:var(--amber); font-weight:700; }
+  .section-collapse-btn{
+    margin-left:auto; width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:50%; padding:0;
+    background:var(--paper-dim); color:var(--navy-soft); cursor:pointer;
+  }
+  .section-collapse-btn svg{ width:14px; height:14px; transition:transform 0.15s ease; }
+  #prepSection.prep-collapsed .section-collapse-btn svg{ transform:rotate(-90deg); }
+  .cat{ margin-bottom:14px; }
+  .cat:last-child{ margin-bottom:0; }
+  .cat-name{ font-size:calc(12.5px * var(--font-scale, 1)); font-weight:600; color:var(--navy-soft); margin:0 0 6px 2px; }
+  .drag-handle{ width:20px;height:20px; flex:0 0 20px; color:var(--navy-soft); cursor:grab; touch-action:none; display:flex; align-items:center; justify-content:center; }
+  .drag-handle:active{ cursor:grabbing; }
+  .item{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px dotted var(--line); -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; flex-wrap:wrap; }
+  .item:last-child{ border-bottom:none; }
+  .item.custom-item{ background:rgba(232,163,61,0.07); border-radius:8px; padding-left:8px; padding-right:8px; }
+  .item.dragging{ opacity:0.9; box-shadow:0 10px 24px rgba(0,0,0,0.18); border-radius:10px; background:var(--paper); position:relative; z-index:20; border-bottom:none; pointer-events:none; }
+  .checkbox{ width:20px;height:20px; flex:0 0 20px; border-radius:6px; border:2px solid var(--navy-soft); display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; cursor:pointer; }
+  .item.checked .checkbox{ background:var(--green); border-color:var(--green); }
+  .item.skipped .checkbox{ background:rgba(193,91,74,0.08); border-color:var(--red); color:var(--red); }
+  .checkbox svg{ width:12px;height:12px; opacity:0; transition:opacity 0.15s ease; }
+  .item.checked .checkbox svg{ opacity:1; }
+  .item.skipped .checkbox svg{ opacity:1; }
+  .item-label{ flex:1; font-size:calc(14.5px * var(--font-scale, 1)); color:var(--navy); cursor:pointer; font-weight:400; }
+  .item.checked .item-label{ color:var(--navy-soft); }
+  .item.skipped .item-label{ color:var(--red); }
+  .item-label-input{
+    flex:1; font-size:calc(14.5px * var(--font-scale, 1)); color:var(--navy); border:1px solid var(--amber); border-radius:6px;
+    padding:4px 6px; font-family:var(--font-body);
+  }
+  .item-qty-input{
+    width:42px; height:28px; flex:0 0 42px; padding:2px 4px; border:1px solid var(--line); border-radius:6px;
+    background:var(--paper-dim); color:var(--navy); font-family:var(--font-mono); font-size:calc(12px * var(--font-scale, 1));
+    text-align:center; outline:none;
+  }
+  .item-qty-input:focus{ border-color:var(--amber); background:var(--paper); }
+  .item-qty-input[readonly]{
+    width:28px; flex-basis:28px; padding:2px 0; border-color:transparent; background:transparent;
+    color:var(--red); cursor:default; pointer-events:none;
+  }
+  .item-qty-input[readonly]::-webkit-inner-spin-button,
+  .item-qty-input[readonly]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .item.checked .item-qty-input[readonly]{ color:var(--navy-soft); }
+  .note{ background:rgba(232,163,61,0.12); border:1px solid rgba(232,163,61,0.4); border-radius:10px; padding:12px 14px; font-size:calc(13px * var(--font-scale, 1)); line-height:1.5; color:var(--navy); margin-bottom:14px; }
+  .note b{ color:var(--red); }
+  .add-modal-layer{
+    position:fixed; inset:0; z-index:1100; display:flex; align-items:center; justify-content:center;
+    padding:18px; background:rgba(20,26,42,0.62);
+  }
+  .add-row.add-modal{
+    display:flex; width:min(100%, 420px); max-height:calc(100vh - 36px); overflow:auto;
+    margin:0; padding:18px; background:var(--paper); border:1px solid var(--line);
+    border-radius:14px; box-shadow:0 18px 45px rgba(0,0,0,0.3);
+  }
+  .add-modal-title{ margin:0 0 12px; font-family:var(--font-display); font-size:calc(17px * var(--font-scale, 1)); color:var(--navy); }
+  .add-modal .add-inputs{ display:block; }
+  .add-modal .new-item-input{ width:100%; min-height:40px; }
+  .add-modal .add-category-row{ display:block; }
+  .add-modal .add-category-row select{ width:100%; margin-top:8px; }
+  .add-modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+  .add-modal-actions button{
+    min-width:72px; border-radius:8px; padding:9px 14px; font-family:var(--font-body);
+    font-size:calc(13px * var(--font-scale, 1)); font-weight:600; cursor:pointer;
+  }
+  .add-modal-cancel{ color:var(--navy-soft); background:transparent; border:1px solid var(--line); }
+  .add-modal-confirm{ color:var(--paper); background:var(--navy); border:1px solid var(--navy); }
+  .add-modal-cancel:active{ background:var(--paper-dim); }
+  .add-modal-confirm:active{ background:var(--navy-soft); }
+  .new-trip-confirm-message{ margin:0; color:var(--navy-soft); font-size:calc(13px * var(--font-scale, 1)); line-height:1.55; white-space:pre-line; }
+  .add-row.add-modal.recheck-mode-confirm{ width:min(100%, 360px); }
+  .recheck-mode-confirm .new-trip-confirm-message{ text-align:center; }
+  .recheck-mode-options{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; margin-top:14px; }
+  .mode-option{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; width:100%; min-height:82px; padding:10px 6px; color:var(--navy); background:var(--paper-dim); border:1px solid var(--line); border-radius:12px; text-align:left; cursor:pointer; }
+  .mode-option:active{ background:rgba(232,163,61,0.22); border-color:var(--amber); }
+  .mode-option-icon{ display:flex; align-items:center; justify-content:center; width:32px; height:32px; flex:0 0 32px; color:var(--navy); background:var(--amber); border-radius:50%; font-size:18px; font-weight:700; }
+  .mode-option-icon svg{ display:block; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .mode-option-copy{ display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; }
+  .mode-option-title{ font-size:calc(14px * var(--font-scale, 1)); font-weight:700; }
+  .mode-option-help{ color:var(--navy-soft); font-size:calc(12px * var(--font-scale, 1)); line-height:1.4; }
+  .recheck-mode-cancel{ align-self:center; width:auto; min-width:88px; margin-top:10px; padding:8px 8px; border-radius:999px; color:var(--navy); background:rgba(232,163,61,0.08); border-color:rgba(232,163,61,0.38); }
+  .recheck-mode-cancel:active{ background:rgba(232,163,61,0.18); }
+  .add-row{ display:none; gap:8px; flex-direction:column; margin:0; padding:12px; background:rgba(232,163,61,0.08); border:1px solid rgba(232,163,61,0.28); border-radius:12px; width:100%; }
+  .add-row.show{ display:flex; }
+  .add-row .add-inputs{ display:flex; gap:6px; }
+  .add-row input[type="text"]{
+    box-sizing:border-box; flex:1 1 60px; min-width:50px; font-family:var(--font-body); font-size:calc(13.5px * var(--font-scale, 1)); border:1px solid var(--line);
+    border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3;
+  }
+  .cat-select-wrap{ position:relative; flex:0 0 118px; }
+  .cat-select-btn{
+    box-sizing:border-box; width:100%; display:flex; align-items:center; justify-content:space-between; gap:4px;
+    font-family:var(--font-body); font-size:calc(13.5px * var(--font-scale, 1)); border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; background:var(--paper-dim); color:var(--navy); cursor:pointer; line-height:1.3;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-touch-callout:none;
+  }
+  .cat-select-btn span:first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cat-select-btn .arrow{ width:12px;height:12px; flex:0 0 12px; color:var(--navy-soft); transition:transform 0.15s ease; }
+  .cat-select-btn .arrow svg{ width:100%; height:100%; }
+  .cat-select-btn.open .arrow{ transform:rotate(180deg); }
+  .cat-select-overlay{ position:fixed; inset:0; background:rgba(20,26,42,0.45); z-index:900; display:none; }
+  .cat-select-overlay.show{ display:block; }
+  .cat-select-list{
+    position:fixed; min-width:150px; max-width:220px; max-height:260px; overflow-y:auto;
+    background:var(--paper); border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 24px rgba(0,0,0,0.25);
+    padding:6px; z-index:1000; display:none;
+  }
+  .cat-select-list.mobile-sheet{
+    left:0 !important; right:0; bottom:0 !important; top:auto !important; width:100%; max-width:100%;
+    border-radius:16px 16px 0 0; box-shadow:0 -8px 30px rgba(0,0,0,0.3);
+    padding:10px 8px calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  .cat-select-list.mobile-sheet::before{
+    content:''; display:block; width:36px; height:4px; border-radius:2px; background:var(--line); margin:2px auto 10px;
+  }
+  .cat-select-list.mobile-sheet .cat-select-option{ padding:14px 14px; font-size:calc(15px * var(--font-scale, 1)); }
+  .cat-select-list.show{ display:block; }
+  .cat-select-option{
+    padding:8px 10px; font-size:calc(13.5px * var(--font-scale, 1)); color:var(--navy); border-radius:6px; cursor:pointer; white-space:nowrap;
+    display:flex; align-items:center; gap:6px;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-touch-callout:none;
+  }
+  .cat-select-option:active{ background:var(--paper-dim); }
+  .cat-select-option .check{ width:13px;height:13px; flex:0 0 13px; opacity:0; color:var(--amber); }
+  .cat-select-option.selected .check{ opacity:1; }
+  .cat-select-option .check svg{ width:100%; height:100%; }
+
+  .add-category-row{ display:flex; gap:6px; }
+  .add-category-row select{ flex:1 1 0; min-width:0; font-family:var(--font-body); font-size:calc(13.5px * var(--font-scale, 1)); border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:var(--paper-dim); color:var(--navy); line-height:1.3; }
+  #prepSection{ background:rgba(94,140,106,0.055); }
+  #prepSection.prep-collapsed .cat{ display:none; }
+  .add-row .add-btn{
+    box-sizing:border-box; font-family:var(--font-display); font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.01em; text-transform:none;
+    background:var(--navy); color:var(--paper); border:none; border-radius:8px; padding:0 14px; cursor:pointer;
+    flex:0 0 auto; white-space:nowrap;
+  }
+  .follow-chip{
+    display:flex; align-items:center; gap:6px; font-size:calc(12px * var(--font-scale, 1)); color:var(--navy-soft); cursor:pointer; user-select:none;
+  }
+  .follow-chip .chip-box{
+    width:16px;height:16px; border-radius:4px; border:2px solid var(--navy-soft); display:flex; align-items:center; justify-content:center;
+  }
+  .follow-chip.on .chip-box{ background:var(--amber); border-color:var(--amber); }
+  .flight-toggle{
+    display:flex; gap:8px; margin-bottom:14px;
+  }
+  .flight-toggle button{
+    flex:1; font-family:var(--font-display); font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.01em;
+    text-transform:none; padding:9px 10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--paper-dim); color:var(--navy-soft); cursor:pointer;
+  }
+  .flight-toggle button.active{
+    background:var(--navy); color:var(--paper); border-color:var(--navy); font-weight:600;
+  }
+  .doc-card-slot{ position:relative; height:47px; }
+  .doc-card-slot > #docItemRow, .doc-card-slot > #docDone{ position:absolute; inset:0; }
+  .doc-row{ height:47px; min-height:0;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--paper-dim); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+  }
+  .doc-row-label{ font-size:calc(14.5px * var(--font-scale, 1)); font-weight:600; color:var(--navy); }
+  .doc-stage{ display:flex; gap:8px; }
+  .stage-btn{
+    font-family:var(--font-display); font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.005em;
+    border:1px solid var(--line); background:var(--paper); color:var(--navy-soft);
+    border-radius:8px; padding:7px 10px; cursor:pointer; white-space:nowrap;
+  }
+  .stage-btn.done{ background:var(--green); border-color:var(--green); color:var(--paper); font-weight:600; }
+  .stage-btn.disabled{ opacity:0.4; cursor:not-allowed; }
+  .move-doc-confirm{ flex:0 0 auto; }
+  .item.checklist-locked{ opacity:1; }
+  .doc-done{
+    position:relative; box-sizing:border-box; height:47px; min-height:0; display:flex; align-items:center; gap:8px; font-size:calc(13.5px * var(--font-scale, 1)); font-weight:600; color:var(--green);
+    background:rgba(94,140,106,0.1); border:1px solid rgba(94,140,106,0.35); border-radius:10px; padding:12px 84px 12px 14px;
+  }
+  .doc-undo-btn{
+    position:absolute; right:14px; top:50%; transform:translateY(-50%); border:1px solid var(--line); border-radius:8px; padding:7px 10px;
+    background:var(--paper); color:var(--navy-soft); font-family:var(--font-display);
+    font-size:calc(11px * var(--font-scale, 1)); letter-spacing:0.005em; cursor:pointer; white-space:nowrap;
+  }
+  .doc-undo-btn:active{ background:var(--paper-dim); }
+  .footer{ padding:16px 24px 24px; display:flex; justify-content:center; }
+  .footer-content{ width:100%; display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .footer-actions .edit-toggle{
+    font-family:var(--font-display);
+    font-size:calc(12px * var(--font-scale, 1));
+    letter-spacing:0.015em;
+    text-transform:none;
+    color:var(--navy);
+    background:var(--paper-dim);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:8px 18px;
+    min-height:35px;
+  }
+  .footer-actions .edit-toggle.active{
+    background:var(--amber);
+    color:var(--navy);
+    border-color:var(--amber);
+    font-weight:600;
+  }
+  .footer-actions{
+    display:flex; flex-direction:column; gap:10px; width:100%; align-items:center;
+  }
+  .footer-action-row{
+    display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+  }
+  .reset-btn{
+    font-family:var(--font-display); font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.015em; text-transform:none;
+    color:var(--navy-soft); background:none; border:1px solid var(--line); border-radius:20px; padding:8px 18px; cursor:pointer;
+  }
+  .secondary-btn{
+    font-family:var(--font-display); font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.015em; text-transform:none;
+    color:var(--navy); background:var(--paper-dim); border:1px solid var(--line); border-radius:20px; padding:8px 18px; cursor:pointer;
+  }
+  .reset-btn:active{ background:var(--paper-dim); }
+  .secondary-btn:active{ background:var(--paper); }
+  .boarding-btn{
+    font-family:var(--font-display); font-size:calc(12px * var(--font-scale, 1)); letter-spacing:0.015em; text-transform:none;
+    color:var(--paper); background:var(--green); border:1px solid var(--green); border-radius:20px; padding:8px 18px; cursor:pointer;
+    box-shadow:0 6px 16px rgba(94,140,106,0.22);
+  }
+  .boarding-btn:active{ background:#4d785a; }
+  .boarding-btn.disabled{ opacity:0.45; cursor:not-allowed; box-shadow:none; }
+  .barcode{ height:34px; margin:2px 24px 0; background:repeating-linear-gradient(90deg, var(--navy) 0px, var(--navy) 2px, transparent 2px, transparent 5px); opacity:0.85; }
+  .checked-toggle{
+    display:flex; align-items:center; gap:6px; font-size:calc(11px * var(--font-scale, 1)); color:var(--navy-soft); cursor:pointer;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
+    font-family:var(--font-display); letter-spacing:0.01em; text-transform:none;
+  }
+  .checked-toggle .toggle-box{
+    width:16px;height:16px; border-radius:4px; border:2px solid var(--navy-soft);
+    display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; flex:0 0 16px;
+  }
+  .checked-toggle.on .toggle-box{ background:var(--amber); border-color:var(--amber); }
+  .checked-toggle .toggle-box svg{ width:10px;height:10px; opacity:0; transition:opacity 0.15s ease; }
+  .checked-toggle.on .toggle-box svg{ opacity:1; }
+  .checked-toggle.recheck-locked{ opacity:0.5; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="pass">
+  <div class="header-strip">
+    <div class="brand"><span class="brand-title">HamsterGo</span><span class="brand-separator"> · </span><span class="brand-subtitle">倉鼠打包小幫手</span></div>
+    <div class="header-actions">
+      <div class="sync-indicator" id="syncIndicator" data-state="idle" title="尚未同步" aria-label="尚未同步"><span class="sync-indicator-dot" aria-hidden="true"></span></div>
+      <button class="toolbar-btn" id="addItemBtn" aria-label="新增項目" title="新增項目">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+      </button>
+      <button class="toolbar-btn" id="editToggle" aria-label="編輯項目" title="編輯項目">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+      </button>
+
+      <button class="settings-btn" id="settingsBtn" aria-label="開啟設定" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0L6.2 6.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+    </div>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel" aria-hidden='true'>
+    <div class="settings-title data-title">備用隱形眼鏡</div>
+    <label class="lens-setting" for="lensBuffer">
+      <input id="lensBuffer" type="number" min="0" max="30" step="1" inputmode="numeric" aria-label="備用隱形眼鏡數量">
+    </label>
+    <div class="settings-title">文字大小</div>
+    <div class="font-options" role="group" aria-label="文字大小">
+      <button class="font-option" data-font-scale="0.9">小</button>
+      <button class="font-option" data-font-scale="1">標準</button>
+      <button class="font-option" data-font-scale="1.15">大</button>
+      <button class="font-option" data-font-scale="1.3">特大</button>
+      </div>
+    <label class="font-family-select-row" for="font-family-select">
+      <span>標題字型</span>
+      <select class="font-family-select" id="font-family-select" aria-label="標題字型">
+        <option value="system">系統</option>
+        <option value="gochi-hand">Gochi Hand</option>
+        <option value="permanent-marker">Permanent Marker</option>
+        <option value="caveat">Caveat</option>
+        <option value="marker-felt">Marker Felt</option>
+      </select>
+    </label>
+    <div class="settings-title data-title">雲端同步</div>
+    <div class="sync-setting account-setting">
+      <label for="accountUsername">帳號</label>
+      <input id="accountUsername" type="text" minlength="3" maxlength="32" placeholder="共用帳號" autocomplete="username" spellcheck="false">
+    </div>
+    <div class="sync-setting account-setting">
+      <label for="accountPassword">密碼</label>
+      <div class="sync-password-wrap">
+        <input id="accountPassword" type="password" minlength="8" placeholder="至少 8 個字元" autocomplete="current-password" spellcheck="false">
+        <button class="sync-password-toggle" type="button" data-target="accountPassword" data-visible="false" aria-label="顯示密碼" aria-pressed="false"><img src="resources/icons/eye-closed.svg" alt=""></button>
+      </div>
+    </div>
+    <div class="account-actions">
+      <button class="account-btn" id="registerAccountBtn" type="button">註冊</button>
+      <button class="account-btn" id="loginAccountBtn" type="button">登入</button>
+      <button class="account-btn" id="logoutAccountBtn" type="button">登出</button>
+    </div>
+    <div class="account-status" id="accountStatus" role="status" aria-live="polite"></div>
+    <details class="legacy-sync-details">
+      <summary>進階同步設定</summary>
+    <div class="sync-setting">
+      <label for="syncEndpoint">Worker 網址</label>
+      <input id="syncEndpoint" type="url" placeholder="https://hamstergo-sync.xxx.workers.dev" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="sync-setting">
+      <label for="syncKey">同步碼</label>
+      <div class="sync-password-wrap">
+        <input id="syncKey" type="password" minlength="32" maxlength="64" placeholder="兩台裝置使用同一組同步碼" autocomplete="off" spellcheck="false">
+        <button class="sync-password-toggle" type="button" data-target="syncKey" data-visible="false" aria-label="顯示同步碼" aria-pressed="false"><img src="resources/icons/eye-closed.svg" alt=""></button>
+      </div>
+    </div>
+    <div class="sync-setting">
+      <label for="syncEncryptionPassword">加密密碼</label>
+      <div class="sync-password-wrap">
+        <input id="syncEncryptionPassword" type="password" minlength="8" placeholder="兩台裝置輸入同一組密碼" autocomplete="new-password" spellcheck="false">
+        <button class="sync-password-toggle" type="button" data-target="syncEncryptionPassword" data-visible="false" aria-label="顯示加密密碼" aria-pressed="false"><img src="resources/icons/eye-closed.svg" alt=""></button>
+      </div>
+    </div>
+    <div class="sync-note">密碼只保存在這台裝置，不會上傳到 Cloudflare。</div>
+    <div class="sync-actions">
+      <button class="sync-btn" id="generateSyncKeyBtn" type="button">產生同步碼</button>
+      <button class="sync-btn" id="uploadCloudBtn" type="button">上傳到雲端</button>
+      <button class="sync-btn" id="downloadCloudBtn" type="button">從雲端下載</button>
+    </div>
+    </details>
+    <div class="sync-status" id="syncStatus" role="status" aria-live="polite"></div>
+    <div class="settings-title data-title">旅行資料</div>
+    <div class="data-actions">
+      <button class="data-btn" id="panelExportBtn">匯出 JSON</button>
+      <button class="data-btn" id="importBtn">匯入 JSON</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <div class="app-version">Version 1.0</div>
+    <div class="app-build">Build 10</div>
+    <button class="about-button" id="aboutBtn" type="button">關於</button>
+  </div>
+
+  <div class="ticket">
+    <div class="ticket-top">
+      <div class="trip-meta">
+        <input class="trip-title" id="tripTitle" name="travel_title" type="text" maxlength="80" placeholder="此次旅行名稱" aria-label="此次旅行名稱" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <div class="days-row" aria-label="行程天數">
+          <div class="days-input">
+            <input class="val" id="dayVal" type="number" min="1" max="30" step="1" inputmode="numeric" aria-label="行程天數">
+            <span class="unit">day</span>
+          </div>
+        </div>
+      </div>
+      <div class="status-layout">
+        <div class="status-copy">
+          <div class="route">
+            <h1 id="pctHeadline">要出發了！<span class="status-pending">還有 0 件物品沒帶</span></h1>
+            <button class="secondary-btn packed-recheck" id="recheckBtn" aria-label="再次檢查" title="再次檢查">
+              <svg class="recheck-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden='true'><path d="M20 12a8 8 0 1 1-2.34-5.66" stroke-width="1.35"></path><path d="M14.4 4.3 17.66 6.34 17.05 3.55" fill="none" stroke="currentColor" stroke-width="1.35"></path><path d="M8 12.6 10.4 15 15.4 9"></path></svg>
+            </button>
+          </div>
+          <p class="subtitle" id="statusSubtitle">出發前確認每一件東西都裝進行李</p>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-label"><span id="doneCount">0</span> / <span id="totalCount">0</span> 已帶上</div>
+        </div>
+        <button class="mascot-reset-btn" id="mascotResetBtn" type="button" aria-label="雙點倉鼠開始新的旅程"><img class="status-mascot" src="resources/images/hamstergo-icon.webp" width="140" height="140" alt="" aria-hidden='true'></button>
+      </div>
+    </div>
+
+    <div class="flight-info" id="flightInfo">
+      <button class="flight-info-toggle" id="flightInfoToggle" type="button" onclick="toggleFlightInfo()" aria-expanded="false" aria-label="編輯航班資訊">
+        <span class="flight-info-plane" aria-hidden="true">✈</span><span class="flight-info-summary" id="flightInfoSummary">尚未填寫航班</span>
+      </button>
+      <div class="flight-info-body" id="flightInfoBody" hidden></div>
+    </div>
+    <div class="perforation"></div>
+    <div class="section" id="documentsSection">
+      <div class="section-title"><span class="idx">01</span> 證件</div>
+      <div id="docActive">
+        <div class="flight-toggle" id="flightToggle">
+          <button data-type="domestic">國內線</button>
+          <button data-type="international">國際線</button>
+        </div>
+        <div class="note" id="docNote"><b>出發前</b>放 Personal Item；<b>安檢後</b>移到 Carry-on。</div>
+        <div class="doc-card-slot">
+          <div id="docItemRow"></div>
+          <div class="doc-done" id="docDone" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="perforation"></div>
+    <div class="section" id="personalSection">
+      <div class="section-title"><span class="idx">02</span> Personal Item 隨身包</div>
+    </div>
+
+    <div class="perforation"></div>
+    <div class="section" id="carryOnSection">
+      <div class="section-title" style="justify-content:space-between;">
+        <span><span class="idx">03</span> Carry-on 手提行李</span>
+        <label class="checked-toggle" id="carryOnToggle">
+          <span class="toggle-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>這趟有手提行李
+        </label>
+      </div>
+    </div>
+
+    <div class="perforation"></div>
+    <div class="section" id="checkedSection">
+      <div class="section-title" style="justify-content:space-between;">
+        <span><span class="idx">04</span> Checked Baggage 托運行李</span>
+        <label class="checked-toggle" id="checkedToggle">
+          <span class="toggle-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>這趟有托運
+        </label>
+      </div>
+    </div>
+
+    <div class="perforation"></div>
+    <div class="section" id="prepSection">
+      <div class="section-title"><span class="idx">05</span> Pre-departure reminders 出發前提醒 <button class="section-collapse-btn" id="prepToggle" type="button">展開</button></div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-content">
+        <div id="globalAddRow"></div>
+        <div class="footer-actions">
+          <div class="footer-action-row">
+            <button class="reset-btn" id="resetBtn">開始新的旅程</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+const X_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>';
+const TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+const DRAG_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="9" cy="12" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>';
+
+function getData(){
+  const importantItems = [ { id:'keys', label:'鑰匙' } ];
+  if(state.flightType === 'international'){
+    importantItems.push({ id:'license', label:'駕照錢包' });
+  }
+
+  const clothesCat = { key:'clothes', name:'衣物', items: [
+    { id:'tops', label:'上衣', qty:'days' },
+    { id:'socks', label:'襪子', qty:'days' },
+    { id:'underwear', label:'內褲', qty:'days' },
+    { id:'pants', label:'褲子' },
+    { id:'jacket', label:'外套' },
+    { id:'shoes', label:'鞋子' },
+    { id:'slippers', label:'拖鞋' },
+  ]};
+
+  const carryCats = [
+    { key:'toiletries', name:'洗漱品和藥品', items: [
+      { id:'toiletryBag', label:'洗漱袋' },
+      { id:'medicineBag', label:'藥品袋' },
+      { id:'razor', label:'刮鬍刀' },
+      { id:'toothbrush', label:'牙刷' },
+      { id:'toothpaste', label:'牙膏' },
+      { id:'contacts', label:'隱形眼鏡（日拋）', qty:'lens' },
+      { id:'eyedrops', label:'眼藥水' },
+      { id:'cleanser', label:'洗面用品' },
+      { id:'skincare', label:'臉部保養品' },
+      { id:'meds', label:'藥品' },
+    ]},
+    { key:'electronics', name:'電子用品', items: [
+      { id:'laptop', label:'筆電' },
+      { id:'chargerBag', label:'充電袋' },
+      { id:'charger', label:'充電器' },
+      { id:'watchcable', label:'手錶充電線' },
+    ]},
+    { key:'misc', name:'個人用品', items: [
+      { id:'bottle', label:'水瓶' },
+      { id:'sunglasses', label:'太陽眼鏡' },
+    ]},
+    { key:'important', name:'重要物品', items: importantItems },
+  ];
+
+  const checkedCats = [
+    { key:'checkedItems', name:'', items: [] },
+  ];
+
+  const prepCats = [
+    { key:'prepTasks', name:'', items: [
+      { id:'fridge', label:'清冰箱' },
+      { id:'trash', label:'倒垃圾' },
+      { id:'charge', label:'電子產品充電' },
+      { id:'poweroff', label:'關燈與電器' },
+      { id:'docs', label:'檢查證件與航班' },
+    ]},
+  ];
+
+  // 托運開啟時（國際線預設開啟，或國內線手動開啟），衣物類移到托運行李。
+  if(state.checkedEnabled){
+    checkedCats.unshift(clothesCat);
+  } else {
+    carryCats.unshift(clothesCat);
+  }
+
+  return [
+    { key:'personal', target:'personalSection', cats: [
+      { key:'personalItems', name:'', items: [
+        { id:'pet', label:'小動物' },
+        { id:'phone', label:'手機' },
+        { id:'ipad', label:'iPad mini' },
+        { id:'headphones', label:'耳機' },
+        { id:'kindle', label:'Kindle' },
+        { id:'cable', label:'充電線' },
+      ]},
+    ]},
+    { key:'carry', target:'carryOnSection', cats: carryCats },
+    { key:'checked', target:'checkedSection', cats: checkedCats },
+    { key:'prep', target:'prepSection', cats: prepCats },
+  ];
+}
+
+function currentDocItem(){
+  return state.flightType === 'international'
+    ? { id:'passport', label:'護照' }
+    : { id:'license', label:'駕照錢包' };
+}
+
+const STORAGE_KEY = 'packing-checklist-v2';
+const SYNC_API_URL_KEY = 'hamstergo-sync-api-url';
+const SYNC_DEFAULT_ENDPOINT = 'https://hamstergo-sync.ccpin777.workers.dev';
+const SYNC_KEY_KEY = 'hamstergo-sync-key';
+const SYNC_ENCRYPTION_PASSWORD_KEY = 'hamstergo-sync-encryption-password';
+const SYNC_VERSION_KEY_PREFIX = 'hamstergo-sync-version-v1-';
+const ENCRYPTION_ITERATIONS = 600000;
+const AUTH_TOKEN_KEY = 'hamstergo-auth-token';
+const ACCOUNT_USERNAME_KEY = 'hamstergo-account-username';
+let state = { days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', fontScale:'1', fontFamily:'system', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' };
+let editingId = null; // custom item currently being renamed
+let dragState = null; // active drag session
+let addModalOpen = false;
+let newTripConfirmOpen = false;
+let recheckModeConfirmOpen = false;
+let docUndoVisible = false;
+let docUndoTimer = null;
+let cloudSyncTimer = null;
+let cloudSyncBusy = false;
+let cloudSyncSuppress = false;
+let cloudSyncBlockedSettings = '';
+let localStateRevision = 0;
+let localStateLastWritten = null;
+const knownSyncVersions = new Map();
+
+function daysQtyText(days){ return String(days); }
+function normalizeLensBuffer(value){
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? Math.min(30, Math.max(0, parsed)) : 2;
+}
+function lensQtyText(days){ return String(days + normalizeLensBuffer(state.lensBuffer)); }
+
+function getMainItemIds(){
+  const ids = [ currentDocItem().id ];
+  const data = getData();
+  const visibleCatKeys = new Set();
+  data.forEach(s => {
+    if(s.key === 'checked' && !state.checkedEnabled) return;
+    if(s.key === 'carry' && !state.carryOnEnabled) return;
+    if(s.key === 'prep') return;
+    s.cats.forEach(c => {
+      visibleCatKeys.add(c.key);
+      c.items.forEach(i => { ids.push(i.id); });
+    });
+  });
+  Object.entries(state.customItems).forEach(([catKey, items]) => {
+    if(!visibleCatKeys.has(catKey)) return;
+    items.forEach(i => { ids.push(i.id); });
+  });
+  return ids;
+}
+
+function hasDefaultQty(item){
+  return item.qty === 'days' || item.qty === 'lens' || item.qty === 'fixed' || item.followsDays;
+}
+
+function defaultQtyTextFor(item, days){
+  if(item.qty === 'days') return daysQtyText(days);
+  if(item.qty === 'lens') return lensQtyText(days);
+  if(item.qty === 'fixed') return item.qtyText;
+  if(item.followsDays) return daysQtyText(days);
+  return null;
+}
+
+function getQtySetting(item){
+  const saved = state.qtySettings[item.id];
+  if(saved){
+    return {
+      show: saved.show !== false,
+      mode: saved.mode === 'auto' ? 'auto' : 'fixed',
+      value: Math.max(1, parseInt(saved.value, 10) || 1),
+    };
+  }
+  return {
+    show: hasDefaultQty(item),
+    mode: hasDefaultQty(item) ? 'auto' : 'fixed',
+    value: 1,
+  };
+}
+
+function getCustomQtyConfig(item, days){
+  const mode = item.qtyMode || (item.followsDays ? 'auto' : 'hide');
+  if(mode === 'hide') return null;
+  if(mode === 'auto') return { show:true, value: days };
+  if(mode === 'fixed') return { show:true, value: Math.max(1, parseInt(item.qtyValue, 10) || 1) };
+  return null;
+}
+
+function qtyTextFor(item){
+  if(Object.prototype.hasOwnProperty.call(state.qtyValues || {}, item.id)){
+    const value = String(state.qtyValues[item.id] ?? '');
+    return value === '0' ? '' : value;
+  }
+  if(item.isCustom) return '';
+  return defaultQtyTextFor(item, state.days) || '';
+}
+
+function setItemQty(itemId, value){
+  state.qtyValues = state.qtyValues || {};
+  const cleaned = String(value || '').replace(/[^0-9]/g, '').slice(0, 3);
+  state.qtyValues[itemId] = cleaned === '0' ? '' : cleaned;
+  saveState();
+  render();
+}
+
+function setQtySetting(itemId, next){
+  const current = state.qtySettings[itemId] || {};
+  state.qtySettings[itemId] = Object.assign({ show: true, mode: 'fixed', value: 1 }, current, next);
+  if(state.qtySettings[itemId].value < 1 || Number.isNaN(state.qtySettings[itemId].value)){
+    state.qtySettings[itemId].value = 1;
+  }
+  saveState();
+  render();
+}
+
+function getCustomItems(catKey){
+  return state.customItems[catKey] || [];
+}
+
+function orderedItemsFor(cat){
+  cat.items.forEach(i => { i.isCustom = false; });
+  const customItems = getCustomItems(cat.key);
+  customItems.forEach(i => { i.isCustom = true; });
+  const all = cat.items.concat(customItems);
+  const saved = state.itemOrder[cat.key];
+  if(!saved) return all;
+  const byId = {};
+  all.forEach(i => { byId[i.id] = i; });
+  const ordered = saved.filter(id => byId[id]).map(id => byId[id]);
+  all.forEach(i => { if(!saved.includes(i.id)) ordered.push(i); });
+  return ordered;
+}
+
+function getItemState(id){
+  return Object.prototype.hasOwnProperty.call(state.checked, id) ? state.checked[id] : null;
+}
+
+function isItemChecked(id){
+  return getItemState(id) === true;
+}
+
+function cycleItemState(id){
+  if(state.checklistLocked) return;
+  const current = getItemState(id);
+  if(state.recheckMode){
+    if(current === null) state.checked[id] = true;
+    else if(current === true) delete state.checked[id];
+    return;
+  }
+  if(current === null){
+    state.checked[id] = true;
+  }else if(current === true){
+    state.checked[id] = false;
+  }else{
+    delete state.checked[id];
+  }
+}
+
+function renderDocuments(){
+  const docItem = currentDocItem();
+  const done = isItemChecked(docItem.id);
+  const packed = !!state.docPacked[docItem.id];
+  const doneLabel = '已收好';
+
+  document.getElementById('docActive').style.display = '';
+  const doneEl = document.getElementById('docDone');
+  doneEl.style.display = done ? 'flex' : 'none';
+  if(done){
+    const typeLabel = state.flightType === 'international' ? '國際線' : '國內線';
+    doneEl.innerHTML = '';
+    const doneText = document.createElement('span');
+    doneText.textContent = "✓ " + docItem.label + doneLabel + "（" + typeLabel + "）";
+    doneEl.appendChild(doneText);
+    if(docUndoVisible && !state.editMode){
+      const undoBtn = document.createElement("button");
+      undoBtn.type = "button";
+      undoBtn.className = "doc-undo-btn";
+      undoBtn.textContent = "返回";
+      undoBtn.title = "返回尚未收好";
+      undoBtn.addEventListener("click", () => {
+        docUndoVisible = false;
+        if(docUndoTimer) clearTimeout(docUndoTimer);
+        docUndoTimer = null;
+        state.checklistLocked = false;
+        delete state.checked[docItem.id];
+        saveState();
+        render();
+      });
+      doneEl.appendChild(undoBtn);
+    }
+    if(state.editMode){
+      const undoBtn = document.createElement('button');
+      undoBtn.type = 'button';
+      undoBtn.className = 'doc-undo-btn';
+      undoBtn.textContent = '退回';
+      undoBtn.title = '退回未收好';
+      undoBtn.addEventListener('click', () => {
+        delete state.checked[docItem.id];
+        state.docPacked[docItem.id] = true;
+        saveState();
+        render();
+      });
+      doneEl.appendChild(undoBtn);
+    }
+  }
+
+  document.getElementById('flightToggle').style.display = packed || state.recheckMode ? 'none' : '';
+  document.getElementById('docNote').style.display = done || state.recheckMode ? 'none' : '';
+  document.querySelectorAll('#flightToggle button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === state.flightType);
+  });
+
+  const rowContainer = document.getElementById('docItemRow');
+  rowContainer.innerHTML = '';
+  if(!done){
+    rowContainer.appendChild(state.recheckMode && state.moveMode === 'move' ? buildMoveDocRow(docItem) : buildDocRow(docItem));
+  }
+}
+
+function buildMoveDocRow(docItem){
+  const row = document.createElement("div");
+  row.className = "doc-row";
+  const label = document.createElement("div");
+  label.className = "doc-row-label";
+  label.textContent = docItem.label;
+  row.appendChild(label);
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "stage-btn move-doc-confirm";
+  confirmBtn.textContent = "證件已收好";
+  confirmBtn.addEventListener("click", () => {
+    if(state.checklistLocked) return;
+    state.checked[docItem.id] = true;
+    state.checklistLocked = true;
+    showDocUndo();
+    saveState();
+    render();
+  });
+  row.appendChild(confirmBtn);
+  return row;
+}
+
+function buildDocRow(docItem){
+  const packed = !!state.docPacked[docItem.id];
+  const row = document.createElement('div');
+  row.className = 'doc-row';
+
+  const label = document.createElement('div');
+  label.className = 'doc-row-label';
+  label.textContent = docItem.label;
+  row.appendChild(label);
+
+  const stageWrap = document.createElement('div');
+  stageWrap.className = 'doc-stage';
+
+  const stage1 = document.createElement('button');
+  stage1.className = 'stage-btn' + (packed ? ' done' : '');
+  stage1.textContent = '① 帶了';
+  stage1.addEventListener('click', () => {
+    state.docPacked[docItem.id] = !state.docPacked[docItem.id];
+    saveState();
+    renderDocuments();
+    updateProgress();
+  });
+  stageWrap.appendChild(stage1);
+
+  const stage2 = document.createElement('button');
+  stage2.className = 'stage-btn' + (packed ? '' : ' disabled');
+  stage2.textContent = '② 已收好';
+  if(packed){
+    stage2.addEventListener('click', () => {
+      if(state.checklistLocked) return;
+      state.checked[docItem.id] = true;
+      state.checklistLocked = true;
+      showDocUndo();
+      saveState();
+      render();
+    });
+  }
+  stageWrap.appendChild(stage2);
+
+  row.appendChild(stageWrap);
+  return row;
+}
+
+function isPrepComplete(){
+  const section = getData().find(s => s.key === 'prep');
+  if(!section) return false;
+  const ids = [];
+  section.cats.forEach(cat => cat.items.forEach(item => ids.push(item.id)));
+  (state.customItems.prepTasks || []).forEach(item => ids.push(item.id));
+  return ids.length > 0 && ids.every(id => getItemState(id) === true);
+}
+
+
+
+
+
+
+
+function emptyFlight(){ return { code:"", time:"", airportTerminal:"" }; }
+
+function getFlights(){
+  if(!Array.isArray(state.flights)){
+    state.flights = [
+      { code:state.flightOutboundCode || "", time:state.flightOutboundTime || "", airportTerminal:[state.flightOutboundAirport, state.flightOutboundTerminal].filter(Boolean).join(" ") },
+      { code:state.flightReturnCode || "", time:state.flightReturnTime || "", airportTerminal:[state.flightReturnAirport, state.flightReturnTerminal].filter(Boolean).join(" ") }
+    ];
+  }
+  while(state.flights.length < 2) state.flights.push(emptyFlight());
+  return state.flights;
+}
+
+function formatFlightTimeInput(value){
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 12);
+  if(!digits) return "";
+  let formatted = digits.slice(0, 4);
+  if(digits.length >= 4) formatted += "/";
+  if(digits.length > 4) formatted += digits.slice(4, 6);
+  if(digits.length >= 6) formatted += "/";
+  if(digits.length > 6) formatted += digits.slice(6, 8);
+  if(digits.length >= 8) formatted += ", ";
+  if(digits.length > 8) formatted += digits.slice(8, 10);
+  if(digits.length >= 10) formatted += ":";
+  if(digits.length > 10) formatted += digits.slice(10, 12);
+  return formatted;
+}
+
+function formatFlightTime(value){
+  const digits = String(value || "").replace(/\D/g, "");
+  if(digits.length < 12) return formatFlightTimeInput(value);
+  const hour = Number(digits.slice(8, 10));
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return digits.slice(0,4) + "/" + digits.slice(4,6) + "/" + digits.slice(6,8) + ", " + String(hour12).padStart(2, "0") + ":" + digits.slice(10,12) + " " + suffix;
+}
+
+
+function flightTimestamp(flight){
+  const digits = String(flight.time || "").replace(/\D/g, "");
+  if(digits.length < 12) return null;
+  return new Date(Number(digits.slice(0,4)), Number(digits.slice(4,6)) - 1, Number(digits.slice(6,8)), Number(digits.slice(8,10)), Number(digits.slice(10,12))).getTime();
+}
+
+function flightSummary(flight){
+  const firstLine = [flight.code, formatFlightTime(flight.time)].filter(Boolean).join(" ");
+  return [firstLine, flight.airportTerminal].filter(Boolean).join("\n");
+}
+
+function renderFlightSummary(){
+  const flights = getFlights();
+  const now = Date.now();
+  const upcoming = flights.filter(flight => { const time = flightTimestamp(flight); return time === null || time > now; }).sort((a,b) => (flightTimestamp(a) ?? Infinity) - (flightTimestamp(b) ?? Infinity));
+  const dated = flights.filter(flight => flightTimestamp(flight) !== null).sort((a,b) => flightTimestamp(b) - flightTimestamp(a));
+  const current = upcoming.find(flight => flightSummary(flight)) || dated[0] || flights.find(flight => flightSummary(flight));
+  document.getElementById("flightInfoSummary").textContent = current ? (flightSummary(current) || "尚未填寫航班") : "尚未填寫航班";
+}
+
+function renderFlightEditor(){
+  const body = document.getElementById("flightInfoBody");
+  body.innerHTML = "";
+  getFlights().forEach((flight, index) => {
+    const row = document.createElement("div");
+    row.className = "flight-leg";
+    const title = document.createElement("div");
+    title.className = "flight-leg-title";
+    title.dataset.flightTitle = String(index);
+    title.textContent = flightSummary(flight) || ("航班 " + (index + 1));
+    if(getFlights().length > 2){
+      const remove = document.createElement("button");
+      remove.type = "button"; remove.className = "flight-leg-remove"; remove.textContent = "移除"; remove.dataset.flightRemove = String(index);
+      title.appendChild(remove);
+    }
+    row.appendChild(title);
+    [["code","航班編號","text"],["time","出發時間","text"],["airportTerminal","機場／航廈","text"]].forEach(([field, labelText, type]) => {
+      const label = document.createElement("label"); label.className = "flight-info-field"; label.textContent = labelText;
+      const input = document.createElement("input"); input.type = type; input.maxLength = field === "time" ? 18 : (field === "airportTerminal" ? 24 : 40); input.autocomplete = "off"; input.dataset.flightIndex = String(index); input.dataset.flightField = field;
+      if(field === "time"){ input.inputMode = "numeric"; input.placeholder = "YYYYMMDDHHmm"; }
+      input.value = field === "time" ? formatFlightTimeInput(flight[field]) : (flight[field] || ""); label.appendChild(input); row.appendChild(label);
+    });
+    body.appendChild(row);
+    row.querySelectorAll("input").forEach(input => { input.value = input.dataset.flightField === "time" ? formatFlightTimeInput(flight[input.dataset.flightField]) : (flight[input.dataset.flightField] || ""); });
+  });
+  const add = document.createElement("button");
+  add.type = "button"; add.className = "secondary-btn flight-add-btn"; add.textContent = "＋ 新增航班";
+  body.appendChild(add);
+}
+
+function toggleFlightInfo(){
+  state.flightInfoCollapsed = state.flightInfoCollapsed === false;
+  renderFlightInfo();
+  saveState();
+}
+
+
+function renderFlightInfo(){
+  renderFlightSummary();
+  const body = document.getElementById("flightInfoBody");
+  const editing = state.flightInfoCollapsed === false;
+  document.getElementById("flightInfo").classList.toggle("editing", editing);
+  body.hidden = !editing;
+  document.getElementById("flightInfoToggle").setAttribute("aria-expanded", String(editing));
+  document.getElementById("flightInfoToggle").setAttribute("aria-label", editing ? "完成航班編輯" : "編輯航班資訊");
+  if(editing) renderFlightEditor();
+  else body.innerHTML = "";
+}
+
+
+function render(){
+  renderFlightInfo();
+  closeAllCatLists();
+  document.querySelectorAll('.cat-select-list').forEach(el => el.remove());
+  renderDocuments();
+  getData().forEach(section => {
+    const container = document.getElementById(section.target);
+    container.querySelectorAll('.cat').forEach(el => el.remove());
+    if(section.key === 'checked' && !state.checkedEnabled){
+      return;
+    }
+    if(section.key === 'carry' && !state.carryOnEnabled){
+      return;
+    }
+    section.cats.forEach(cat => {
+      const catEl = document.createElement('div');
+      catEl.className = 'cat';
+      catEl.dataset.catKey = cat.key;
+      if(cat.name){
+        const nameEl = document.createElement('p');
+        nameEl.className = 'cat-name';
+        nameEl.textContent = cat.name;
+        catEl.appendChild(nameEl);
+      }
+
+      orderedItemsFor(cat).forEach(item => {
+        catEl.appendChild(buildItemRow(item, item.isCustom, cat.key));
+      });
+
+      container.appendChild(catEl);
+    });
+
+  });
+  const prepComplete = isPrepComplete();
+  if(prepComplete && !state.prepWasComplete){
+    state.prepCollapsed = true;
+  }else if(!prepComplete && state.prepWasComplete){
+    state.prepCollapsed = false;
+  }else if(state.prepCollapsed === null){
+    state.prepCollapsed = prepComplete;
+  }
+  state.prepWasComplete = prepComplete;
+  document.getElementById('prepSection').classList.toggle('prep-collapsed', state.prepCollapsed === true);
+  const prepToggle = document.getElementById('prepToggle');
+  const prepIsCollapsed = state.prepCollapsed === true;
+  prepToggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>';
+  prepToggle.setAttribute('aria-expanded', String(!prepIsCollapsed));
+  prepToggle.setAttribute('aria-label', prepIsCollapsed ? '展開出發前提醒' : '收起出發前提醒');
+  prepToggle.setAttribute('title', prepIsCollapsed ? '展開' : '收起');
+  renderGlobalAddRow();
+  document.getElementById('checkedToggle').classList.toggle('on', !!state.checkedEnabled);
+  document.getElementById('carryOnToggle').classList.toggle('on', !!state.carryOnEnabled);
+  const documentLocked = isItemChecked(currentDocItem().id);
+  document.getElementById('checkedToggle').classList.toggle('recheck-locked', !!state.recheckMode || documentLocked);
+  document.getElementById('carryOnToggle').classList.toggle('recheck-locked', !!state.recheckMode || documentLocked);
+  updateProgress();
+  document.getElementById('editToggle').classList.toggle('active', state.editMode);
+  document.getElementById('editToggle').setAttribute('aria-label', state.editMode ? '完成編輯' : '編輯項目');
+  document.getElementById('editToggle').setAttribute('title', state.editMode ? '完成編輯' : '編輯項目');
+}
+
+function getCatSelectOverlay(){
+  let overlay = document.querySelector('.cat-select-overlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.className = 'cat-select-overlay';
+    document.body.appendChild(overlay);
+  }
+  return overlay;
+}
+
+function closeAllCatLists(){
+  document.querySelectorAll('.cat-select-list.show').forEach(l => l.classList.remove('show'));
+  document.querySelectorAll('.cat-select-btn.open').forEach(b => b.classList.remove('open'));
+  getCatSelectOverlay().classList.remove('show');
+}
+
+function renderGlobalAddRow(){
+  const host = document.getElementById('globalAddRow');
+  host.innerHTML = '';
+  document.querySelectorAll('.add-modal-layer').forEach(el => el.remove());
+  if(!addModalOpen) return;
+
+  const layer = document.createElement('div');
+  layer.className = 'add-modal-layer';
+  const backdrop = document.createElement('div');
+  backdrop.className = 'add-modal-backdrop';
+  backdrop.addEventListener('click', closeAddModal);
+  layer.appendChild(backdrop);
+  const wrap = document.createElement('div');
+  wrap.className = 'add-row show add-modal';
+  const title = document.createElement('h2');
+  title.className = 'add-modal-title';
+  title.textContent = '新增項目';
+  wrap.appendChild(title);
+  const inputsRow = document.createElement('div');
+  inputsRow.className = 'add-inputs';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.name = 'item';
+  input.placeholder = '新增項目名稱';
+  input.className = 'new-item-input';
+  input.autocomplete = 'off';
+  input.autocapitalize = 'off';
+  input.spellcheck = false;
+  inputsRow.appendChild(input);
+  wrap.appendChild(inputsRow);
+
+  const data = getData();
+  const sections = [
+    { key:'personal', label:'Personal 隨身包', cats:data[0].cats },
+    { key:'carry', label:'Carry-on 手提行李', cats:data[1].cats },
+    { key:'checked', label:'Checked Baggage 托運行李', cats:data[2].cats },
+    { key:'prep', label:'Pre-departure reminders 出發前提醒', cats:data[3].cats },
+  ].filter(section => (section.key !== 'carry' || state.carryOnEnabled) && (section.key !== 'checked' || state.checkedEnabled));
+  const categoryRow = document.createElement('div');
+  categoryRow.className = 'add-category-row';
+  const majorSelect = document.createElement('select');
+  sections.forEach(section => {
+    const option = document.createElement('option');
+    option.value = section.key; option.textContent = section.label; majorSelect.appendChild(option);
+  });
+  categoryRow.appendChild(majorSelect);
+  const subSelect = document.createElement('select');
+  subSelect.className = 'subcategory';
+  categoryRow.appendChild(subSelect);
+  wrap.appendChild(categoryRow);
+
+  const selectedSection = () => sections.find(section => section.key === majorSelect.value) || sections[0];
+  const refreshSubcategory = () => {
+    const section = selectedSection(); subSelect.innerHTML = '';
+    const showSubcategory = section && section.key === 'carry' && section.cats.length > 1;
+    subSelect.style.display = showSubcategory ? 'block' : 'none';
+    if(showSubcategory) section.cats.forEach(cat => {
+      const option = document.createElement('option'); option.value = cat.key; option.textContent = cat.name || cat.key; subSelect.appendChild(option);
+    });
+  };
+  majorSelect.addEventListener('change', refreshSubcategory); refreshSubcategory();
+
+  const actions = document.createElement('div');
+  actions.className = 'add-modal-actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button'; cancelBtn.className = 'add-modal-cancel'; cancelBtn.textContent = '取消';
+  cancelBtn.addEventListener('click', closeAddModal);
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'add-modal-confirm'; btn.textContent = '新增';
+  actions.append(cancelBtn, btn); wrap.appendChild(actions);
+
+  const doAdd = () => {
+    const label = input.value.trim(); const section = selectedSection();
+    if(!label || !section) return;
+    const catKey = section.key === 'carry' && subSelect.style.display !== 'none' ? subSelect.value : section.cats[0].key;
+    const id = 'custom_' + catKey + '_' + Date.now();
+    if(!state.customItems[catKey]) state.customItems[catKey] = [];
+    state.customItems[catKey].push({ id, label }); addModalOpen = false; saveState(); render();
+  };
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') doAdd(); });
+  btn.addEventListener('click', doAdd);
+  layer.appendChild(wrap); document.body.appendChild(layer);
+  setTimeout(() => input.focus(), 0);
+}
+
+function showDocUndo(){
+  state.prepCollapsed = true;
+  docUndoVisible = true;
+  if(docUndoTimer) clearTimeout(docUndoTimer);
+  docUndoTimer = setTimeout(() => {
+    docUndoVisible = false;
+    docUndoTimer = null;
+    renderDocuments();
+  }, 5000);
+}
+
+function beginRecheck(mode){
+  const prepIds = new Set();
+  const prepSection = getData().find(section => section.key === "prep");
+  prepSection?.cats.forEach(cat => cat.items.forEach(item => prepIds.add(item.id)));
+  (state.customItems.prepTasks || []).forEach(item => prepIds.add(item.id));
+  Object.keys(state.checked).forEach(id => {
+    if(state.checked[id] === true && !prepIds.has(id)) delete state.checked[id];
+  });
+  docUndoVisible = false;
+  if(docUndoTimer) clearTimeout(docUndoTimer);
+  docUndoTimer = null;
+  state.checklistLocked = false;
+  state.completionPromptShown = false;
+  state.docPacked = {};
+  const recheckDocId = currentDocItem().id;
+  delete state.checked[recheckDocId];
+  delete state.docPacked[recheckDocId];
+  if(mode === "move") state.docPacked[recheckDocId] = true;
+  state.moveMode = mode;
+  state.recheckMode = true;
+  state.tripStatus = "packing";
+  render(); saveState();
+}
+
+function openRecheckModeConfirm(){
+  if(recheckModeConfirmOpen) return;
+  recheckModeConfirmOpen = true;
+  const layer = document.createElement("div");
+  layer.className = "add-modal-layer recheck-mode-confirm-layer";
+  const backdrop = document.createElement("div");
+  backdrop.className = "add-modal-backdrop";
+  backdrop.addEventListener("click", closeRecheckModeConfirm);
+  layer.appendChild(backdrop);
+  const wrap = document.createElement("div");
+  wrap.className = "add-row show add-modal recheck-mode-confirm";
+  const title = document.createElement("h2");
+  title.className = "add-modal-title";
+  title.textContent = "接下來要帶行李去哪裡？";
+  wrap.appendChild(title);
+  const options = document.createElement("div");
+  options.className = "recheck-mode-options";
+  const moveBtn = document.createElement("button");
+  moveBtn.type = "button";
+  moveBtn.className = "mode-option";
+  moveBtn.innerHTML = "<span class='mode-option-icon' aria-hidden='true'>↗</span><span class='mode-option-copy'><span class='mode-option-title'>換旅館</span></span>";
+  moveBtn.addEventListener("click", () => { closeRecheckModeConfirm(); beginRecheck("move"); });
+  const returnBtn = document.createElement("button");
+  returnBtn.type = "button";
+  returnBtn.className = "mode-option";
+  returnBtn.innerHTML = "<span class='mode-option-icon' aria-hidden='true'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 10.5 12 3l9 7.5'></path><path d='M5.5 9.5V20h13V9.5'></path><path d='M9.5 20v-5h5v5'></path></svg></span><span class='mode-option-copy'><span class='mode-option-title'>回家</span></span>";
+  returnBtn.addEventListener("click", () => { closeRecheckModeConfirm(); beginRecheck("return"); });
+  options.append(moveBtn, returnBtn);
+  wrap.appendChild(options);
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "add-modal-cancel recheck-mode-cancel";
+  cancelBtn.textContent = "取消";
+  cancelBtn.addEventListener("click", closeRecheckModeConfirm);
+  wrap.appendChild(cancelBtn);
+  layer.appendChild(wrap);
+  document.body.appendChild(layer);
+  setTimeout(() => moveBtn.focus(), 0);
+}
+
+function closeRecheckModeConfirm(){
+  recheckModeConfirmOpen = false;
+  document.querySelectorAll(".recheck-mode-confirm-layer").forEach(el => el.remove());
+}
+
+function openNewTripConfirm(){
+  if(newTripConfirmOpen) return;
+  newTripConfirmOpen = true;
+  const layer = document.createElement('div');
+  layer.className = 'add-modal-layer new-trip-confirm-layer';
+  const backdrop = document.createElement('div');
+  backdrop.className = 'add-modal-backdrop';
+  backdrop.addEventListener('click', closeNewTripConfirm);
+  layer.appendChild(backdrop);
+  const wrap = document.createElement('div');
+  wrap.className = 'add-row show add-modal new-trip-confirm';
+  const title = document.createElement('h2');
+  title.className = 'add-modal-title';
+  title.textContent = '開始新的旅程？';
+  wrap.appendChild(title);
+  const message = document.createElement('p');
+  message.className = 'new-trip-confirm-message';
+  message.textContent = "請選擇接下來的模式";
+  wrap.appendChild(message);
+  const actions = document.createElement('div');
+  actions.className = 'add-modal-actions';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'add-modal-cancel';
+  cancelBtn.textContent = '取消';
+  cancelBtn.addEventListener('click', closeNewTripConfirm);
+  const confirmBtn = document.createElement('button');
+  confirmBtn.type = 'button';
+  confirmBtn.className = 'add-modal-confirm';
+  confirmBtn.textContent = '開始新的旅程';
+  confirmBtn.addEventListener('click', () => {
+    closeNewTripConfirm();
+    startNewTrip();
+  });
+  actions.append(cancelBtn, confirmBtn);
+  wrap.appendChild(actions);
+  layer.appendChild(wrap);
+  document.body.appendChild(layer);
+  setTimeout(() => cancelBtn.focus(), 0);
+}
+
+function closeNewTripConfirm(){
+  newTripConfirmOpen = false;
+  document.querySelectorAll('.new-trip-confirm-layer').forEach(el => el.remove());
+}
+
+function closeAddModal(){
+  addModalOpen = false; renderGlobalAddRow();
+}
+
+function openAboutModal(){
+  document.querySelectorAll(".about-modal-layer").forEach(el => el.remove());
+  const layer = document.createElement("div");
+  layer.className = "add-modal-layer about-modal-layer";
+  const backdrop = document.createElement("div");
+  backdrop.className = "add-modal-backdrop";
+  const close = () => layer.remove();
+  backdrop.addEventListener("click", close);
+  layer.appendChild(backdrop);
+  const wrap = document.createElement("div");
+  wrap.className = "add-row add-modal about-modal";
+  wrap.innerHTML = `<img class="about-image" src="resources/images/hamster_boarding_pass_current_1.png" alt="HamsterGo boarding pass"><h2>HamsterGo</h2><p class="about-tagline">倉鼠打包小幫手</p><p class="about-version">Version 1.0</p><p class="about-build">Build 10</p><p class="about-footer">© 2026 HamsterGo · Created by Pin</p><div class="add-modal-actions"><button type="button" class="add-modal-cancel">OK</button></div>`;
+  wrap.querySelector(".add-modal-cancel").addEventListener("click", close);
+  layer.appendChild(wrap);
+  document.body.appendChild(layer);
+  wrap.querySelector(".add-modal-cancel").focus();
+}
+
+function buildItemRow(item, isCustom, catKey){
+  const row = document.createElement('div');
+  const itemState = getItemState(item.id);
+  const isPrepItem = catKey === 'prepTasks';
+  const prepChecked = isPrepItem && itemState === true;
+  row.className = 'item' + (isCustom ? ' custom-item' : '') + (!isPrepItem && itemState === true ? ' checked' : '') + (!isPrepItem && itemState === false ? ' skipped' : '') + (prepChecked ? ' checked' : '') + (state.checklistLocked ? ' checklist-locked' : '');
+  row.dataset.id = item.id;
+  row.dataset.custom = isCustom ? '1' : '0';
+
+  const box = document.createElement('div');
+  box.className = 'checkbox';
+  box.innerHTML = isPrepItem ? (prepChecked ? CHECK_SVG : '') : (itemState === false ? X_SVG : CHECK_SVG);
+  box.style.cursor = state.editMode || state.checklistLocked ? 'default' : 'pointer';
+  box.addEventListener('mousedown', e => e.preventDefault());
+  box.addEventListener('click', () => {
+    if(state.editMode || state.checklistLocked) return;
+    if(isPrepItem){
+      if(state.recheckMode){
+        if(itemState === null) state.checked[item.id] = true;
+        else if(itemState === true) delete state.checked[item.id];
+        saveState();
+        render();
+      }else if(itemState === true){
+        delete state.checked[item.id];
+        saveState();
+        render();
+      }else{
+        state.checked[item.id] = true;
+        saveState();
+        render();
+      }
+      return;
+    }
+    toggleItem(item.id);
+  });
+  row.appendChild(box);
+
+  if(isCustom && state.editMode && editingId === item.id){
+    const input = document.createElement('input');
+    input.className = 'item-label-input';
+    input.value = item.label;
+    input.addEventListener('keydown', e => { if(e.key === 'Enter') input.blur(); });
+    input.addEventListener('blur', () => {
+      const val = input.value.trim();
+      if(val) item.label = val;
+      editingId = null;
+      saveState();
+      render();
+    });
+    row.appendChild(input);
+    setTimeout(() => { input.focus(); input.select(); }, 0);
+  } else {
+    const label = document.createElement('div');
+    label.className = 'item-label';
+    label.textContent = item.label;
+    label.style.cursor = (state.editMode || isPrepItem || state.checklistLocked) ? 'default' : 'pointer';
+    if(!isPrepItem){
+      label.addEventListener('mousedown', e => e.preventDefault());
+      label.addEventListener('click', () => { if(!state.editMode) toggleItem(item.id); });
+    }
+    row.appendChild(label);
+  }
+
+  const qtyInput = document.createElement('input');
+  qtyInput.type = 'number'; qtyInput.min = '1'; qtyInput.max = '999'; qtyInput.inputMode = 'numeric';
+  qtyInput.className = 'item-qty-input'; qtyInput.value = qtyTextFor(item);
+  qtyInput.placeholder = ''; qtyInput.readOnly = !state.editMode;
+  qtyInput.setAttribute('aria-label', item.label + '數量');
+  qtyInput.addEventListener('click', e => e.stopPropagation());
+  qtyInput.addEventListener('change', () => setItemQty(item.id, qtyInput.value));
+  row.appendChild(qtyInput);
+
+  if(isCustom && state.editMode){
+    const editBtn = document.createElement('button');
+    editBtn.className = 'icon-btn';
+    editBtn.innerHTML = PENCIL_SVG;
+    editBtn.addEventListener('click', () => { editingId = item.id; render(); });
+    row.appendChild(editBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'icon-btn delete';
+    delBtn.innerHTML = TRASH_SVG;
+    delBtn.addEventListener('click', () => deleteCustomItem(catKey, item.id));
+    row.appendChild(delBtn);
+  }
+
+  if(state.editMode){
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.innerHTML = DRAG_SVG;
+    row.appendChild(handle);
+
+
+  }
+
+  return row;
+}
+
+function deleteCustomItem(catKey, id){
+  state.customItems[catKey] = (state.customItems[catKey] || []).filter(i => i.id !== id);
+  delete state.checked[id];
+  if(state.qtySettings) delete state.qtySettings[id];
+  saveState();
+  render();
+}
+
+function allItemIds(){
+  return getMainItemIds();
+}
+
+function updateProgress(){
+  const docId = currentDocItem().id;
+  const ids = allItemIds();
+  const progressIds = ids.filter(id => getItemState(id) !== false);
+  const total = progressIds.length;
+  const docStored = !!state.docPacked[docId] && getItemState(docId) === true;
+  const docProgressDone = state.recheckMode && state.moveMode === "move" ? docStored : !!state.docPacked[docId];
+  const packingPending = progressIds.filter(id => id === docId ? !docProgressDone : getItemState(id) === null).length;
+  const readyPending = packingPending + (docStored ? 0 : 1);
+  const done = progressIds.filter(id => id === docId ? docProgressDone : getItemState(id) === true).length;
+
+  const otherPending = progressIds.filter(id => id !== docId && getItemState(id) === null).length;
+  const isMoveMode = state.recheckMode && state.moveMode === 'move';
+  const docOnlyPending = !state.recheckMode && !state.docPacked[docId] && total > 0 && otherPending === 0;
+  const moveDocOnlyPending = isMoveMode && total > 0 && !state.checked[docId] && otherPending === 0;
+  const returnMode = state.recheckMode && state.moveMode === 'return';
+  const returnDocOnlyPending = returnMode && total > 0 && !state.docPacked[docId] && otherPending === 0;
+  const docOnlyStatus = docOnlyPending || moveDocOnlyPending || returnDocOnlyPending;
+  const statusText = docOnlyStatus
+    ? '只剩證件未確認'
+    : state.recheckMode
+    ? (returnMode
+      ? (packingPending > 0
+        ? '準備回家！<span class="status-pending">還有 ' + packingPending + ' 件物品尚未確認</span>'
+        : (docStored ? 'Bon voyage! 🛫' : '安心回家！'))
+      : (packingPending > 0
+        ? '準備移動了！<span class="status-pending">還有 ' + packingPending + ' 件物品尚未確認</span>'
+        : '可以移動了！'))
+    : (packingPending > 0
+      ? '要出發了！<span class="status-pending">還有 ' + packingPending + ' 件物品沒帶</span>'
+      : (docStored ? 'Bon voyage! 🛫' : '行李都整理好了！ ✈️'));
+  state.tripStatus = docStored && packingPending === 0 ? 'packed' : 'packing';
+
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('totalCount').textContent = total;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('pctHeadline').innerHTML = statusText;
+  const statusSubtitle = document.getElementById('statusSubtitle');
+  statusSubtitle.textContent = docOnlyStatus ? '別忘了證件噢 👀' : (returnMode ? '別忘了把所有東西帶回家' : (isMoveMode ? '移動前確認每一件物品都帶上了' : '出發前確認每一件東西都裝進行李'));
+  statusSubtitle.style.display = docOnlyStatus || (returnMode || isMoveMode || !state.recheckMode) && packingPending > 0 ? '' : 'none';
+  const recheckBtn = document.getElementById('recheckBtn');
+  const canRecheck = readyPending === 0;
+  recheckBtn.style.display = canRecheck ? 'inline-flex' : 'none';
+  recheckBtn.setAttribute('aria-hidden', String(!canRecheck));
+  document.getElementById('dayVal').value = state.days;
+  document.getElementById('lensBuffer').value = state.lensBuffer;
+ }
+
+function saveState(){
+  localStateRevision += 1;
+  try{
+    const serialized = JSON.stringify(state);
+    localStorage.setItem(STORAGE_KEY, serialized);
+    localStateLastWritten = serialized;
+  }catch(e){ console.error('save failed', e); }
+  scheduleCloudUpload();
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    localStateLastWritten = raw;
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = Object.assign({ days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:false, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', fontScale:'1', fontFamily:'system', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' }, parsed);
+      delete state.itemPlacement;
+      state.qtySettings = state.qtySettings || {};
+      state.qtyValues = state.qtyValues || {};
+      state.lensBuffer = normalizeLensBuffer(state.lensBuffer);
+      state.moveMode = state.moveMode === 'move' || state.moveMode === 'return' ? state.moveMode : null;
+      state.checklistLocked = state.checklistLocked === true;
+      state.completionPromptShown = state.completionPromptShown === true;
+      state.tripStatus = state.tripStatus === 'packed' ? 'packed' : 'packing';
+      state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : '';
+    }
+  }catch(e){ /* first run, no saved state */ }
+  const legacyFontScale = (() => { try{ return localStorage.getItem(FONT_SCALE_KEY) || "1"; }catch(e){ return "1"; } })();
+  const legacyFontFamily = (() => { try{ return localStorage.getItem(FONT_FAMILY_KEY) || "system"; }catch(e){ return "system"; } })();
+  state.fontScale = ["0.9", "1", "1.15", "1.3"].includes(String(state.fontScale)) ? String(state.fontScale) : legacyFontScale;
+  state.fontFamily = ["system", "gochi-hand", "permanent-marker", "caveat", "marker-felt"].includes(state.fontFamily) ? state.fontFamily : legacyFontFamily;
+  setFontScale(state.fontScale, false);
+  setFontFamily(state.fontFamily, false);
+  render();
+}
+
+function safeFileName(name){
+  const cleaned = String(name || 'HamsterGo-旅行紀錄').trim().replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, ' ');
+  return (cleaned || 'HamsterGo-旅行紀錄').slice(0, 80);
+}
+
+function exportTrip(){
+  const payload = {
+    format: 'HamsterGo Travel',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    tripTitle: state.tripTitle || '',
+    state
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = safeFileName(state.tripTitle) + '.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function importTripFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const payload = JSON.parse(reader.result);
+      const imported = payload && payload.state && typeof payload.state === 'object' ? payload.state : payload;
+      if(!imported || typeof imported !== 'object' || Array.isArray(imported) || !imported.checked || !imported.customItems){
+        throw new Error('invalid travel file');
+      }
+      const defaults = { days:3, lensBuffer:2, moveMode:null, checklistLocked:false, completionPromptShown:false, checked:{}, customItems:{}, qtyValues:{}, prepCollapsed:null, prepWasComplete:null, recheckMode:false, editMode:false, flightType:'domestic', docPacked:{}, itemOrder:{}, checkedEnabled:false, carryOnEnabled:true, qtySettings:{}, tripStatus:'packing', tripTitle:'', fontScale:'1', fontFamily:'system', flightInfoCollapsed:true, flights:[], flightOutboundCode:'', flightOutboundTime:'', flightOutboundAirport:'', flightOutboundTerminal:'', flightReturnCode:'', flightReturnTime:'', flightReturnAirport:'', flightReturnTerminal:'' };
+      state = Object.assign(defaults, imported);
+      state.editMode = false;
+      state.qtySettings = state.qtySettings || {};
+      state.qtyValues = state.qtyValues || {};
+      state.lensBuffer = normalizeLensBuffer(state.lensBuffer);
+      state.moveMode = state.moveMode === 'move' || state.moveMode === 'return' ? state.moveMode : null;
+      state.checklistLocked = state.checklistLocked === true;
+      state.completionPromptShown = state.completionPromptShown === true;
+      state.tripTitle = typeof state.tripTitle === 'string' ? state.tripTitle : (typeof payload.tripTitle === 'string' ? payload.tripTitle : '');
+      editingId = null;
+      dragState = null;
+      render();
+      document.getElementById('tripTitle').value = state.tripTitle;
+      saveState();
+    }catch(e){
+      alert('這不是有效的 HamsterGo 旅行 JSON 檔案。');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function toggleItem(id){
+  cycleItemState(id);
+  render();
+  saveState();
+}
+
+document.getElementById('tripTitle').value = state.tripTitle || '';
+window.addEventListener('pywebviewready',loadNativePreferences);
+if(window.pywebview?.api) loadNativePreferences();
+document.getElementById('tripTitle').addEventListener('input', e => {
+  state.tripTitle = e.target.value;
+  saveState();
+});
+document.getElementById("flightInfoBody").addEventListener("keydown", e => {
+  const input = e.target;
+  if(!input.matches('[data-flight-field="time"]') || e.key !== "Backspace" || input.selectionStart !== input.selectionEnd) return;
+  const position = input.selectionStart;
+  if(position === 0 || /\d/.test(input.value.charAt(position - 1))) return;
+  let digit = position - 1;
+  while(digit >= 0 && !/\d/.test(input.value.charAt(digit))) digit--;
+  if(digit < 0) return;
+  e.preventDefault();
+  input.setSelectionRange(digit, position);
+  input.setRangeText("", digit, position, "start"); input.dispatchEvent(new Event("input", { bubbles:true }));
+});
+document.getElementById("flightInfoBody").addEventListener("input", e => {
+  const input = e.target;
+  if(!input.matches("[data-flight-index]")) return;
+  const flight = getFlights()[Number(input.dataset.flightIndex)];
+  if(!flight) return;
+  const value = input.dataset.flightField === "time" ? input.value.replace(/\D/g, "").slice(0, 12) : input.value;
+  flight[input.dataset.flightField] = value;
+  input.value = input.dataset.flightField === "time" ? formatFlightTimeInput(value) : value;
+  const title = document.querySelector('[data-flight-title="' + input.dataset.flightIndex + '"]');
+  if(title) title.firstChild.textContent = flightSummary(flight) || ("航班 " + (Number(input.dataset.flightIndex) + 1));
+  // 主頁摘要在完成編輯時才更新，避免輸入中跟著跳動
+  document.getElementById("flightInfoSummary").textContent = getFlights().some(item => flightSummary(item)) ? "" : "尚未填寫航班";
+  saveState();
+});
+document.getElementById("flightInfoBody").addEventListener("click", e => {
+  const add = e.target.closest(".flight-add-btn");
+  const remove = e.target.closest("[data-flight-remove]");
+  if(add){ getFlights().push(emptyFlight()); renderFlightEditor(); saveState(); return; }
+  if(remove && getFlights().length > 2){ getFlights().splice(Number(remove.dataset.flightRemove), 1); renderFlightEditor(); saveState(); }
+});
+setInterval(() => { if(state.flightInfoCollapsed !== false) renderFlightSummary(); }, 60000);
+document.getElementById('panelExportBtn').addEventListener('click', exportTrip);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e => {
+  importTripFile(e.target.files[0]);
+  e.target.value = '';
+});
+document.getElementById('dayVal').addEventListener('change', e => {
+  state.days = Math.min(30, Math.max(1, parseInt(e.target.value, 10) || 1));
+  render(); saveState();
+});
+document.getElementById('lensBuffer').addEventListener('change', e => {
+  state.lensBuffer = normalizeLensBuffer(e.target.value);
+  e.target.value = state.lensBuffer;
+  render(); saveState();
+});
+document.getElementById("recheckBtn").addEventListener("click", openRecheckModeConfirm);
+function startNewTrip(){
+  state.checked = {};
+  state.docPacked = {};
+  state.flightType = 'domestic';
+  state.recheckMode = false;
+  state.moveMode = null;
+  state.checklistLocked = false;
+  state.completionPromptShown = false;
+  state.prepCollapsed = null;
+  state.prepWasComplete = false;
+  state.tripStatus = 'packing';
+  state.tripTitle = '';
+  state.flightInfoCollapsed = true;
+  state.flights = [];
+  state.flightOutboundCode = ""; state.flightOutboundTime = ""; state.flightOutboundAirport = ""; state.flightOutboundTerminal = "";
+  state.flightReturnCode = ""; state.flightReturnTime = ""; state.flightReturnAirport = ""; state.flightReturnTerminal = "";
+  document.getElementById('tripTitle').value = '';
+  render(); saveState();
+}
+document.getElementById('resetBtn').addEventListener('click', startNewTrip);
+
+let lastMascotTap = 0;
+document.getElementById('mascotResetBtn').addEventListener('pointerup', () => {
+  const now = Date.now();
+  if(now - lastMascotTap < 400){
+    lastMascotTap = 0;
+    openNewTripConfirm();
+  }else{
+    lastMascotTap = now;
+  }
+});
+document.getElementById('editToggle').addEventListener('click', () => {
+  closeAddModal();
+  state.editMode = !state.editMode;
+  editingId = null;
+  render(); saveState();
+});
+document.getElementById('addItemBtn').addEventListener('click', () => {
+  addModalOpen = true;
+  renderGlobalAddRow();
+});
+document.querySelectorAll('#flightToggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.flightType = btn.dataset.type;
+    const isIntl = state.flightType === 'international';
+    state.carryOnEnabled = true;
+    state.checkedEnabled = isIntl;
+    render(); saveState();
+  });
+});
+document.getElementById('prepToggle').addEventListener('click', () => {
+  state.prepCollapsed = state.prepCollapsed === true ? false : true;
+  render(); saveState();
+});
+document.getElementById('checkedToggle').addEventListener('click', () => {
+  if(isItemChecked(currentDocItem().id)) return;
+  state.checkedEnabled = !state.checkedEnabled;
+  render(); saveState();
+});
+document.getElementById('carryOnToggle').addEventListener('click', () => {
+  if(isItemChecked(currentDocItem().id)) return;
+  state.carryOnEnabled = !state.carryOnEnabled;
+  render(); saveState();
+});
+function swapItemNodes(dragEl, sib, direction){
+  const rect = sib.getBoundingClientRect();
+  const style = getComputedStyle(sib);
+  const height = rect.height + parseFloat(style.marginTop || 0) + parseFloat(style.marginBottom || 0);
+  if(direction === 'down'){
+    sib.parentNode.insertBefore(sib, dragEl);
+    dragState.startY += height;
+  } else {
+    sib.parentNode.insertBefore(dragEl, sib);
+    dragState.startY -= height;
+  }
+}
+
+document.addEventListener('pointerdown', e => {
+  const handle = e.target.closest('.drag-handle');
+  if(!handle) return;
+  const itemEl = handle.closest('.item');
+  if(!itemEl) return;
+  const container = itemEl.closest('.cat');
+  if(!container) return;
+  e.preventDefault();
+  dragState = { itemEl, container, pointerId: e.pointerId, startY: e.clientY };
+  itemEl.classList.add('dragging');
+  try{ itemEl.setPointerCapture(e.pointerId); }catch(err){ /* not supported */ }
+});
+
+document.addEventListener('pointermove', e => {
+  if(!dragState || e.pointerId !== dragState.pointerId) return;
+  const dy = e.clientY - dragState.startY;
+  dragState.itemEl.style.transform = `translateY(${dy}px)`;
+
+  const siblings = Array.from(dragState.container.querySelectorAll('.item')).filter(el => el !== dragState.itemEl);
+  const dragRect = dragState.itemEl.getBoundingClientRect();
+  const dragCenter = dragRect.top + dragRect.height / 2;
+
+  for(const sib of siblings){
+    const rect = sib.getBoundingClientRect();
+    const sibCenter = rect.top + rect.height / 2;
+    const dragIsBefore = !!(dragState.itemEl.compareDocumentPosition(sib) & Node.DOCUMENT_POSITION_FOLLOWING);
+    if(dragIsBefore && dragCenter > sibCenter){
+      swapItemNodes(dragState.itemEl, sib, 'down');
+      dragState.itemEl.style.transform = `translateY(${e.clientY - dragState.startY}px)`;
+      break;
+    } else if(!dragIsBefore && dragCenter < sibCenter){
+      swapItemNodes(dragState.itemEl, sib, 'up');
+      dragState.itemEl.style.transform = `translateY(${e.clientY - dragState.startY}px)`;
+      break;
+    }
+  }
+});
+
+function endItemDrag(e){
+  if(!dragState || e.pointerId !== dragState.pointerId) return;
+  const { itemEl, container } = dragState;
+  itemEl.classList.remove('dragging');
+  itemEl.style.transform = '';
+  try{ itemEl.releasePointerCapture(e.pointerId); }catch(err){ /* already released */ }
+  const order = Array.from(container.querySelectorAll('.item')).map(el => el.dataset.id);
+  state.itemOrder[container.dataset.catKey] = order;
+  dragState = null;
+  saveState();
+}
+
+document.addEventListener('pointerup', endItemDrag);
+document.addEventListener('pointercancel', endItemDrag);
+
+document.addEventListener('click', closeAllCatLists);
+window.addEventListener('scroll', closeAllCatLists, true);
+window.addEventListener('resize', closeAllCatLists);
+
+const FONT_SCALE_KEY = 'hamstergo-font-scale';
+const FONT_FAMILY_KEY = 'hamstergo-font-family';
+let nativePreferences = {};
+let nativePreferencesReady = false;
+function saveNativePreferences(){
+  if(!nativePreferencesReady || !window.pywebview?.api?.save_preferences) return;
+  nativePreferences = {...nativePreferences, syncEndpoint:document.getElementById('syncEndpoint')?.value.trim().replace(/\/$/,'')||'', syncKey:document.getElementById('syncKey')?.value.trim()||'', syncEncryptionPassword:document.getElementById('syncEncryptionPassword')?.value||'', fontScale:state.fontScale||'1', fontFamily:state.fontFamily||'system'};
+  window.pywebview.api.save_preferences(nativePreferences).catch(()=>{});
+}
+function setFontFamily(value, persist = true){
+  const allowed = ['system', 'gochi-hand', 'permanent-marker', 'caveat', 'marker-felt'];
+  if(!allowed.includes(value)) value = 'system';
+  if(value === 'system') document.documentElement.removeAttribute('data-app-font');
+  else document.documentElement.dataset.appFont = value;
+  const select = document.getElementById('font-family-select');
+  if(select) select.value = value;
+  if(persist){ state.fontFamily = value; try{ localStorage.setItem(FONT_FAMILY_KEY, value); }catch(e){ /* storage unavailable */ } saveState(); saveNativePreferences(); }
+}
+function setFontScale(scale, persist = true){
+  const value = ["0.9", "1", "1.15", "1.3"].includes(String(scale)) ? String(scale) : "1";
+  document.documentElement.style.setProperty('--font-scale', value);
+  document.querySelectorAll('.font-option').forEach(btn => btn.classList.toggle('active', btn.dataset.fontScale === value));
+  if(persist){ state.fontScale = value; try{ localStorage.setItem(FONT_SCALE_KEY, value); }catch(e){ /* storage unavailable */ } saveState(); saveNativePreferences(); }
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  if(newTripConfirmOpen) closeNewTripConfirm();
+  else if(recheckModeConfirmOpen) closeRecheckModeConfirm();
+  else if(addModalOpen) closeAddModal();
+});
+
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+settingsBtn.addEventListener('click', () => {
+  const open = settingsPanel.classList.toggle('show');
+  settingsBtn.classList.toggle('open', open);
+  settingsBtn.setAttribute('aria-expanded', String(open));
+  settingsPanel.setAttribute('aria-hidden', String(!open));
+});
+document.querySelectorAll('.font-option').forEach(btn => {
+  btn.addEventListener('click', () => setFontScale(btn.dataset.fontScale));
+});
+const fontFamilySelect = document.getElementById('font-family-select');
+fontFamilySelect.addEventListener('change', () => setFontFamily(fontFamilySelect.value));
+let savedFontScale = '1';
+try{ savedFontScale = localStorage.getItem(FONT_SCALE_KEY) || '1'; }catch(e){ /* first run */ }
+setFontScale(savedFontScale, false);
+let savedFontFamily = 'system';
+try{ savedFontFamily = localStorage.getItem(FONT_FAMILY_KEY) || 'system'; }catch(e){ /* first run */ }
+setFontFamily(savedFontFamily, false);
+
+const syncEndpointInput = document.getElementById('syncEndpoint');
+const syncKeyInput = document.getElementById('syncKey');
+const syncStatus = document.getElementById('syncStatus');
+const accountUsernameInput = document.getElementById('accountUsername');
+const accountPasswordInput = document.getElementById('accountPassword');
+const accountStatus = document.getElementById('accountStatus');
+let authToken = '';
+let accountUsername = '';
+try{ authToken = localStorage.getItem(AUTH_TOKEN_KEY) || ''; accountUsername = localStorage.getItem(ACCOUNT_USERNAME_KEY) || ''; }catch(e){ /* first run */ }
+accountUsernameInput.value = accountUsername;
+
+function setSyncStatus(message, isError = false){
+  syncStatus.textContent = message;
+  syncStatus.style.color = isError ? 'var(--red)' : 'var(--paper-dim)';
+  const indicator = document.getElementById('syncIndicator');
+  if(indicator){
+    const stateName = isError ? 'error' : (message.includes('正在') ? 'syncing' : (message.includes('已') ? 'success' : 'idle'));
+    indicator.dataset.state = stateName;
+    indicator.title = message;
+    indicator.setAttribute('aria-label', message);
+  }
+}
+
+function setAccountStatus(message, isError = false){
+  accountStatus.textContent = message;
+  accountStatus.style.color = isError ? 'var(--red)' : 'var(--paper-dim)';
+}
+function saveAccountSession(result){
+  authToken = result.token || '';
+  accountUsername = result.username || accountUsernameInput.value.trim();
+  try{ localStorage.setItem(AUTH_TOKEN_KEY, authToken); localStorage.setItem(ACCOUNT_USERNAME_KEY, accountUsername); }catch(e){ /* storage unavailable */ }
+  accountUsernameInput.value = accountUsername;
+  setAccountStatus('已登入：' + accountUsername);
+}
+function clearAccountSession(){
+  authToken = '';
+  try{ localStorage.removeItem(AUTH_TOKEN_KEY); localStorage.removeItem(ACCOUNT_USERNAME_KEY); }catch(e){ /* storage unavailable */ }
+  setAccountStatus('已登出。');
+}
+async function accountRequest(path, body){
+  const endpoint = syncEndpointInput.value.trim().replace(/\/$/, '') || SYNC_DEFAULT_ENDPOINT;
+  const response = await fetch(endpoint + path, { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body) });
+  const result = await response.json().catch(() => ({}));
+  if(!response.ok) throw new Error(result.error || ('HTTP ' + response.status));
+  return result;
+}
+async function registerAccount(){
+  const username = accountUsernameInput.value.trim();
+  const password = accountPasswordInput.value;
+  if(!/^[A-Za-z0-9_-]{3,32}$/.test(username) || password.length < 8){ setAccountStatus('帳號需 3–32 個英數字元，密碼至少 8 個字元。', true); return; }
+  setAccountStatus('正在註冊…');
+  try{ saveSyncSettings(); saveAccountSession(await accountRequest('/auth/register', {username, password})); }catch(e){ setAccountStatus(e.message === 'username_taken' ? '這個帳號已存在，請直接登入。' : '註冊失敗，請稍後再試。', true); }
+}
+async function loginAccount(){
+  const username = accountUsernameInput.value.trim();
+  const password = accountPasswordInput.value;
+  if(!username || !password){ setAccountStatus('請輸入帳號和密碼。', true); return; }
+  setAccountStatus('正在登入…');
+  try{ saveSyncSettings(); saveAccountSession(await accountRequest('/auth/login', {username, password})); }catch(e){ setAccountStatus('帳號或密碼錯誤。', true); }
+}
+async function logoutAccount(){
+  if(authToken){ try{ await fetch((syncEndpointInput.value.trim().replace(/\/$/, '') || SYNC_DEFAULT_ENDPOINT) + '/auth/logout', {method:'POST', headers:{authorization:'Bearer ' + authToken}}); }catch(e){ /* logout locally anyway */ } }
+  clearAccountSession();
+}
+document.getElementById('registerAccountBtn').addEventListener('click', registerAccount);
+document.getElementById('loginAccountBtn').addEventListener('click', loginAccount);
+document.getElementById('logoutAccountBtn').addEventListener('click', logoutAccount);
+
+function saveSyncSettings(){
+  try{
+    localStorage.setItem(SYNC_API_URL_KEY, syncEndpointInput.value.trim().replace(/\/$/, ''));
+    localStorage.setItem(SYNC_KEY_KEY, syncKeyInput.value.trim());
+    localStorage.setItem(SYNC_ENCRYPTION_PASSWORD_KEY, document.getElementById('syncEncryptionPassword').value);
+  }catch(e){ /* storage unavailable */ }
+  saveNativePreferences();
+}
+
+function loadSyncSettings(){
+  try{
+    syncEndpointInput.value = localStorage.getItem(SYNC_API_URL_KEY) || SYNC_DEFAULT_ENDPOINT;
+    syncKeyInput.value = localStorage.getItem(SYNC_KEY_KEY) || '';
+    document.getElementById('syncEncryptionPassword').value = localStorage.getItem(SYNC_ENCRYPTION_PASSWORD_KEY) || '';
+  }catch(e){ /* first run */ }
+}
+
+function markNativeApp(){ document.documentElement.dataset.nativeApp = "true"; }
+async function loadNativePreferences(){
+  markNativeApp();
+  if(!window.pywebview?.api?.load_preferences) return;
+  try{
+    nativePreferences=await window.pywebview.api.load_preferences()||{};
+    nativePreferencesReady=true;
+    if(typeof nativePreferences.fontScale==='string') setFontScale(nativePreferences.fontScale,false);
+    if(typeof nativePreferences.fontFamily==='string') setFontFamily(nativePreferences.fontFamily,false);
+    if(typeof nativePreferences.syncEndpoint==='string') syncEndpointInput.value=nativePreferences.syncEndpoint||SYNC_DEFAULT_ENDPOINT;
+    if(typeof nativePreferences.syncKey==='string') syncKeyInput.value=nativePreferences.syncKey;
+    if(typeof nativePreferences.syncEncryptionPassword==='string') document.getElementById('syncEncryptionPassword').value=nativePreferences.syncEncryptionPassword;
+  }catch(e){}
+}
+function createSyncKey(){
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function syncRequestReady(){
+  const endpoint = syncEndpointInput.value.trim().replace(/\/$/, '') || SYNC_DEFAULT_ENDPOINT;
+  if(authToken) return { endpoint, authToken };
+  const syncKey = syncKeyInput.value.trim();
+  if(!endpoint || !/^https?:\/\//i.test(endpoint)){ setSyncStatus('請先設定同步服務。', true); return null; }
+  if(!/^[A-Za-z0-9_-]{32,64}$/.test(syncKey)){ setSyncStatus('請先登入，或在進階設定輸入同步碼。', true); return null; }
+  saveSyncSettings();
+  return { endpoint, syncKey };
+}
+
+function bytesToBase64(bytes){
+  let binary = '';
+  for(const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+function base64ToBytes(value){
+  const binary = atob(value);
+  return Uint8Array.from(binary, char => char.charCodeAt(0));
+}
+
+async function deriveEncryptionKey(password, salt){
+  const material = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(password),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt, iterations:ENCRYPTION_ITERATIONS, hash:'SHA-256' },
+    material,
+    { name:'AES-GCM', length:256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptState(value, password){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveEncryptionKey(password, salt);
+  const plaintext = new TextEncoder().encode(JSON.stringify(value));
+  const ciphertext = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, plaintext);
+  return {
+    format:'HamsterGo encrypted sync',
+    version:1,
+    algorithm:'AES-GCM',
+    kdf:'PBKDF2-SHA-256',
+    iterations:ENCRYPTION_ITERATIONS,
+    salt:bytesToBase64(salt),
+    iv:bytesToBase64(iv),
+    ciphertext:bytesToBase64(new Uint8Array(ciphertext))
+  };
+}
+
+async function decryptState(payload, password){
+  if(!payload || payload.format !== 'HamsterGo encrypted sync' || payload.version !== 1){
+    throw new Error('unsupported encrypted payload');
+  }
+  const salt = base64ToBytes(payload.salt);
+  const iv = base64ToBytes(payload.iv);
+  const ciphertext = base64ToBytes(payload.ciphertext);
+  const key = await deriveEncryptionKey(password, salt);
+  const plaintext = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ciphertext);
+  return JSON.parse(new TextDecoder().decode(plaintext));
+}
+
+function syncEncryptionPasswordReady(){
+  const password = authToken ? accountPasswordInput.value : document.getElementById('syncEncryptionPassword').value;
+  if(password.length < 8){
+    setSyncStatus('請輸入至少 8 個字元的加密密碼。', true);
+    return null;
+  }
+  return password;
+}
+
+function syncSettingsIdentity(settings){
+  return settings.endpoint + '\n' + (settings.authToken ? 'account:' + settings.authToken : 'key:' + settings.syncKey);
+}
+
+async function syncVersionStorageKey(settings){
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(syncSettingsIdentity(settings)));
+  return SYNC_VERSION_KEY_PREFIX + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function knownSyncVersion(settings){
+  const key = await syncVersionStorageKey(settings);
+  if(!knownSyncVersions.has(key)){
+    let stored = null;
+    try{ stored = localStorage.getItem(key); }catch(e){ /* storage unavailable */ }
+    const version = Number(stored);
+    knownSyncVersions.set(key, stored !== null && Number.isSafeInteger(version) && version > 0 ? version : 0);
+  }
+  return knownSyncVersions.get(key);
+}
+
+async function rememberSyncVersion(settings, version){
+  if(!Number.isSafeInteger(version) || version < 1) throw new Error('invalid sync version');
+  const key = await syncVersionStorageKey(settings);
+  knownSyncVersions.set(key, version);
+  try{ localStorage.setItem(key, String(version)); }catch(e){ /* memory still protects this session */ }
+}
+
+async function requireConditionalSync(settings){
+  const response = await fetch(settings.endpoint + '/sync-capabilities', {cache:'no-store'});
+  if(!response.ok) throw new Error('sync_protocol_unavailable');
+  const capability = await response.json();
+  if(capability.protocol !== 2 || capability.conditionalWrites !== true) throw new Error('sync_protocol_unavailable');
+}
+
+function scheduleCloudUpload(){
+  const endpoint = document.getElementById('syncEndpoint')?.value.trim();
+  const syncKey = document.getElementById('syncKey')?.value.trim();
+  const password = document.getElementById('syncEncryptionPassword')?.value;
+  if(cloudSyncSuppress || cloudSyncTimer || !endpoint || (!authToken && !syncKey) || !password) return;
+  if(cloudSyncBlockedSettings === endpoint.replace(/\/$/, '') + '\n' + (authToken ? 'account:' + authToken : 'key:' + syncKey)) return;
+  cloudSyncTimer = setTimeout(() => {
+    cloudSyncTimer = null;
+    if((authToken ? accountPasswordInput.value : document.getElementById('syncEncryptionPassword')?.value)) uploadStateToCloud(true);
+  }, 1800);
+}
+
+async function uploadStateToCloud(isAutomatic = false){
+  const settings = syncRequestReady();
+  if(!settings) return;
+  const password = syncEncryptionPasswordReady();
+  if(!password) return;
+  if(cloudSyncBusy) return;
+  if(cloudSyncTimer){ clearTimeout(cloudSyncTimer); cloudSyncTimer = null; }
+  cloudSyncBusy = true;
+  setSyncStatus(isAutomatic ? '正在自動同步…' : '正在加密並上傳…');
+  let submittedRevision = localStateRevision;
+  let shouldRetry = false;
+  try{
+    const snapshot = JSON.parse(JSON.stringify(state));
+    submittedRevision = localStateRevision;
+    await requireConditionalSync(settings);
+    const baseVersion = await knownSyncVersion(settings);
+    const payload = await encryptState(snapshot, password);
+    let latestLocalState = null;
+    try{ latestLocalState = localStorage.getItem(STORAGE_KEY); }catch(e){ /* storage unavailable */ }
+    if(latestLocalState !== localStateLastWritten){
+      cloudSyncBlockedSettings = syncSettingsIdentity(settings);
+      setSyncStatus('另一個視窗已修改本機紀錄，已停止上傳。請重新載入並檢查資料。', true);
+      return;
+    }
+    const response = await fetch(settings.endpoint + (settings.authToken ? '/me/record' : '/record'), {
+      method:'PUT',
+      headers:{'content-type':'application/json', authorization:'Bearer ' + (settings.authToken || settings.syncKey)},
+      body:JSON.stringify({payload, baseVersion})
+    });
+    if(response.status === 409){
+      cloudSyncBlockedSettings = syncSettingsIdentity(settings);
+      setSyncStatus('雲端已有較新的資料，已停止自動上傳。請下載雲端紀錄；下載前會先匯出本機備份。', true);
+      return;
+    }
+    if(response.status === 428){
+      setSyncStatus('同步服務版本不相容，請更新 Worker 後重試。', true);
+      return;
+    }
+    if(!response.ok) throw new Error('HTTP ' + response.status);
+    const result = await response.json();
+    await rememberSyncVersion(settings, result.version);
+    cloudSyncBlockedSettings = '';
+    shouldRetry = localStateRevision !== submittedRevision;
+    setSyncStatus('已加密上傳到雲端 · ' + new Date(result.updatedAt).toLocaleString());
+  }catch(e){
+    if(e.message === 'sync_protocol_unavailable') setSyncStatus('同步服務尚未支援安全版本檢查，請先更新 Worker。', true);
+    else setSyncStatus('上傳失敗，請確認 Worker、同步碼與加密密碼。', true);
+  } finally {
+    cloudSyncBusy = false;
+    if(shouldRetry) scheduleCloudUpload();
+  }
+}
+
+async function downloadStateFromCloud(){
+  const settings = syncRequestReady();
+  if(!settings) return;
+  const password = syncEncryptionPasswordReady();
+  if(!password) return;
+  if(cloudSyncBusy) return;
+  let localStateAtStart = null;
+  try{ localStateAtStart = localStorage.getItem(STORAGE_KEY); }catch(e){ /* storage unavailable */ }
+  const revisionAtStart = localStateRevision;
+  if(localStateAtStart !== localStateLastWritten){
+    cloudSyncBlockedSettings = syncSettingsIdentity(settings);
+    setSyncStatus('另一個視窗已修改本機紀錄，已停止下載。請重新載入並檢查資料。', true);
+    return;
+  }
+  if(localStateAtStart !== null){
+    if(!window.confirm('下載會取代這台裝置目前的旅行紀錄。繼續前會先匯出本機 JSON 備份。要繼續嗎？')){
+      setSyncStatus('已取消下載，本機紀錄沒有變更。');
+      return;
+    }
+    try{ exportTrip(); }catch(e){
+      setSyncStatus('無法匯出本機備份，已取消下載。', true);
+      return;
+    }
+  }
+  if(cloudSyncTimer){ clearTimeout(cloudSyncTimer); cloudSyncTimer = null; }
+  cloudSyncBusy = true;
+  setSyncStatus('正在下載並解密…');
+  try{
+    const response = await fetch(settings.endpoint + (settings.authToken ? '/me/record' : '/record'), { headers:{authorization:'Bearer ' + (settings.authToken || settings.syncKey)} });
+    if(response.status === 404){
+      setSyncStatus('雲端還沒有資料，請先上傳。', true);
+      return;
+    }
+    if(!response.ok) throw new Error('HTTP ' + response.status);
+    const remote = await response.json();
+    if(remote.state){
+      throw new Error('legacy_plaintext_record');
+    }
+    const remoteState = await decryptState(remote.payload, password);
+    if(!remoteState || typeof remoteState !== 'object' || Array.isArray(remoteState) || !remoteState.checked || !remoteState.customItems){
+      throw new Error('invalid state');
+    }
+    if(!Number.isSafeInteger(remote.version) || remote.version < 1){
+      throw new Error('invalid sync version');
+    }
+    let latestLocalState = null;
+    try{ latestLocalState = localStorage.getItem(STORAGE_KEY); }catch(e){ /* storage unavailable */ }
+    if(localStateRevision !== revisionAtStart || latestLocalState !== localStateAtStart){
+      setSyncStatus('下載期間本機紀錄有變更，已取消取代。請檢查資料後再試。', true);
+      return;
+    }
+    cloudSyncSuppress = true;
+    state = Object.assign({}, state, remoteState);
+    state.fontScale = ["0.9", "1", "1.15", "1.3"].includes(String(state.fontScale)) ? String(state.fontScale) : "1";
+    state.fontFamily = ["system", "gochi-hand", "permanent-marker", "caveat", "marker-felt"].includes(state.fontFamily) ? state.fontFamily : "system";
+    setFontScale(state.fontScale, false);
+    setFontFamily(state.fontFamily, false);
+    state.editMode = false;
+    state.moveMode = null;
+    editingId = null;
+    dragState = null;
+    render();
+    document.getElementById('tripTitle').value = state.tripTitle || '';
+    saveState();
+    const downloadedRevision = localStateRevision;
+    await rememberSyncVersion(settings, remote.version);
+    cloudSyncBlockedSettings = '';
+    setSyncStatus('已解密並下載 · ' + new Date(remote.updatedAt).toLocaleString());
+    cloudSyncSuppress = false;
+    if(localStateRevision !== downloadedRevision) scheduleCloudUpload();
+  }catch(e){
+    cloudSyncSuppress = false;
+    if(e.message === 'legacy_plaintext_record') setSyncStatus('這是舊版未加密資料，請先用新版本上傳覆蓋。', true);
+    else setSyncStatus('解密失敗，請確認加密密碼是否正確。', true);
+  }finally{
+    cloudSyncBusy = false;
+  }
+}
+
+document.getElementById('generateSyncKeyBtn').addEventListener('click', () => {
+  syncKeyInput.value = createSyncKey();
+  saveSyncSettings();
+  setSyncStatus('同步碼已產生，請在另一台裝置輸入同一組同步碼。');
+});
+syncEndpointInput.addEventListener('change', saveSyncSettings);
+syncKeyInput.addEventListener('change', saveSyncSettings);
+document.getElementById('syncEncryptionPassword').addEventListener('change', saveSyncSettings);
+document.getElementById('uploadCloudBtn').addEventListener('click', () => uploadStateToCloud(false));
+document.querySelectorAll('.sync-password-toggle').forEach(button => {
+  button.addEventListener('click', () => {
+    const input = document.getElementById(button.dataset.target);
+    const visible = input.type === 'text';
+    input.type = visible ? 'password' : 'text';
+    button.setAttribute('aria-pressed', String(!visible));
+    button.setAttribute('aria-label', visible ? '顯示密碼' : '隱藏密碼');
+    button.dataset.visible = String(!visible);
+    const icon = button.querySelector("img");
+    if(icon) icon.src = visible ? "resources/icons/eye-open.svg" : "resources/icons/eye-closed.svg";
+  });
+});
+document.getElementById('downloadCloudBtn').addEventListener('click', downloadStateFromCloud);
+document.getElementById('aboutBtn').addEventListener('click', openAboutModal);
+
+loadSyncSettings();
+if(authToken) setAccountStatus('已登入：' + accountUsername);
+loadState();
+document.getElementById('tripTitle').value = state.tripTitle || '';
+
+try{
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('service-worker.js');
+  }
+}catch(e){ /* service worker not supported */ }
+</script>
+</body>
+</html>

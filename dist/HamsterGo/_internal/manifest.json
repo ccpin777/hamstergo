@@ -1,0 +1,25 @@
+{
+  "name": "HamsterGo 倉鼠打包小幫手",
+  "short_name": "HamsterGo",
+  "description": "你的倉鼠打包小幫手，陪你確認每一項行李",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1B2A4A",
+  "theme_color": "#1B2A4A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "resources/images/hamstergo-safari-icon-v3.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "resources/images/hamstergo-favicon-v3.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

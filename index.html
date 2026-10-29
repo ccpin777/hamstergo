@@ -2214,7 +2214,7 @@ async function requireConditionalSync(settings){
 function scheduleCloudUpload(){
   const endpoint = document.getElementById('syncEndpoint')?.value.trim();
   const syncKey = document.getElementById('syncKey')?.value.trim();
-  const password = document.getElementById('syncEncryptionPassword')?.value;
+  const password = authToken ? accountPasswordInput.value : document.getElementById('syncEncryptionPassword')?.value;
   if(cloudSyncSuppress || cloudSyncTimer || !endpoint || (!authToken && !syncKey) || !password) return;
   if(cloudSyncBlockedSettings === endpoint.replace(/\/$/, '') + '\n' + (authToken ? 'account:' + authToken : 'key:' + syncKey)) return;
   cloudSyncTimer = setTimeout(() => {
@@ -2269,7 +2269,10 @@ async function uploadStateToCloud(isAutomatic = false){
     setSyncStatus('已加密上傳到雲端 · ' + new Date(result.updatedAt).toLocaleString());
   }catch(e){
     if(e.message === 'sync_protocol_unavailable') setSyncStatus('同步服務尚未支援安全版本檢查，請先更新 Worker。', true);
-    else setSyncStatus('上傳失敗，請確認 Worker、同步碼與加密密碼。', true);
+    else if(e.message === 'HTTP 401' && settings.authToken) setSyncStatus('登入已失效，請重新登入後再同步。', true);
+    else if(e.message === 'HTTP 413') setSyncStatus('旅行資料超過同步服務的大小限制，請先匯出 JSON 備份。', true);
+    else if(/^HTTP \d+$/.test(e.message)) setSyncStatus('上傳失敗：同步服務回傳 ' + e.message + '。', true);
+    else setSyncStatus('上傳失敗：無法連接同步服務，請檢查網路與 Worker 網址。', true);
   } finally {
     cloudSyncBusy = false;
     if(shouldRetry) scheduleCloudUpload();
@@ -2349,7 +2352,10 @@ async function downloadStateFromCloud(){
   }catch(e){
     cloudSyncSuppress = false;
     if(e.message === 'legacy_plaintext_record') setSyncStatus('這是舊版未加密資料，請先用新版本上傳覆蓋。', true);
-    else setSyncStatus('解密失敗，請確認加密密碼是否正確。', true);
+    else if(e.message === 'HTTP 401' && settings.authToken) setSyncStatus('登入已失效，請重新登入後再同步。', true);
+    else if(/^HTTP \d+$/.test(e.message)) setSyncStatus('下載失敗：同步服務回傳 ' + e.message + '。', true);
+    else if(e.name === 'OperationError') setSyncStatus('解密失敗，請確認加密密碼是否正確。', true);
+    else setSyncStatus('下載失敗：請檢查網路、Worker 網址與雲端資料。', true);
   }finally{
     cloudSyncBusy = false;
   }
